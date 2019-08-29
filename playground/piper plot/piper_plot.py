@@ -87,7 +87,7 @@ def piper_plot(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1
     
     # canvas
     fig.add_trace(
-        go.Scatter(x=[-1,2.25*a+1, 2.25*a+1, -1], y=[-0.5,-0.5, 2*a, 2*a], mode='markers', opacity=0, hoverinfo="none"))
+        go.Scatter(x=[-1,2.25*a+1, 2.25*a+1, -1], y=[-0.5,-0.5, 2*a+1, 2*a+1], mode='markers', opacity=0, hoverinfo="none"))
     
     fig.update_layout(
         autosize=False,
@@ -127,7 +127,46 @@ def piper_plot(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1
             go.layout.Annotation(x=1.75*a, y=0, text='40', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='top'),
             go.layout.Annotation(x=1.95*a, y=0, text='60', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='top'),
             go.layout.Annotation(x=2.15*a, y=0, text='80', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='top'),
-            go.layout.Annotation(x=2.35*a, y=0, text='100', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='top')
+            go.layout.Annotation(x=2.35*a, y=0, text='100', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='top'),
+            
+            go.layout.Annotation(x=1.35*a+0, y=0, text='0', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.2*xTrans, y=0.2*yTrans, text='20', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.4*xTrans, y=0.4*yTrans, text='40', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.6*xTrans, y=0.6*yTrans, text='60', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.8*xTrans, y=0.8*yTrans, text='80', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+xTrans, y=yTrans, text='100', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
+            
+            go.layout.Annotation(x=1.35*a+xTrans, y=yTrans, text='0', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.2*xTrans+0.8*a, y=0.2*yTrans, text='20', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.4*xTrans+0.6*a, y=0.4*yTrans, text='40', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.6*xTrans+0.4*a, y=0.6*yTrans, text='60', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.8*xTrans+0.2*a, y=0.8*yTrans, text='80', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+a, y=0, text='100', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            
+            # upper diamond
+            go.layout.Annotation(x=1.35*xTrans, y=1.35*yTrans, text='0', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.55*xTrans, y=1.55*yTrans, text='20', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.75*xTrans, y=1.75*yTrans, text='40', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=1.95*xTrans, y=1.95*yTrans, text='60', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=2.15*xTrans, y=2.15*yTrans, text='80', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            go.layout.Annotation(x=2.35*xTrans, y=2.35*yTrans, text='100', font=dict(color=ud_color), showarrow=False, xanchor='right', yanchor='bottom'),
+            
+            go.layout.Annotation(x=2.35*xTrans, y=2.35*yTrans, text='100', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=2.55*xTrans, y=2.15*yTrans, text='80', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=2.75*xTrans, y=1.95*yTrans, text='60', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=2.95*xTrans, y=1.75*yTrans, text='40', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=3.15*xTrans, y=1.55*yTrans, text='20', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=3.35*xTrans, y=1.35*yTrans, text='0', font=dict(color=ud_color), showarrow=False, xanchor='left', yanchor='bottom'),
+            
+            go.layout.Annotation(x=a/2, y=-0.5, text='Calcium', font=dict(color=lt_color1), showarrow=False, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=1.85*a, y=-0.5, text='Chloride', font=dict(color=rt_color1), showarrow=False, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=xTrans/2-0.15*a, y=yTrans/2+0.05*a, text='Magnesium', font=dict(color=lt_color2), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=xTrans/2+0.65*a, y=yTrans/2+0.05*a, text='Natrium + Kalium', font=dict(color=lt_color3), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=3.15*xTrans-0.15*a, y=yTrans/2+0.05*a, text='Carbonate + Bicarbonate', font=dict(color=rt_color2), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=3.15*xTrans+0.65*a, y=yTrans/2+0.05*a, text='Sulfate', font=dict(color=rt_color3), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=1.85*xTrans-0.15*a, y=1.85*yTrans+0.05*a, text='Sulfate + Chloride', font=dict(color=ud_color), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),
+            go.layout.Annotation(x=1.85*xTrans+0.65*a, y=1.85*yTrans+0.05*a, text='Calcium + Magnesium', font=dict(color=ud_color), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),
+            
             
             ]
         )
