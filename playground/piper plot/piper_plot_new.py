@@ -60,7 +60,8 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
         annots.append(go.layout.Annotation(x=((base+space)+(i*0.2*base))*xPr, y=((base+space)+(i*0.2*base))*yPr, text=(i*20), font=dict(color=colors[6]), showarrow=False, xanchor='right', yanchor='bottom'),)
         annots.append(go.layout.Annotation(x=((3*base+space)-((5-i)*0.2*base))*xPr, y=((base+space)+((5-i)*0.2*base))*yPr, text=(100-i*20), font=dict(color=colors[6]), showarrow=False, xanchor='left', yanchor='bottom'),)
         
-    annots.append(go.layout.Annotation(x=(base/2), y=-(0.1*base), text="Ca",showarrow=False, xanchor='center', yanchor='top'), )
+    annots.append(go.layout.Annotation(x=(base/2), y=-(0.1*base), text="Calcium", font=dict(color=colors[0]), showarrow=False, xanchor='center', yanchor='top'),)
+    annots.append(go.layout.Annotation(x=(base/2)*xPr-20, y=(base/2)*yPr+5, text="Magnesium", font=dict(color=colors[1]), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),)
     
     fig.update_layout(
         annotations = annots
