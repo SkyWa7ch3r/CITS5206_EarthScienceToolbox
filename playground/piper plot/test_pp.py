@@ -1,4 +1,4 @@
 import piper_plot as pp
 
-fig = pp.piper_plot()
+fig = pp.plot_background()
 fig.show()

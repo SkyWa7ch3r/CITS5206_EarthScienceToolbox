@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import math
 
-def piper_plot(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1, grid_dash='dot'):
+def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1, grid_dash='dot'):
     fig = go.Figure()
     
     # triangle base line length
@@ -173,5 +173,7 @@ def piper_plot(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1
     
     fig.update_xaxes(showticklabels=False, showgrid=False, zeroline=False)
     fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
+    
+    
     
     return fig
