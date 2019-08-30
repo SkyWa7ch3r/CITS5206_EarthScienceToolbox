@@ -1,11 +1,11 @@
 import plotly.graph_objects as go
 import math
 
-def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1, grid_dash='dot'):
+def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_width=1, grid_dash='dot', triangle_base_length=5):
     fig = go.Figure()
     
     # triangle base line length
-    a = 5
+    a = triangle_base_length
     
     # Projection factor for x-axis and y-axis
     xPr = math.cos(math.radians(60))
@@ -115,10 +115,10 @@ def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_wi
             go.layout.Annotation(x=xTrans, y=yTrans, text='100', font=dict(color=lt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
             
             go.layout.Annotation(x=xTrans, y=yTrans, text='0', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=0.2*xTrans+0.8*a, y=0.2*yTrans, text='20', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=0.4*xTrans+0.6*a, y=0.4*yTrans, text='40', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=0.6*xTrans+0.4*a, y=0.6*yTrans, text='60', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=0.8*xTrans+0.2*a, y=0.8*yTrans, text='80', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=0.2*xTrans+0.8*a, y=0.2*yTrans, text='80', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=0.4*xTrans+0.6*a, y=0.4*yTrans, text='60', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=0.6*xTrans+0.4*a, y=0.6*yTrans, text='40', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=0.8*xTrans+0.2*a, y=0.8*yTrans, text='20', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
             go.layout.Annotation(x=a, y=0, text='100', font=dict(color=lt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
             
             # right terniary
@@ -137,10 +137,10 @@ def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_wi
             go.layout.Annotation(x=1.35*a+xTrans, y=yTrans, text='100', font=dict(color=rt_color2), showarrow=False, xanchor='right', yanchor='bottom'),
             
             go.layout.Annotation(x=1.35*a+xTrans, y=yTrans, text='0', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=1.35*a+0.2*xTrans+0.8*a, y=0.2*yTrans, text='20', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=1.35*a+0.4*xTrans+0.6*a, y=0.4*yTrans, text='40', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=1.35*a+0.6*xTrans+0.4*a, y=0.6*yTrans, text='60', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
-            go.layout.Annotation(x=1.35*a+0.8*xTrans+0.2*a, y=0.8*yTrans, text='80', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.2*xTrans+0.8*a, y=0.2*yTrans, text='80', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.4*xTrans+0.6*a, y=0.4*yTrans, text='60', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.6*xTrans+0.4*a, y=0.6*yTrans, text='40', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
+            go.layout.Annotation(x=1.35*a+0.8*xTrans+0.2*a, y=0.8*yTrans, text='20', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
             go.layout.Annotation(x=1.35*a+a, y=0, text='100', font=dict(color=rt_color3), showarrow=False, xanchor='left', yanchor='bottom'),
             
             # upper diamond
@@ -165,15 +165,33 @@ def plot_background(canvas_width=800, canvas_height=800, line_width=1.5, grid_wi
             go.layout.Annotation(x=3.15*xTrans-0.15*a, y=yTrans/2+0.05*a, text='Carbonate + Bicarbonate', font=dict(color=rt_color2), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),
             go.layout.Annotation(x=3.15*xTrans+0.65*a, y=yTrans/2+0.05*a, text='Sulfate', font=dict(color=rt_color3), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),
             go.layout.Annotation(x=1.85*xTrans-0.15*a, y=1.85*yTrans+0.05*a, text='Sulfate + Chloride', font=dict(color=ud_color), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),
-            go.layout.Annotation(x=1.85*xTrans+0.65*a, y=1.85*yTrans+0.05*a, text='Calcium + Magnesium', font=dict(color=ud_color), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),
-            
-            
+            go.layout.Annotation(x=1.85*xTrans+0.65*a, y=1.85*yTrans+0.05*a, text='Calcium + Magnesium', font=dict(color=ud_color), showarrow=False, textangle=60, xanchor='center', yanchor='middle'),            
             ]
         )
     
     fig.update_xaxes(showticklabels=False, showgrid=False, zeroline=False)
     fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
     
+    return fig
+
+def plot_point(x, y, fig, triangle_base_length = 5,area=1):
+    if (area==1):
+        xLab = 'Calcium'
+        yLab = 'Magnesium'
+        zLab = 'Natrium + Kalium'
+    elif (area==2):
+        xLab = 'Cl'
+        yLab = 'CO3+HCO3'
+        zLab = 'SO4'
     
+    base=triangle_base_length
+    xTrans = math.cos(math.radians(60))
+    yTrans = math.sin(math.radians(60))
+   
+    y1 = (y[0]/100)*base*yTrans
+    x1 = ((100-x[0])/100)*base-(((y[0]/100)*base*yTrans)*xTrans)-0.025*base
     
+    hovText=xLab+': '+str(x[0])+'<br>'+yLab+': '+str(y[0])+'<br>'+zLab+': '+str(100-x[0]-y[0])
+    
+    fig.add_trace(go.Scatter(x=[x1], y=[y1], mode='markers', hovertext=[hovText], hoverinfo='text'))
     return fig
