@@ -6,7 +6,7 @@ def draw_line(figure, length, color, rotation=0, dash='solid', xOrigin=0, yOrigi
     xPr = math.cos(math.radians(rotation))
     yPr = math.sin(math.radians(rotation))
     
-    figure.add_trace(go.Scatter(x=[xOrigin, xOrigin+length*xPr], y=[yOrigin, yOrigin+length*yPr], mode='lines', line=dict(dash=dash, color=color, width=line_size), hoverinfo="none"))
+    figure.add_trace(go.Scatter(x=[xOrigin, xOrigin+length*xPr], y=[yOrigin, yOrigin+length*yPr], mode='lines', line=dict(dash=dash, color=color, width=line_size), hoverinfo="none", showlegend=False))
     
     return figure
 
@@ -18,7 +18,7 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
     
     fig = go.Figure()
     # frame
-    fig.add_trace(go.Scatter(x=[-0.1*base, (2.1*base+space)], y=[-0.1*base*yPr, (2*base+space)*yPr+0.1*base], mode='markers', opacity=0, hoverinfo="none"))
+    fig.add_trace(go.Scatter(x=[-0.1*base, (2.1*base+space)], y=[-0.1*base*yPr, (2*base+space)*yPr+0.1*base], mode='markers', opacity=0, hoverinfo="none", showlegend=False))
     
     # perimeters
     col_idx=0
@@ -39,9 +39,9 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
         fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=0, xOrigin=0.2*(i+1)*base*xPr, yOrigin=0.2*(i+1)*base*yPr, dash='dot', color=colors[1])
         fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=60, xOrigin=0.2*(i+1)*base, yOrigin=0, dash='dot', color=colors[2])
         
-        fig = draw_line(figure=fig, length=0.2*(i+1)*base, rotation=120, xOrigin=0.2*(i+1)*base+(base+space), yOrigin=0, dash='dot', color=colors[3])
-        fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=0, xOrigin=0.2*(i+1)*base*xPr+(base+space), yOrigin=0.2*(i+1)*base*yPr, dash='dot', color=colors[4])
-        fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=60, xOrigin=0.2*(i+1)*base+(base+space), yOrigin=0, dash='dot', color=colors[5])
+        fig = draw_line(figure=fig, length=0.2*(i+1)*base, rotation=120, xOrigin=0.2*(i+1)*base+(base+space), yOrigin=0, dash='dot', color=colors[4])
+        fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=0, xOrigin=0.2*(i+1)*base*xPr+(base+space), yOrigin=0.2*(i+1)*base*yPr, dash='dot', color=colors[5])
+        fig = draw_line(figure=fig, length=0.2*(4-i)*base, rotation=60, xOrigin=0.2*(i+1)*base+(base+space), yOrigin=0, dash='dot', color=colors[3])
         
         fig = draw_line(figure=fig, length=base, rotation=60, xOrigin=(0.2*(i+1)*base + (base+space))*xPr, yOrigin=((base+space)-(0.2*(i+1)*base))*yPr, dash='dot', color=colors[6])
         fig = draw_line(figure=fig, length=base, rotation=-60, xOrigin=(0.2*(i+1)*base + (base+space))*xPr, yOrigin=((base+space)+(0.2*(i+1)*base))*yPr, dash='dot', color=colors[6])
@@ -76,30 +76,49 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
         )
     
     # canvas config
-    fig.update_layout(autosize=False, width=canvas_width, height=canvas_height, showlegend=False)
+    bgcolor='aliceblue'
+    fig.update_layout(autosize=False, width=canvas_width, height=canvas_height,
+                      plot_bgcolor=bgcolor,
+                      legend=go.layout.Legend(
+                          x=0, y=1, traceorder='normal', bgcolor=bgcolor))
     
     fig.update_xaxes(showticklabels=False, showgrid=False, zeroline=False)
     fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
     
     return fig
 
-def plot_point(fig, x, y, area=1):
-    xPr = math.cos(math.radians(60))
+def plot_point(fig, x, y, name=''):
+    #xPr = math.cos(math.radians(60))
     yPr = math.sin(math.radians(60))
-    
-    if (area==1):
-        xDist = 0.08*y[0]-0.4
-        xPlot = [((100-x[0])-y[0]*yPr*xPr)-xDist]
-        yPlot = [y[0]*yPr]
-        xLab = 'Calcium'
-        yLab = 'Magnesium'
-        zLab = 'Natrium + Kalium'
-    
-    hovText=xLab+': '+str(x[0])+'%<br>'+yLab+': '+str(y[0])+'%<br>'+zLab+': '+str(100-x[0]-y[0])+'%'
+    m1 = math.tan(math.radians(120))
+    m2 = math.tan(math.radians(60))
+    n = len(x)
+    xPlot = []
+    yPlot = []
+    hovText = []
+    xReal=0
+    for i in range(n):
+        if (x[i]<=100):
+            yPlot.append(y[i]*yPr)
+            xPlot.append((yPlot[i]/m1)+(100-x[i]))
+            xLab = 'Calcium'
+            yLab = 'Magnesium'
+            zLab = 'Natrium + Kalium'
+        elif (x[i]>100):
+            xReal = x[i] - 100
+            yPlot.append(y[i]*yPr)
+            xPlot.append((yPlot[i]/m2)+(xReal+135))
+            xLab = 'Chloride'
+            yLab = 'Sulfate'
+            zLab = 'Carbonate + Bicarbonate'
+            
+        hovText.append(xLab+': '+str(xReal)+'%<br>'+yLab+': '+str(y[i])+'%<br>'+zLab+': '+str(100-x[i]-y[i])+'%')
+        
     fig.add_trace(
         go.Scatter(
             x=xPlot, y=yPlot, mode='markers',
-            hovertext=[hovText], hoverinfo='text'
-            ))    
+            hovertext=hovText, hoverinfo='text', name=name
+            ))
+    
     return fig
         
