@@ -88,7 +88,8 @@ def plot_point(fig, x, y, area=1):
     yPr = math.sin(math.radians(60))
     
     if (area==1):
-        xPlot = [((100-x[0])-x[0]*xPr)+5]
+        xDist = 0.08*y[0]-0.4
+        xPlot = [((100-x[0])-y[0]*yPr*xPr)-xDist]
         yPlot = [y[0]*yPr]
         xLab = 'Calcium'
         yLab = 'Magnesium'
