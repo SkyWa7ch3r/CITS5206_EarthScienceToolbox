@@ -60,8 +60,16 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
         annots.append(go.layout.Annotation(x=((base+space)+(i*0.2*base))*xPr, y=((base+space)+(i*0.2*base))*yPr, text=(i*20), font=dict(color=colors[6]), showarrow=False, xanchor='right', yanchor='bottom'),)
         annots.append(go.layout.Annotation(x=((3*base+space)-((5-i)*0.2*base))*xPr, y=((base+space)+((5-i)*0.2*base))*yPr, text=(100-i*20), font=dict(color=colors[6]), showarrow=False, xanchor='left', yanchor='bottom'),)
         
-    annots.append(go.layout.Annotation(x=(base/2), y=-(0.1*base), text="Calcium", font=dict(color=colors[0]), showarrow=False, xanchor='center', yanchor='top'),)
-    annots.append(go.layout.Annotation(x=(base/2)*xPr-20, y=(base/2)*yPr+5, text="Magnesium", font=dict(color=colors[1]), showarrow=False, textangle=-60, xanchor='center', yanchor='middle'),)
+    annots.append(go.layout.Annotation(x=(base/2), y=-(0.07*base), text="Calcium", font=dict(color=colors[0]), showarrow=False, xanchor='center', yanchor='top'),)
+    annots.append(go.layout.Annotation(x=(base/2)*xPr+2, y=(base/2)*yPr+10, text="Magnesium", font=dict(color=colors[1]), showarrow=False, textangle=-60, xanchor='right', yanchor='middle'),)
+    annots.append(go.layout.Annotation(x=base-(base/2*xPr)-5, y=(base/2)*yPr+10, text="Natrium + Kalium", font=dict(color=colors[2]), showarrow=False, textangle=60, xanchor='left', yanchor='middle'),)
+    
+    annots.append(go.layout.Annotation(x=(base/2+(base+space)), y=-(0.07*base), text="Chloride", font=dict(color=colors[3]), showarrow=False, xanchor='center', yanchor='top'),)
+    annots.append(go.layout.Annotation(x=(base/2)*xPr+(base+space)+10, y=(base/2)*yPr+10, text="Carbonate + Bicarbonate", font=dict(color=colors[4]), showarrow=False, textangle=-60, xanchor='right', yanchor='middle'),)
+    annots.append(go.layout.Annotation(x=(2*base+space)-(base/2*xPr)+2, y=(base/2)*yPr+10, text="Sulfate", font=dict(color=colors[5]), showarrow=False, textangle=60, xanchor='left', yanchor='middle'),)
+    
+    annots.append(go.layout.Annotation(x=(1.5*base+space)*xPr+7, y=(1.5*base+space)*yPr+10, text="Sulfate + Chloride", font=dict(color=colors[6]), showarrow=False, textangle=-60, xanchor='right', yanchor='middle'),)
+    annots.append(go.layout.Annotation(x=(2*base)-(1.5*base)*xPr+10, y=(1.5*base+space)*yPr+7, text="Calcium + Magnesium", font=dict(color=colors[6]), showarrow=False, textangle=60, xanchor='left', yanchor='middle'),)
     
     fig.update_layout(
         annotations = annots
@@ -75,8 +83,22 @@ def plot_bg(colors, canvas_width=750, canvas_height=750):
     
     return fig
 
-
-colours=['#726da8', '#bd4089', '#6a8d73', '#bb4430', '#264653', '#337357', '#42213d']
-
-fig_plot = plot_bg(colors=colours)
-fig_plot.show()
+def plot_point(fig, x, y, area=1):
+    xPr = math.cos(math.radians(60))
+    yPr = math.sin(math.radians(60))
+    
+    if (area==1):
+        xPlot = [((100-x[0])-x[0]*xPr)+5]
+        yPlot = [y[0]*yPr]
+        xLab = 'Calcium'
+        yLab = 'Magnesium'
+        zLab = 'Natrium + Kalium'
+    
+    hovText=xLab+': '+str(x[0])+'%<br>'+yLab+': '+str(y[0])+'%<br>'+zLab+': '+str(100-x[0]-y[0])+'%'
+    fig.add_trace(
+        go.Scatter(
+            x=xPlot, y=yPlot, mode='markers',
+            hovertext=[hovText], hoverinfo='text'
+            ))    
+    return fig
+        

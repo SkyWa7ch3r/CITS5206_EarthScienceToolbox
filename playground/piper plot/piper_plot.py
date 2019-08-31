@@ -191,7 +191,7 @@ def plot_point(x, y, fig, triangle_base_length = 5,area=1):
     y1 = (y[0]/100)*base*yTrans
     x1 = ((100-x[0])/100)*base-(((y[0]/100)*base*yTrans)*xTrans)-0.025*base
     
-    hovText=xLab+': '+str(x[0])+'<br>'+yLab+': '+str(y[0])+'<br>'+zLab+': '+str(100-x[0]-y[0])
+    hovText=xLab+': '+str(x[0])+'%<br>'+yLab+': '+str(y[0])+'%<br>'+zLab+': '+str(100-x[0]-y[0])+'%'
     
     fig.add_trace(go.Scatter(x=[x1], y=[y1], mode='markers', hovertext=[hovText], hoverinfo='text'))
     return fig
