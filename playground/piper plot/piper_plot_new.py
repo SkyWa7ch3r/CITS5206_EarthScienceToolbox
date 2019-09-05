@@ -104,6 +104,7 @@ def plot_point(fig, x, y, name=''):
             xLab = 'Calcium'
             yLab = 'Magnesium'
             zLab = 'Natrium + Kalium'
+            hovText.append(xLab+': '+str(x[i])+'%<br>'+yLab+': '+str(y[i])+'%<br>'+zLab+': '+str(100-x[i]-y[i])+'%')
         elif (x[i]>100):
             xReal = x[i] - 100
             yPlot.append(y[i]*yPr)
@@ -111,8 +112,7 @@ def plot_point(fig, x, y, name=''):
             xLab = 'Chloride'
             yLab = 'Sulfate'
             zLab = 'Carbonate + Bicarbonate'
-            
-        hovText.append(xLab+': '+str(xReal)+'%<br>'+yLab+': '+str(y[i])+'%<br>'+zLab+': '+str(100-x[i]-y[i])+'%')
+            hovText.append(xLab+': '+str(xReal)+'%<br>'+yLab+': '+str(y[i])+'%<br>'+zLab+': '+str(200-x[i]-y[i])+'%')
         
     fig.add_trace(
         go.Scatter(
