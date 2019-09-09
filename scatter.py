@@ -2,6 +2,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import numpy as np
+import plotly.express as px
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -74,12 +76,6 @@ app.layout = html.Div([
     )
 ])
 
-@app.callback(
-    Output("out-all-types", "children"),
-    [Input("input", "value")],
-    )
-def update_output(input):
-    return '{}'.format(input)
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -87,10 +83,11 @@ def update_output(input):
      Input('yaxis-column', 'value'),
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
-     Input('year--slider', 'value')])
+     Input('year--slider', 'value'),
+     Input('input', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 year_value):
+                 year_value, title_1):
     dff = df[df['Year'] == year_value]
 
     return {
@@ -99,11 +96,14 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
             text=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
             mode='markers',
-            marker={
-                'size': 15,
-                'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
+            marker=dict(
+                size = 15,
+                opacity = 0.5,
+                line = {'width': 0.5, 'color': 'white'},
+                color = dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+                colorscale = 'Viridis',
+                showscale = True
+            )
         )],
         'layout': go.Layout(
             xaxis={
@@ -115,6 +115,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'type': 'linear' if yaxis_type == 'Linear' else 'log'
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+            title= title_1,
             hovermode='closest'
         )
     }
