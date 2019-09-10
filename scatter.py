@@ -88,9 +88,6 @@ app.layout = html.Div([
     html.Div(id='alignment-body', className='app-body', children=[
         html.Div([
             html.Div(id='alignment-control-tabs', className='control-tabs', children=[
-                dcc.Tabs(
-                    id='alignment-tabs', value='what-is',
-                    children=[
                         dcc.Tab(
                             label='Graph',
                             value='control-tab-customize',
@@ -118,8 +115,6 @@ app.layout = html.Div([
                                 
                             ]),
                         ),
-                    ],
-                ),
             ]),
         ]),
         dcc.Store(id='alignment-data-store'),
