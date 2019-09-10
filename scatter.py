@@ -2,6 +2,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import numpy as np
+import plotly.express as px
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -9,6 +11,27 @@ import plotly.graph_objs as go
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+COLORSCALES_DICT = [
+    {'value': 'Blackbody', 'label': 'Blackbody'},
+    {'value': 'Bluered', 'label': 'Bluered'},
+    {'value': 'Blues', 'label': 'Blues'},
+    {'value': 'Earth', 'label': 'Earth'},
+    {'value': 'Electric', 'label': 'Electric'},
+    {'value': 'Greens', 'label': 'Greens'},
+    {'value': 'Greys', 'label': 'Greys'},
+    {'value': 'Hot', 'label': 'Hot'},
+    {'value': 'Jet', 'label': 'Jet'},
+    {'value': 'Picnic', 'label': 'Picnic'},
+    {'value': 'Portland', 'label': 'Portland'},
+    {'value': 'Rainbow', 'label': 'Rainbow'},
+    {'value': 'RdBu', 'label': 'RdBu'},
+    {'value': 'Reds', 'label': 'Reds'},
+    {'value': 'Viridis', 'label': 'Viridis'},
+    {'value': 'YlGnBu', 'label': 'YlGnBu'},
+    {'value': 'YlOrRd', 'label': 'YlOrRd'},
+]
+
 
 df = pd.read_csv(
     'https://gist.githubusercontent.com/chriddyp/'
@@ -62,6 +85,46 @@ app.layout = html.Div([
     
     ]),
 
+    html.Div(id='alignment-body', className='app-body', children=[
+        html.Div([
+            html.Div(id='alignment-control-tabs', className='control-tabs', children=[
+                dcc.Tabs(
+                    id='alignment-tabs', value='what-is',
+                    children=[
+                        dcc.Tab(
+                            label='Graph',
+                            value='control-tab-customize',
+                            children=html.Div(className='control-tab', children=[
+                                html.Div([
+                                    html.H3('General', className='alignment-settings-section'),
+                                    html.Div(
+                                        className='app-controls-block',
+                                        children=[
+                                            html.Div(className='app-controls-name',
+                                                     children="Colorscale"),
+                                            dcc.Dropdown(
+                                                id='alignment-colorscale-dropdown',
+                                                className='app-controls-block-dropdown',
+                                                options=COLORSCALES_DICT,
+                                                value='Blackbody',
+                                            ),
+                                            html.Div(
+                                                className='app-controls-desc',
+                                                children='Choose the color theme of the viewer.'
+                                            )
+                                        ],
+                                    ),
+                                ]),
+                                
+                            ]),
+                        ),
+                    ],
+                ),
+            ]),
+        ]),
+        dcc.Store(id='alignment-data-store'),
+    ]),
+
     dcc.Graph(id='indicator-graphic'),
 
     dcc.Slider(
@@ -74,12 +137,6 @@ app.layout = html.Div([
     )
 ])
 
-@app.callback(
-    Output("out-all-types", "children"),
-    [Input("input", "value")],
-    )
-def update_output(input):
-    return '{}'.format(input)
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -87,10 +144,12 @@ def update_output(input):
      Input('yaxis-column', 'value'),
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
-     Input('year--slider', 'value')])
+     Input('year--slider', 'value'),
+     Input('input', 'value'),
+     Input('alignment-colorscale-dropdown', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 year_value):
+                 year_value, title_1, alignment_colorscale_dropdown):
     dff = df[df['Year'] == year_value]
 
     return {
@@ -99,11 +158,14 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
             text=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
             mode='markers',
-            marker={
-                'size': 15,
-                'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
+            marker=dict(
+                size = 15,
+                opacity = 0.5,
+                line = {'width': 0.5, 'color': 'white'},
+                color = dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+                colorscale = alignment_colorscale_dropdown,
+                showscale = True
+            )
         )],
         'layout': go.Layout(
             xaxis={
@@ -115,6 +177,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'type': 'linear' if yaxis_type == 'Linear' else 'log'
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+            title= title_1,
             hovermode='closest'
         )
     }
