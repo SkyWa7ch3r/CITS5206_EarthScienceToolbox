@@ -93,6 +93,10 @@ app.layout = html.Div([
             html.Button('Swap Axes', id='swap'),
             ]),
 
+        html.Div([
+            html.Button('Show the Linear Fit', id='linear'),
+            ]),
+
 
         html.Div([
             dcc.Input(
@@ -154,18 +158,24 @@ app.layout = html.Div([
      Input('yaxis-type', 'value'),
      Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
-     Input('swap', 'n_clicks')])
+     Input('swap', 'n_clicks'),
+     Input('linear', 'n_clicks')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, swap):
+                 title_1, alignment_colorscale_dropdown, swap, linear):
     
-    #slope, intercept, r_value, p_value, std_err = stats.linregress(x,yi),
-    #line = slope*x+intercept,
+    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
+    line = slope*df[xaxis_column_name]+intercept
+
+
     if swap != None and int(swap) % 2 == 1:
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
 
+    l_click = False
+    if linear != None and int(linear) % 2 == 1:
+        l_click = True
     
     return {
         'data': [go.Scatter(
@@ -180,9 +190,19 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 color = df[xaxis_column_name],
                 colorscale = alignment_colorscale_dropdown,
                 showscale = True
-            )
+            ),
+
         ),
-            ],
+        
+        go.Scatter(
+                x=df[xaxis_column_name],
+                y=line,
+                mode='lines',
+                marker=go.Marker(color='rgb(31, 119, 180)'),
+                name='Fit',
+                visible=l_click
+                    )
+        ],
 
         'layout': go.Layout(
             xaxis={
