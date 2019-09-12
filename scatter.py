@@ -107,6 +107,19 @@ app.layout = html.Div([
             + [html.Div(id="out-all-types")]
             ),
 
+        html.Div([
+            dcc.Input(
+                id="x_label",
+                type="text",
+                value=cnames[0],
+                placeholder=cnames[0]),
+
+            dcc.Input(
+                id="y_label",
+                type="text",
+                value=cnames[-1],
+                placeholder=cnames[-1])
+            ]),
 
     
     ]),
@@ -159,10 +172,12 @@ app.layout = html.Div([
      Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
      Input('swap', 'n_clicks'),
-     Input('linear', 'n_clicks')])
+     Input('linear', 'n_clicks'),
+     Input('x_label', 'value'),
+     Input('y_label', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, swap, linear):
+                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -198,7 +213,14 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 x=df[xaxis_column_name],
                 y=line,
                 mode='lines',
-                marker=go.Marker(color='rgb(31, 119, 180)'),
+                marker=dict(
+                    size = 15,
+                    opacity = 0.5,
+                    line = {'width': 0.5, 'color': 'white'},
+                    color = 'black',
+                    colorscale = alignment_colorscale_dropdown,
+                    showscale = True
+            ),
                 name='Fit',
                 visible=l_click
                     )
@@ -206,11 +228,11 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 
         'layout': go.Layout(
             xaxis={
-                'title': xaxis_column_name,
+                'title': x_label,
                 'type': 'linear' if xaxis_type == 'Linear' else 'log'
             },
             yaxis={
-                'title': yaxis_column_name,
+                'title': y_label,
                 'type': 'linear' if yaxis_type == 'Linear' else 'log'
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
