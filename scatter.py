@@ -88,7 +88,12 @@ app.layout = html.Div([
             )
         ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
-        
+                
+        html.Div([
+            html.Button('Swap Axes', id='swap'),
+            ]),
+
+
         html.Div([
             dcc.Input(
                 id="title",
@@ -96,7 +101,9 @@ app.layout = html.Div([
                 placeholder="title")
             ]
             + [html.Div(id="out-all-types")]
-            )
+            ),
+
+
     
     ]),
 
@@ -146,13 +153,19 @@ app.layout = html.Div([
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
      Input('title', 'value'),
-     Input('alignment-colorscale-dropdown', 'value')])
+     Input('alignment-colorscale-dropdown', 'value'),
+     Input('swap', 'n_clicks')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown):
+                 title_1, alignment_colorscale_dropdown, swap):
     
     #slope, intercept, r_value, p_value, std_err = stats.linregress(x,yi),
     #line = slope*x+intercept,
+    if swap != None and int(swap) % 2 == 1:
+        tmp = xaxis_column_name
+        xaxis_column_name = yaxis_column_name
+        yaxis_column_name = tmp
+
     
     return {
         'data': [go.Scatter(
