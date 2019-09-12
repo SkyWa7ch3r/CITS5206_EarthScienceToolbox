@@ -4,13 +4,34 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import numpy as np
 import plotly.express as px
-
+from scipy import stats
+from numpy import arange,array,ones
 import pandas as pd
 import plotly.graph_objs as go
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+
+file_name='UWA_acid_base_table.xlsx'
+
+
+def read_file(filename):
+    try:
+        if 'csv' in filename:
+            dff = pd.read_csv(filename)
+        elif ('xls' or 'xlsx') in filename:
+            dff = pd.read_excel(filename)
+    except Exception as e:
+        print (e)
+        return u'There was an error opening {}'.format(filename)
+    return dff
+
+
+df = read_file(file_name)
+
+cnames = df.select_dtypes(include='number').columns.values
 
 COLORSCALES_DICT = [
     {'value': 'Blackbody', 'label': 'Blackbody'},
@@ -33,13 +54,7 @@ COLORSCALES_DICT = [
 ]
 
 
-df = pd.read_csv(
-    'https://gist.githubusercontent.com/chriddyp/'
-    'cb5392c35661370d95f300086accea51/raw/'
-    '8e0768211f6b747c0db42a9ce9a0937dafcbd8b2/'
-    'indicators.csv')
 
-available_indicators = df['Indicator Name'].unique()
 
 app.layout = html.Div([
     html.Div([
@@ -47,8 +62,8 @@ app.layout = html.Div([
         html.Div([
             dcc.Dropdown(
                 id='xaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Fertility rate, total (births per woman)'
+                options=[{'label': i, 'value': i} for i in cnames],
+                value=cnames[0],
             ),
             dcc.RadioItems(
                 id='xaxis-type',
@@ -62,8 +77,8 @@ app.layout = html.Div([
         html.Div([
             dcc.Dropdown(
                 id='yaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Life expectancy at birth, total (years)'
+                options=[{'label': i, 'value': i} for i in cnames],
+                value=cnames[-1],
             ),
             dcc.RadioItems(
                 id='yaxis-type',
@@ -76,7 +91,7 @@ app.layout = html.Div([
         
         html.Div([
             dcc.Input(
-                id="input",
+                id="title",
                 type="text",
                 placeholder="title")
             ]
@@ -121,15 +136,6 @@ app.layout = html.Div([
     ]),
 
     dcc.Graph(id='indicator-graphic'),
-
-    dcc.Slider(
-        id='year--slider',
-        min=df['Year'].min(),
-        max=df['Year'].max(),
-        value=df['Year'].max(),
-        marks={str(year): str(year) for year in df['Year'].unique()},
-        step=None
-    )
 ])
 
 
@@ -139,29 +145,32 @@ app.layout = html.Div([
      Input('yaxis-column', 'value'),
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
-     Input('year--slider', 'value'),
-     Input('input', 'value'),
+     Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 year_value, title_1, alignment_colorscale_dropdown):
-    dff = df[df['Year'] == year_value]
-
+                 title_1, alignment_colorscale_dropdown):
+    
+    #slope, intercept, r_value, p_value, std_err = stats.linregress(x,yi),
+    #line = slope*x+intercept,
+    
     return {
         'data': [go.Scatter(
-            x=dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
-            y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
-            text=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
+            x=df[xaxis_column_name],
+            y=df[yaxis_column_name],
+            text=xaxis_column_name,
             mode='markers',
             marker=dict(
                 size = 15,
                 opacity = 0.5,
                 line = {'width': 0.5, 'color': 'white'},
-                color = dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+                color = df[xaxis_column_name],
                 colorscale = alignment_colorscale_dropdown,
                 showscale = True
             )
-        )],
+        ),
+            ],
+
         'layout': go.Layout(
             xaxis={
                 'title': xaxis_column_name,
