@@ -53,6 +53,23 @@ COLORSCALES_DICT = [
     {'value': 'YlOrRd', 'label': 'YlOrRd'},
 ]
 
+MARKERS_DICT = [
+    {'value': 'circle', 'label': 'circle'},
+    {'value': 'square', 'label': 'square'},
+    {'value': 'diamond', 'label': 'diamond'},
+    {'value': 'cross', 'label': 'cross'},
+    {'value': 'x', 'label': 'x'},
+    {'value': 'triangle-up', 'label': 'triangle-up'},
+    {'value': 'pentagon', 'label': 'pentagon'},
+    {'value': 'hexagon', 'label': 'hexagon'},
+    {'value': 'hexagon2', 'label': 'hexagon2'},
+    {'value': 'octagon', 'label': 'octagon'},
+    {'value': 'star', 'label': 'star'},
+    {'value': 'hexagram', 'label': 'hexagram'},
+    {'value': 'star-triangle-up', 'label': 'star-triangle-up'},
+    {'value': 'hourglass', 'label': 'hourglass'},
+    {'value': 'bowtie', 'label': 'bowtie'},
+]
 
 
 
@@ -163,6 +180,13 @@ app.layout = html.Div([
         dcc.Store(id='alignment-data-store'),
     ]),
 
+    dcc.Dropdown(
+            id='alignment-markers-dropdown',
+            className='markers-controls-block-dropdown',
+            options=MARKERS_DICT,
+            value='circle',
+    ),
+
     dcc.Graph(id='indicator-graphic'),
 ])
 
@@ -180,10 +204,11 @@ app.layout = html.Div([
      Input('x_label', 'value'),
      Input('y_label', 'value'),
      Input('GL', 'n_clicks'),
-     Input('OL', 'n_clicks')])
+     Input('OL', 'n_clicks'),
+     Input('alignment-markers-dropdown', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label, GL, OL):
+                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label, GL, OL, alignment_markers_dropdown):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -218,7 +243,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 line = {'width': 0.5, 'color': 'white'},
                 color = df[xaxis_column_name],
                 colorscale = alignment_colorscale_dropdown,
-                showscale = True
+                showscale = True,
+                symbol = alignment_markers_dropdown
             ),
 
         ),
@@ -233,7 +259,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                     line = {'width': 0.5, 'color': 'white'},
                     color = 'black',
                     colorscale = alignment_colorscale_dropdown,
-                    showscale = True
+                    showscale = True,
             ),
                 name='Fit',
                 visible=l_click
