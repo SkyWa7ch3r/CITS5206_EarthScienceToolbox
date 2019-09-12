@@ -121,6 +121,10 @@ app.layout = html.Div([
                 placeholder=cnames[-1])
             ]),
 
+        html.Div([
+            html.Button('Hide or Show grid line', id='GL'),
+            html.Button('Hide or Show zero line', id='OL')
+            ])
     
     ]),
 
@@ -174,10 +178,12 @@ app.layout = html.Div([
      Input('swap', 'n_clicks'),
      Input('linear', 'n_clicks'),
      Input('x_label', 'value'),
-     Input('y_label', 'value')])
+     Input('y_label', 'value'),
+     Input('GL', 'n_clicks'),
+     Input('OL', 'n_clicks')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label):
+                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label, GL, OL):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -192,6 +198,14 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if linear != None and int(linear) % 2 == 1:
         l_click = True
     
+    G_click = False
+    if GL != None and int(GL) % 2 == 1:
+        G_click = True
+
+    O_click = False
+    if OL != None and int(OL) % 2 == 1:
+        O_click = True
+
     return {
         'data': [go.Scatter(
             x=df[xaxis_column_name],
@@ -229,12 +243,17 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         'layout': go.Layout(
             xaxis={
                 'title': x_label,
-                'type': 'linear' if xaxis_type == 'Linear' else 'log'
+                'type': 'linear' if xaxis_type == 'Linear' else 'log',
+                'showgrid': G_click,
+                'zeroline': O_click
             },
             yaxis={
                 'title': y_label,
-                'type': 'linear' if yaxis_type == 'Linear' else 'log'
+                'type': 'linear' if yaxis_type == 'Linear' else 'log',
+                'showgrid': G_click,
+                'zeroline': O_click
             },
+
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
             hovermode='closest'
