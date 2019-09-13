@@ -34,7 +34,14 @@ def read_file(filename):
 
 df = read_file(file_name)
 
-cnames = df.select_dtypes(include='number').columns.values
+names = df.select_dtypes(exclude='number').columns.values
+xnames = []
+for col in names:
+    if 'date' in col.lower() or 'time' in col.lower():
+        df[col] = pd.to_datetime(df[col], infer_datetime_format=True)
+        xnames.append(col)
+
+ynames = df.select_dtypes(include='number').columns.values
 
 COLORSCALES_DICT = [
     {'value': 'Blackbody', 'label': 'Blackbody'},
@@ -63,8 +70,8 @@ app.layout = html.Div([
         html.Div([
             dcc.Dropdown(
                 id='xaxis-column',
-                options=[{'label': i, 'value': i} for i in cnames],
-                value=cnames[0],
+                options=[{'label': i, 'value': i} for i in xnames],
+                value=xnames[0],
             ),
             dcc.RadioItems(
                 id='xaxis-type',
@@ -78,8 +85,8 @@ app.layout = html.Div([
         html.Div([
             dcc.Dropdown(
                 id='yaxis-column',
-                options=[{'label': i, 'value': i} for i in cnames],
-                value=cnames[-1],
+                options=[{'label': i, 'value': i} for i in ynames],
+                value=[ynames[0]],
                 multi=True,
             ),
             dcc.RadioItems(
@@ -98,9 +105,19 @@ app.layout = html.Div([
                 placeholder="title")
             ]
             + [html.Div(id="out-all-types")]
-            )
+        ),
+        html.Div([
+            html.H5('X-Axis Title:'),
+            dcc.Input(id='xaxis_title', value=xnames[0], type='text')
+            ]),
+        html.Div([
+            html.H5('Y-Axis Title:'),
+            dcc.Input(id='yaxis_title', value=ynames[0], type='text')
+            ]),
     
     ]),
+
+
 
         html.Div(id='alignment-body', className='app-body', children=[
         html.Div([
@@ -147,36 +164,45 @@ app.layout = html.Div([
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
      Input('title', 'value'),
-     Input('alignment-colorscale-dropdown', 'value')])
+     Input('alignment-colorscale-dropdown', 'value'),
+     Input('xaxis_title', 'value'),
+     Input('yaxis_title', 'value'),])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown):
+                 title_1, alignment_colorscale_dropdown,
+                 xaxis_title, yaxis_title):
+    
+    traces_list = []
+    for col in yaxis_column_name:
+        traces_list.append(
+            go.Scatter(
+                x=df[xaxis_column_name],
+                y=df[col],
+                text=xaxis_column_name,
+                mode='lines',
+                name=col,
+                marker=dict(
+                    size = 15,
+                    opacity = 0.5,
+                    line = {'width': 0.5, 'color': 'white'},
+                    color = df[col],
+                    colorscale = alignment_colorscale_dropdown,
+                    showscale = True
+                )
+            )
+        )
         
     return {
-        'data': [go.Scatter(
-            x=df[xaxis_column_name],
-            y=df[yaxis_column_name],
-            text=xaxis_column_name,
-            mode='lines',
-            marker=dict(
-                size = 15,
-                opacity = 0.5,
-                line = {'width': 0.5, 'color': 'white'},
-                color = df[xaxis_column_name],
-                colorscale = alignment_colorscale_dropdown,
-                showscale = True
-            )
-        ),
-            ],
+        'data': traces_list,
 
         'layout': go.Layout(
             xaxis={
-                'title': xaxis_column_name,
-                'type': 'linear' if xaxis_type == 'Linear' else 'log'
+                'title' : xaxis_title,
+                'type' : xaxis_type.lower(),
             },
             yaxis={
-                'title': yaxis_column_name,
-                'type': 'linear' if yaxis_type == 'Linear' else 'log'
+                'title' : yaxis_title,
+                'type' : yaxis_type.lower(),
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
