@@ -128,14 +128,12 @@ app.layout = html.Div([
             dcc.Input(
                 id="x_label",
                 type="text",
-                value=cnames[0],
-                placeholder=cnames[0]),
+                placeholder="x_label"),
 
             dcc.Input(
                 id="y_label",
                 type="text",
-                value=cnames[-1],
-                placeholder=cnames[-1])
+                placeholder="y_label")
             ]),
 
         html.Div([
@@ -218,6 +216,12 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
+
+
+    if swap != None and int(swap) % 2 == 1:
+        tmp = x_label
+        x_label = y_label
+        y_label = tmp
 
     l_click = False
     if linear != None and int(linear) % 2 == 1:
