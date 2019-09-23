@@ -131,12 +131,12 @@ app.layout = html.Div([
                 type="text",
                 placeholder="title")
             ]
-        , style={'display' : 'inline-block'}),
+        , style={'display' : 'inline-block', 'padding-right' : '5px'}),
         #This is the title for the X axes
         html.Div([
             html.H5('X-Axis Title:'),
             dcc.Input(id='xaxis_title', value=xnames[0], type='text')
-            ], style={'display' : 'inline-block'}),
+            ], style={'display' : 'inline-block', 'padding-right' : '5px'}),
         #This is the title for Y axes
         html.Div([
             html.H5('Y-Axis Title:'),
