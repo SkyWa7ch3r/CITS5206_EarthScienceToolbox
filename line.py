@@ -99,12 +99,6 @@ app.layout = html.Div([
                 options=[{'label': i, 'value': i} for i in xnames],
                 value=xnames[0],
             ),
-            dcc.RadioItems(
-                id='xaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
         ],
         style={'width': '48%', 'display': 'inline-block'}),
 
@@ -199,7 +193,6 @@ app.layout = html.Div([
     Output('indicator-graphic', 'figure'),
     [Input('xaxis-column', 'value'),
      Input('yaxis-column', 'value'),
-     Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
      Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
@@ -209,7 +202,7 @@ app.layout = html.Div([
      Input('OL', 'n_clicks'),
      Input('alignment-markers-dropdown', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
-                 xaxis_type, yaxis_type,
+                 yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
                  alignment_markers_dropdown):
@@ -250,7 +243,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         'layout': go.Layout(
             xaxis={
                 'title' : xaxis_title,
-                'type' : xaxis_type.lower(),
                 'showgrid': G_click,
                 'zeroline': O_click
             },
