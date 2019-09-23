@@ -244,7 +244,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             xaxis={
                 'title' : xaxis_title,
                 'showgrid': G_click,
-                'zeroline': O_click
+                'zeroline': O_click,
+                'rangeslider': {'visible': True}, 'type': 'date'
             },
             yaxis={
                 'title' : yaxis_title,
