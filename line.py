@@ -63,6 +63,32 @@ COLORSCALES_DICT = [
     {'value': 'YlOrRd', 'label': 'YlOrRd'},
 ]
 
+MARKERS_DICT = [
+    {'value': 'circle', 'label': 'circle'},
+    {'value': 'square', 'label': 'square'},
+    {'value': 'diamond', 'label': 'diamond'},
+    {'value': 'cross', 'label': 'cross'},
+    {'value': 'x', 'label': 'x'},
+    {'value': 'triangle-up', 'label': 'triangle-up'},
+    {'value': 'pentagon', 'label': 'pentagon'},
+    {'value': 'hexagon', 'label': 'hexagon'},
+    {'value': 'hexagon2', 'label': 'hexagon2'},
+    {'value': 'octagon', 'label': 'octagon'},
+    {'value': 'star', 'label': 'star'},
+    {'value': 'hexagram', 'label': 'hexagram'},
+    {'value': 'star-triangle-up', 'label': 'star-triangle-up'},
+    {'value': 'hourglass', 'label': 'hourglass'},
+    {'value': 'bowtie', 'label': 'bowtie'},
+]
+
+LINESTYLE_DICT = [
+
+    {'value': 'solid', 'label': 'solid'}, 
+    {'value': 'dash', 'label': 'dash'},
+    {'value': 'dot', 'label': 'dot'},
+    {'value': 'dashdot', 'label': 'dashdot'}
+]
+
 
 app.layout = html.Div([
      html.Div([
@@ -97,23 +123,29 @@ app.layout = html.Div([
             )
         ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
-        
+        #This is the form for the title of the plot
         html.Div([
+            html.H5('Plot Title'),
             dcc.Input(
                 id="title",
                 type="text",
                 placeholder="title")
             ]
-            + [html.Div(id="out-all-types")]
-        ),
+        , style={'display' : 'inline-block', 'padding-right' : '5px'}),
+        #This is the title for the X axes
         html.Div([
             html.H5('X-Axis Title:'),
             dcc.Input(id='xaxis_title', value=xnames[0], type='text')
-            ]),
+            ], style={'display' : 'inline-block', 'padding-right' : '5px'}),
+        #This is the title for Y axes
         html.Div([
             html.H5('Y-Axis Title:'),
             dcc.Input(id='yaxis_title', value=ynames[0], type='text')
-            ]),
+            ], style={'display' : 'inline-block'}),
+        html.Div([
+            html.Button('Hide or Show grid line', id = 'GL'),
+            html.Button('Hide or Show zero line', id = 'OL')
+            ])
     
     ]),
 
@@ -154,6 +186,12 @@ app.layout = html.Div([
         dcc.Store(id='alignment-data-store'),
     ]),
 
+    dcc.Dropdown(
+        id = 'alignment-markers-dropdown',
+        className = 'markers-controls-block-dropdown',
+        options = MARKERS_DICT,
+        value = 'square'),
+
     dcc.Graph(id='indicator-graphic'),
 ])
 
@@ -166,12 +204,25 @@ app.layout = html.Div([
      Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
      Input('xaxis_title', 'value'),
-     Input('yaxis_title', 'value'),])
+     Input('yaxis_title', 'value'),
+     Input('GL', 'n_clicks'),
+     Input('OL', 'n_clicks'),
+     Input('alignment-markers-dropdown', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
                  title_1, alignment_colorscale_dropdown,
-                 xaxis_title, yaxis_title):
+                 xaxis_title, yaxis_title, GL, OL,
+                 alignment_markers_dropdown):
     
+    G_click = False
+    if GL != None and int(GL) % 2 == 1:
+        G_click = True
+
+    O_click = False
+    if OL != None and int(OL) % 2 == 1:
+        O_click = True
+
+
     traces_list = []
     for col in yaxis_column_name:
         traces_list.append(
@@ -187,7 +238,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                     line = {'width': 0.5, 'color': 'white'},
                     color = df[col],
                     colorscale = alignment_colorscale_dropdown,
-                    showscale = True
+                    showscale = True,
+                    symbol = alignment_markers_dropdown
                 )
             )
         )
@@ -199,10 +251,14 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             xaxis={
                 'title' : xaxis_title,
                 'type' : xaxis_type.lower(),
+                'showgrid': G_click,
+                'zeroline': O_click
             },
             yaxis={
                 'title' : yaxis_title,
                 'type' : yaxis_type.lower(),
+                'showgrid': G_click,
+                'zeroline': O_click
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
