@@ -65,7 +65,7 @@ def render_content(tab):
             dcc.Upload(
                 id = 'data',
                 children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
-                className='data',
+                className='data-upload',
             ),
             html.Div(id='output-data-upload'),
         ])
@@ -120,9 +120,19 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
 
+    describe = df.describe(include='all', percentiles=[0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95])
+    describe = describe.reset_index()
+    describe = describe.rename(columns={'index' : 'Features'})
+
     return html.Div([
-        html.H5(filename),
-        html.H6(datetime.fromtimestamp(date)),
+        #Show the uploaded file name and last modified timestamp
+        html.H5("Uploaded File: "+ filename),
+        html.H6("Date Last Modified: " + str(datetime.fromtimestamp(date))),
+
+        dash_table.DataTable(
+            data=describe.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in describe.columns],
+        ),
 
         dash_table.DataTable(
             data=df.to_dict('records'),
