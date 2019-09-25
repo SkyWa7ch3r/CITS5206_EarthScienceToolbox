@@ -7,6 +7,7 @@ from datetime import datetime
 import base64
 import io
 import dash_table
+import plotly.graph_objs as go
 
 from dash.dependencies import Input, Output, State
 
@@ -68,6 +69,10 @@ def render_content(tab):
                 className='data-upload',
             ),
             html.Div(id='output-data-upload'),
+            
+            dcc.Graph(
+                id="scatterplot-matrix", 
+            ),
         ])
     elif tab == 'scatter':
         return html.Div([
@@ -162,6 +167,8 @@ def update_output(content, name, date):
             parse_contents(content, name, date)
         ]
         return children
+
+@app.callback(Output('scatterplot-matrix', 'figure'))
 
 
 if __name__ == '__main__':
