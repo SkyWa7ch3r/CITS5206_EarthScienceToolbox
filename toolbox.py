@@ -63,9 +63,9 @@ def render_content(tab):
         return html.Div([
             html.H2('Upload Your Dataset'),
             dcc.Upload(
-                id = 'data-upload',
+                id = 'data',
                 children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
-                className='data-upload',
+                className='data',
             ),
             html.Div(id='output-data-upload'),
         ])
@@ -122,7 +122,7 @@ def parse_contents(contents, filename, date):
 
     return html.Div([
         html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
+        html.H6(datetime.fromtimestamp(date)),
 
         dash_table.DataTable(
             data=df.to_dict('records'),
@@ -132,14 +132,14 @@ def parse_contents(contents, filename, date):
 
 
 @app.callback(Output('output-data-upload', 'children'),
-              [Input('upload-data', 'contents')],
-              [State('upload-data', 'filename'),
-               State('upload-data', 'last_modified')])
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    if list_of_contents is not None:
+              [Input('data', 'contents')],
+              [State('data', 'filename'),
+               State('data', 'last_modified')])
+def update_output(content, name, date):
+    if content is not None:
         children = [
-            parse_contents(c, n, d) for c, n, d in
-            zip(list_of_contents, list_of_names, list_of_dates)]
+            parse_contents(content, name, date)
+        ]
         return children
 
 
