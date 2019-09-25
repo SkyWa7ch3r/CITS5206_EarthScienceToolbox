@@ -124,21 +124,32 @@ def parse_contents(contents, filename, date):
     describe = describe.reset_index()
     describe = describe.rename(columns={'index' : 'Features'})
 
+    size = df.shape[0] * df.shape[1]
+    missing_cells = df.isna().sum().sum()
+    missing_stat = round((missing_cells / size)*100,3)
+
     return html.Div([
         #Show the uploaded file name and last modified timestamp
-        html.H5("Uploaded File: "+ filename),
-        html.H6("Date Last Modified: " + str(datetime.fromtimestamp(date))),
-
+        html.H3("Uploaded File: {}".format(filename)),
+        html.H4("Last Modified: {}".format(str(datetime.fromtimestamp(date)))),
+        #Shown the contents of describe in a data table
         dash_table.DataTable(
             data=describe.to_dict('records'),
             columns=[{'name': i, 'id': i} for i in describe.columns],
+            fixed_columns={ 'headers': True, 'data': 1 },
+            # Make the table scroll for large X values
+            style_table={'overflowX' : 'scroll'},
         ),
-
+        html.H2("Your Uploaded Data"),
+        html.H4("It contains {} cells, of which {} are missing values".format(size, missing_cells)),
+        html.H4("The missing data accounts for {}% of the data set.".format(missing_stat)),
         dash_table.DataTable(
             data=df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in df.columns]
+            columns=[{'name': i, 'id': i} for i in df.columns],
+            fixed_rows={ 'headers': True, 'data': 0 },
+            style_table={'overflowX' : 'scroll', 'overflowY' : 'scroll'},
         ),
-    ])
+    ], style={'width' : '50%'})
 
 
 @app.callback(Output('output-data-upload', 'children'),
