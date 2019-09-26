@@ -47,11 +47,10 @@
     border-top: 3px solid #d6c544 !important;
 }
 .data-upload {
-    width : 50%;
-    height : 60px;
-    line-height : 60px;
+    height : 50px;
+    line-height : 50px;
     border-width : 1px;
-    border-style : dashed;
+    border-style : solid;
     border-radius : 5px;
     text-align : center;
 }

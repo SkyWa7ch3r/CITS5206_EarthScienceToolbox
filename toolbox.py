@@ -62,18 +62,24 @@ app.layout = html.Div(children = [
 def render_content(tab):
     if tab == 'upload':
         return html.Div([
-            html.H2('Upload Your Dataset'),
-            dcc.Upload(
-                id = 'data',
-                children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
-                className='data-upload',
+            html.Div([
+                html.H2('Upload Your Dataset'),
+                dcc.Upload(
+                    id = 'data',
+                    children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
+                    className='data-upload',
+                ),
+                html.Div(id='output-data-upload'),
+            ], style={'float' : 'left' , 'width' : '33%', 'padding-right' : '10px'}),
+            html.Div(
+                id='output-data-upload-2', 
+                style={'float' : 'left', 'width' : '33%'}
             ),
-            html.Div(id='output-data-upload'),
-            
             dcc.Graph(
                 id="scatterplot-matrix", 
+                style={'float' : 'right', 'width' : '33%'},
             ),
-        ])
+        ], style={'height' : 'screen.height'})
     elif tab == 'scatter':
         return html.Div([
             html.H3('Tab content 2')
@@ -124,16 +130,20 @@ def parse_contents(contents, filename, date):
         return html.Div([
             'There was an error processing this file.'
         ])
-
+    #Use describe to get basic stats from datasets including percentiles
     describe = df.describe(include='all', percentiles=[0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95])
+    #Reset the index to have the Features column appear in describe result
     describe = describe.reset_index()
+    #Rename the index column to Features
     describe = describe.rename(columns={'index' : 'Features'})
-
+    #Get the size of the dataframe in number of cells
     size = df.shape[0] * df.shape[1]
+    #Get the number of missing cells (its a sum of the missing cells in each column)
     missing_cells = df.isna().sum().sum()
+    #Put it in terms of percentage to 3 decimal places.
     missing_stat = round((missing_cells / size)*100,3)
 
-    return html.Div([
+    children_1 = html.Div([
         #Show the uploaded file name and last modified timestamp
         html.H3("Uploaded File: {}".format(filename)),
         html.H4("Last Modified: {}".format(str(datetime.fromtimestamp(date)))),
@@ -141,34 +151,41 @@ def parse_contents(contents, filename, date):
         dash_table.DataTable(
             data=describe.to_dict('records'),
             columns=[{'name': i, 'id': i} for i in describe.columns],
+            #Fix the First column containing the feature indexes
             fixed_columns={ 'headers': True, 'data': 1 },
             # Make the table scroll for large X values
             style_table={'overflowX' : 'scroll'},
         ),
+    ])
+
+    children_2 = html.Div([
+        #Give some headers and show filename and date last modified
         html.H2("Your Uploaded Data"),
-        html.H4("It contains {} cells, of which {} are missing values".format(size, missing_cells)),
-        html.H4("The missing data accounts for {}% of the data set.".format(missing_stat)),
+        html.P("It contains {} cells, of which {} are missing values.".format(size, missing_cells)),
+        html.P("The missing data accounts for {}% of the data set.".format(missing_stat)),
+        #Show the data
         dash_table.DataTable(
             data=df.to_dict('records'),
             columns=[{'name': i, 'id': i} for i in df.columns],
+            #Fix the headers on the table
             fixed_rows={ 'headers': True, 'data': 0 },
+            #Ensure scrolling for smaller screens
             style_table={'overflowX' : 'scroll', 'overflowY' : 'scroll'},
         ),
-    ], style={'width' : '50%'})
+    ])
+
+    return children_1, children_2
 
 
-@app.callback(Output('output-data-upload', 'children'),
+@app.callback([Output('output-data-upload', 'children'),
+               Output('output-data-upload-2', 'children')],
               [Input('data', 'contents')],
               [State('data', 'filename'),
                State('data', 'last_modified')])
 def update_output(content, name, date):
     if content is not None:
-        children = [
-            parse_contents(content, name, date)
-        ]
-        return children
-
-@app.callback(Output('scatterplot-matrix', 'figure'))
+        children_1, children_2 = parse_contents(content, name, date)
+        return children_1, children_2
 
 
 if __name__ == '__main__':
