@@ -157,7 +157,23 @@ def parse_contents(contents, filename, date):
             style_table={'overflowX' : 'scroll'},
         ),
     ])
-
+    conditionals = [
+        {
+            'if': {'row_index': 'odd'},
+            'backgroundColor': 'rgb(248, 248, 248)'
+        },
+    ]
+    #Create the conditionals to highlight the cells which are empty
+    for col in df.columns:
+        conditionals.append(
+        {
+            'if': {
+                'column_id': col,
+                'filter_query': '{{{}}} is nil'.format(col)
+            },
+        'backgroundColor': 'orangered'
+        }
+    )
     children_2 = html.Div([
         #Give some headers and show filename and date last modified
         html.H2("Your Uploaded Data"),
@@ -170,7 +186,15 @@ def parse_contents(contents, filename, date):
             #Fix the headers on the table
             fixed_rows={ 'headers': True, 'data': 0 },
             #Ensure scrolling for smaller screens
-            style_table={'overflowX' : 'scroll', 'overflowY' : 'scroll'},
+            style_table={
+                'overflowX' : 'scroll', 
+                'overflowY' : 'scroll'
+            },
+            style_data_conditional=conditionals,
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            }
         ),
     ])
 
