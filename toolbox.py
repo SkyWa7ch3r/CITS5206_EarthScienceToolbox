@@ -8,6 +8,8 @@ import base64
 import io
 import dash_table
 import plotly.graph_objs as go
+import uuid
+from flask_caching import Cache
 
 from dash.dependencies import Input, Output, State
 
@@ -20,18 +22,23 @@ WARNING: THIS DOES DISABLE OTHER WARNINGS OR EXCEPTIONS FOR CALLBACKS
 NOT BEING FOUND INSIDE THE PYTHON FILE
 '''
 app.config['suppress_callback_exceptions']=True
+#Create the cache needed to store the dataframe
+cache = Cache(app.server, config={
+    'CACHE_TYPE' : 'filesystem',
+    'CACHE_DIR' : 'cache',
+})
 
-#Initialize the dataframe variable
-df = pd.DataFrame()
+session_id = str(uuid.uuid4())
 
 #Begin the layout of the app layout
 app.layout = html.Div(children = [
+    html.Div(session_id, id='session-id', style={'display': 'none'}),
     #Create the header
     html.Div(
         className = "header",
         children = [
             html.Img(
-                src="https://skyraidnextcloud.duckdns.org/index.php/s/Axc37NW9wjaKMyr/preview", 
+                src="https://skyraidnextcloud.duckdns.org/index.php/s/Axc37NW9wjaKMyr/preview",
                 className="header-logo"
             ),
             html.H1("Earth Science Toolbox", className="header-title"),
@@ -62,24 +69,24 @@ app.layout = html.Div(children = [
 def render_content(tab):
     if tab == 'upload':
         return html.Div([
-            html.Div([
-                html.H2('Upload Your Dataset'),
-                dcc.Upload(
-                    id = 'data',
-                    children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
-                    className='data-upload',
-                ),
-                html.Div(id='output-data-upload'),
-            ], style={'float' : 'left' , 'width' : '33%', 'padding-right' : '10px'}),
+            dcc.Tabs(
+                id='tabs-styled-in-upload',
+                value='upload-data',
+                className="custom-tabs-container-upload",
+                vertical=True,
+                children=[
+                    dcc.Tab(label='Upload Your Data', value='upload-data', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
+                    dcc.Tab(label='Your Uploaded Data', value='uploaded', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
+                    dcc.Tab(label='Basic Description of Data', value='description', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
+                    dcc.Tab(label='Scatter Plot Matrix', value='scatterplot-matrix', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
+                ],
+            ),
+             #The HTML Division to show the content
             html.Div(
-                id='output-data-upload-2', 
-                style={'float' : 'left', 'width' : '33%'}
+                id='tabs-content-upload',
+                className="custom-tabs-upload",
             ),
-            dcc.Graph(
-                id="scatterplot-matrix", 
-                style={'float' : 'right', 'width' : '33%'},
-            ),
-        ], style={'height' : 'screen.height'})
+        ])
     elif tab == 'scatter':
         return html.Div([
             html.H3('Tab content 2')
@@ -97,12 +104,9 @@ def render_content(tab):
             html.H3('Tab content 4')
         ])
 
-'''
-BEGIN CALLBACKS FOR EACH TAB SHOULD BE DONE IN THE 
-ORDER AS DETERMINED BY THE TABS
-'''
 
 '''
+------------------ DATA CLEANING RECOMMENDATION PAGE AND DATA UPLOAD --------------------------------
 Content for the Data Upload Page is below
 Please look into the comments for what each one is for
 Some of it is derived by https://dash.plot.ly/dash-core-components/upload
@@ -122,6 +126,7 @@ def parse_contents(contents, filename, date):
         elif 'xlsx' in filename:
             # Assume that the user uploaded an excel file
             df = pd.read_excel(io.BytesIO(decoded))
+        
     #If an exception occured when uploading the file
     except Exception as e:
         #Print the exception in the terminal
@@ -130,86 +135,154 @@ def parse_contents(contents, filename, date):
         return html.Div([
             'There was an error processing this file.'
         ])
-    #Use describe to get basic stats from datasets including percentiles
-    describe = df.describe(include='all', percentiles=[0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95])
-    #Reset the index to have the Features column appear in describe result
-    describe = describe.reset_index()
-    #Rename the index column to Features
-    describe = describe.rename(columns={'index' : 'Features'})
-    #Get the size of the dataframe in number of cells
-    size = df.shape[0] * df.shape[1]
-    #Get the number of missing cells (its a sum of the missing cells in each column)
-    missing_cells = df.isna().sum().sum()
-    #Put it in terms of percentage to 3 decimal places.
-    missing_stat = round((missing_cells / size)*100,3)
 
-    children_1 = html.Div([
-        #Show the uploaded file name and last modified timestamp
-        html.H3("Uploaded File: {}".format(filename)),
-        html.H4("Last Modified: {}".format(str(datetime.fromtimestamp(date)))),
-        #Shown the contents of describe in a data table
-        dash_table.DataTable(
-            data=describe.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in describe.columns],
-            #Fix the First column containing the feature indexes
-            fixed_columns={ 'headers': True, 'data': 1 },
-            # Make the table scroll for large X values
-            style_table={'overflowX' : 'scroll'},
-        ),
-    ])
-    conditionals = [
-        {
-            'if': {'row_index': 'odd'},
-            'backgroundColor': 'rgb(248, 248, 248)'
-        },
-    ]
-    #Create the conditionals to highlight the cells which are empty
-    for col in df.columns:
-        conditionals.append(
-        {
-            'if': {
-                'column_id': col,
-                'filter_query': '{{{}}} is nil'.format(col)
-            },
-        'backgroundColor': 'orangered'
-        }
+    #Add Filename to cache
+    cache.set(session_id + '-name', filename)
+    #Add File Last Modified Datetime to cache
+    cache.set(session_id + '-date', str(datetime.fromtimestamp(date)))
+    #Add Dataframe to Cache
+    cache.set(session_id + '-df', df)
+
+    return html.Div([
+            #Show the uploaded file name and last modified timestamp
+            html.H3("Uploaded File: {}".format(filename)),
+            html.H3("Last Modified: {}".format(str(datetime.fromtimestamp(date)))),
+        ]
     )
-    children_2 = html.Div([
-        #Give some headers and show filename and date last modified
-        html.H2("Your Uploaded Data"),
-        html.P("It contains {} cells, of which {} are missing values.".format(size, missing_cells)),
-        html.P("The missing data accounts for {}% of the data set.".format(missing_stat)),
-        #Show the data
-        dash_table.DataTable(
-            data=df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in df.columns],
-            #Fix the headers on the table
-            fixed_rows={ 'headers': True, 'data': 0 },
-            #Ensure scrolling for smaller screens
-            style_table={
-                'overflowX' : 'scroll', 
-                'overflowY' : 'scroll'
-            },
-            style_data_conditional=conditionals,
-            style_header={
-                'backgroundColor': 'rgb(230, 230, 230)',
-                'fontWeight': 'bold'
-            }
-        ),
-    ])
 
-    return children_1, children_2
+@app.callback(Output('tabs-content-upload', 'children'),
+              [Input('tabs-styled-in-upload', 'value')])
+def render_upload_content(tab):
+    #Retrieve the Dataframe from Cache
+    df = cache.get(session_id + '-df')
+    if tab == "upload-data":
+        if df is None:
+            children_upload = html.Div([
+                    dcc.Markdown('''
+                    If you're seeing this message then you haven't uploaded any data yet.
+                    Either click the box above or drag and drop an Excel or CSV file into it
+                    ''')
+            ])
+        else:
+            children_upload = html.Div([
+                #Show the uploaded file name and last modified timestamp
+                html.H3("Uploaded File: {}".format(cache.get(session_id + '-name'))),
+                html.H3("Last Modified: {}".format(cache.get(session_id + '-date'))),  
+            ])
+        return html.Div([
+                html.H1('Upload Your Dataset'),
+                dcc.Upload(
+                    id = 'data',
+                    children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
+                    className='data-upload',
+                ),
+                html.Div(id='upload-data-output', children=children_upload),
+            ]
+        )
+    elif tab == 'uploaded':
+        if df is None:
+            return html.Div([
+                dcc.Markdown('''
+                ## No Data Uploaded
+                Please go to **Upload Your Data** and select an Excel or CSV file to upload
+                Once you have done this, your data will appear here.
+                '''),
+            ])
+        else:
+            conditionals = [
+                {
+                    'if': {'row_index': 'odd'},
+                    'backgroundColor': 'rgb(248, 248, 248)'
+                },
+            ]
+            #Create the conditionals to highlight the cells which are empty
+            for col in df.columns:
+                conditionals.append(
+                    {
+                        'if': {
+                            'column_id': col,
+                            'filter_query': '{{{}}} is nil'.format(col)
+                        },
+                    'backgroundColor': 'orangered'
+                    }
+                )
+            #Get the size of the dataframe in number of cells
+            size = df.shape[0] * df.shape[1]
+            #Get the number of missing cells (its a sum of the missing cells in each column)
+            missing_cells = df.isna().sum().sum()
+            #Put it in terms of percentage to 3 decimal places.
+            missing_stat = round((missing_cells / size)*100,3)
 
+            return html.Div([
+                #Give some headers and show filename and date last modified
+                html.H1("Your Uploaded Data"),
+                html.P("It contains {} cells, of which {} are missing values.".format(size, missing_cells)),
+                html.P("The missing data accounts for {}% of the data set.".format(missing_stat)),
+                #Show the data
+                dash_table.DataTable(
+                    data=df.to_dict('records'),
+                    columns=[{'name': i, 'id': i} for i in df.columns],
+                    #Fix the headers on the table
+                    fixed_rows={ 'headers': True, 'data': 0 },
+                    #Ensure scrolling for smaller screens
+                    style_table={
+                        'overflowX' : 'scroll', 
+                        'overflowY' : 'scroll'
+                    },
+                    style_data_conditional=conditionals,
+                    style_header={
+                        'backgroundColor': 'rgb(230, 230, 230)',
+                        'fontWeight': 'bold'
+                    }
+                ),
+            ])
+    elif tab == 'description':
+        if df is None:
+            return html.Div([
+                dcc.Markdown('''
+                ## No Data Uploaded
+                Please go to **Upload Your Data** and select an Excel or CSV file to upload
+                Once you have done this, your data description will appear here.
+                '''),
+            ])
+        else:
+            #Use describe to get basic stats from datasets including percentiles
+            describe = df.describe(include='all', percentiles=[0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95])
+            #Reset the index to have the Features column appear in describe result
+            describe = describe.reset_index()
+            #Rename the index column to Features
+            describe = describe.rename(columns={'index' : 'Features'})
 
-@app.callback([Output('output-data-upload', 'children'),
-               Output('output-data-upload-2', 'children')],
+            return html.Div([
+                #Shown the contents of describe in a data table
+                dash_table.DataTable(
+                    data=describe.to_dict('records'),
+                    columns=[{'name': i, 'id': i} for i in describe.columns],
+                    #Fix the First column containing the feature indexes
+                    fixed_columns={ 'headers': True, 'data': 1 },
+                    # Make the table scroll for large X values
+                    style_table={'overflowX' : 'scroll'},
+                ),
+            ])
+    elif tab == 'scatterplot-matrix':
+        if df is None:
+            return html.Div([
+                dcc.Markdown('''
+                ## No Data Uploaded
+                Please go to **Upload Your Data** and select an Excel or CSV file to upload
+                Once you have done this, your data will appear here.
+                '''),
+            ])
+        else:
+            pass
+
+@app.callback(Output('upload-data-output', 'children'),
               [Input('data', 'contents')],
               [State('data', 'filename'),
                State('data', 'last_modified')])
 def update_output(content, name, date):
     if content is not None:
-        children_1, children_2 = parse_contents(content, name, date)
-        return children_1, children_2
+        return parse_contents(content, name, date)
 
 
 if __name__ == '__main__':
