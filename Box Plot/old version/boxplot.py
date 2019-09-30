@@ -87,7 +87,7 @@ app.layout = html.Div([
                 max=20,
                 step=5,
                 value=10,
-                marks={5:'5', 10:'10', 15:'15', 20:'20'},
+                marks={5: '5', 10: '10', 15: '15', 20: '20'},
                 included=False,
                 dots=True
                 )
@@ -97,8 +97,9 @@ app.layout = html.Div([
     html.Div([
         dcc.Graph(id='box-plot')
         ], style={'width': '70%', 'float': 'right', 'display': 'inline-block'},
-    )    
+    )
 ])
+
 
 @app.callback(
     Output(component_id='box-plot', component_property='figure'),
@@ -117,7 +118,7 @@ def update_figure(groupby, value, clr, main_title, xaxs_title, yaxs_title, show_
         show_lgnd = True
     else:
         show_lgnd = False
-        
+
     return {
         'data': [go.Box(
             x=df[groupby],
@@ -142,5 +143,3 @@ def update_figure(groupby, value, clr, main_title, xaxs_title, yaxs_title, show_
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-    
-

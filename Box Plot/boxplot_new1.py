@@ -10,6 +10,8 @@ from dash.dependencies import Input, Output
 # Read File Function,
 # @param: File name (csv or excel)
 # @return: Pandas Dataframe
+
+
 def read_file(filename):
     try:
         if 'csv' in filename:
@@ -17,18 +19,23 @@ def read_file(filename):
         elif ('xls' or 'xlsx') in filename:
             dff = pd.read_excel(filename)
     except Exception as e:
-        print (e)
+        print(e)
         return u'There was an error opening {}'.format(filename)
     return dff
 
 # Loading Data
+
+
 file_name = 'data1.xlsx'
+
+
 df = read_file(file_name)
 
 # Loading Numeric Data from Dataframe
-features=df.select_dtypes(include='number').columns.values
+features = df.select_dtypes(include='number').columns.values
+
 # Loading non-Numeric Data from Dataframe
-cat_features=df.select_dtypes(exclude='number').columns.values
+cat_features = df.select_dtypes(exclude='number').columns.values
 
 # Init Dash App
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -41,36 +48,35 @@ app.layout = html.Div([
         html.H5('Variable:'),
         dcc.Dropdown(
             id='dd_features',
-            options=[{'label':i, 'value':i} for i in features],
+            options=[{'label': i, 'value': i} for i in features],
             value=str(features[0])
         ),
         html.H5('Group By:'),
         dcc.Dropdown(
             id='dd_group',
-            options=[{'label':i, 'value':i} for i in cat_features],
+            options=[{'label': i, 'value': i} for i in cat_features],
             value=str(cat_features[0])
         ),
-        html.H5('Main Title:'),
-        dcc.Input(id='main_title', value='Main Title', type='text'),
-        html.H5('X-Axis Title:'),
-        dcc.Input(id='xaxis_title', value='X Axis Title', type='text'),
-        html.H5('Y-Axis Title:'),
-        dcc.Input(id='yaxis_title', value='Y Axis Title', type='text'),
+        html.Div([
+            dcc.Input(id='main_title', type='text', placeholder='Main Title'),
+            dcc.Input(id='xaxis_title', type='text', placeholder='X Axis Label'),
+            dcc.Input(id='yaxis_title', type='text', placeholder='Y Axis Label'),
+        ]),
         html.H5('Data Transform:'),
         dcc.RadioItems(
             id='data_transform',
             options=[
-                {'label': 'Linear', 'value':'lin'},
-                {'label': 'Logarithm', 'value':'log'},
-                ],
-                value='lin'
-            ),
+                {'label': 'Linear', 'value': 'lin'},
+                {'label': 'Logarithm', 'value': 'log'},
+            ],
+            value='lin'
+        ),
         html.H5('Graph Orientation:'),
         dcc.RadioItems(
             id='graph_orient',
             options=[
-                {'label': 'Vertical', 'value':'v'},
-                {'label': 'Horizontal', 'value':'h'},
+                {'label': 'Vertical', 'value': 'v'},
+                {'label': 'Horizontal', 'value': 'h'},
                 ],
             value='v'
             ),
@@ -78,10 +84,10 @@ app.layout = html.Div([
         dcc.Checklist(
             id='extra_markers',
             options=[
-                {'label':'Mean', 'value':'mean'},
-                {'label':'Std. Dev.', 'value':'sd'},
+                {'label': 'Mean', 'value': 'mean'},
+                {'label': 'Std. Dev.', 'value': 'sd'},
                 ],
-                value=[]
+            value=[]
             ),
         html.H5('Show Legend:'),
         dcc.RadioItems(
@@ -92,8 +98,7 @@ app.layout = html.Div([
         html.H5('Color Scale:'),
         dcc.Dropdown(
             id='color-scale',
-            options=[{'label':i, 'value':i} for i in ['Colors01', 'Colors02']
-            ],        
+            options=[{'label': i, 'value': i} for i in ['Colors01', 'Colors02']],
             value='Colors01'
             ),
         html.H5('Opacity:'),
@@ -106,7 +111,7 @@ app.layout = html.Div([
             ),
         html.Div(id='opacity-value', style={'padding':'10px'})
     ], style={'width':'30%', 'display':'inline-block'}),
-    
+
     # Right Graph
     html.Div([
         html.H5('Right Panel'),
@@ -121,8 +126,6 @@ app.layout = html.Div([
 )
 def update_value(opacity_value):
     return html.H6(opacity_value)
-    
-
 
 @app.callback(
     Output('box-plot', 'figure'),
@@ -140,12 +143,14 @@ def update_value(opacity_value):
     ]
 )
 def update_figure(
-    variable, groupby, 
-    main_title, xaxis_title, yaxis_title, 
+    variable, groupby,
+    main_title, xaxis_title, yaxis_title,
     transform, orient, extra,
     show_legend,
-    alpha, color_scale):
-    
+    alpha,
+    color_scale
+    ):
+
     group_list=df[groupby].unique()
     data_list=[]
     # Extra Markers Options
@@ -155,28 +160,28 @@ def update_figure(
         box_mean=bool(True)
     else:
         box_mean=bool(False)
-        
+
     # Change Variable and Group By
-    
+
     if (color_scale=='Colors01'):
         colors = [
-        'rgba(93, 164, 200, 0.5)', 
-        'rgba(255, 144, 14, 0.5)', 
-        'rgba(44, 160, 101, 0.5)', 
-        'rgba(255, 65, 54, 0.5)', 
-        'rgba(207, 114, 255, 0.5)', 
-        'rgba(127, 96, 0, 0.5)', 
-        'rgba(255, 140, 184, 0.5)', 
-        'rgba(79, 90, 117, 0.5)', 
+        'rgba(93, 164, 200, 0.5)',
+        'rgba(255, 144, 14, 0.5)',
+        'rgba(44, 160, 101, 0.5)',
+        'rgba(255, 65, 54, 0.5)',
+        'rgba(207, 114, 255, 0.5)',
+        'rgba(127, 96, 0, 0.5)',
+        'rgba(255, 140, 184, 0.5)',
+        'rgba(79, 90, 117, 0.5)',
         'rgba(222, 223, 0, 0.5)',
-        'rgba(255, 195, 18,0.5)', 
-        'rgba(196, 229, 56,0.5)', 
-        'rgba(18, 203, 196,0.5)', 
-        'rgba(253, 167, 223,0.5)', 
-        'rgba(237, 76, 103,0.5)', 
-        'rgba(163, 203, 56,0.5)', 
-        'rgba(18, 137, 167,0.5)', 
-        'rgba(217, 128, 250,0.5)', 
+        'rgba(255, 195, 18,0.5)',
+        'rgba(196, 229, 56,0.5)',
+        'rgba(18, 203, 196,0.5)',
+        'rgba(253, 167, 223,0.5)',
+        'rgba(237, 76, 103,0.5)',
+        'rgba(163, 203, 56,0.5)',
+        'rgba(18, 137, 167,0.5)',
+        'rgba(217, 128, 250,0.5)',
         'rgba(181, 52, 113,0.5)',
         ]
     else:
@@ -202,7 +207,7 @@ def update_figure(
         'rgba(128, 142, 155,0.5)',
         'rgba(30, 39, 46,0.5)',
         ]
-    
+
     color_idx=0
     for i in group_list:
         if (orient=='h'):
@@ -227,7 +232,16 @@ def update_figure(
     if show_legend=='True':
         show_legend=True
     else:
-        show_legend=False    
+        show_legend=False
+
+    if xaxis_title==None:
+        xaxis_title=groupby
+    
+    if yaxis_title==None:
+        yaxis_title=variable
+        
+    if main_title==None:
+        main_title=str(variable + " VS " + groupby)
     
     return{
         'data':data_list,
