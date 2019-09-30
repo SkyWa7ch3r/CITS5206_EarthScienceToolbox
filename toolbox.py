@@ -51,6 +51,7 @@ app.layout = html.Div(children = [
         parent_className='custom-tabs', 
         className ='custom-tabs-container',
         children=[
+            #Data Upload Tab
             dcc.Tab(label='Data Upload', value='upload', className='custom-tab', selected_className='custom-tab--selected'),
             dcc.Tab(label='Scatter Plot', value='scatter', className='custom-tab', selected_className='custom-tab--selected'),
             dcc.Tab(label='Line Plot', value='line', className='custom-tab', selected_className='custom-tab--selected'),
@@ -63,7 +64,7 @@ app.layout = html.Div(children = [
         className="custom-tabs-inline",
     )
 ])
-
+#Callbacks for the tbas inside the Uload Tab
 @app.callback(Output('tabs-content-inline', 'children'),
               [Input('tabs-styled-with-inline', 'value')])
 def render_content(tab):
