@@ -47,15 +47,14 @@
 }
 .custom-tabs-container-upload {
     padding-top: 20px;
-    display: inline;
-    margin-right: 30px;
+    float : left !important;
 }
 .custom-tabs-upload {
-    display: inline-block;
-    width : 75%;
-    padding-left: 3vw;
+    float : right;
     text-align: center;
     align-content: center;
+    width : 80%;
+    padding-right: 4vw;
 }
 .custom-tab-upload {
     color:#424242;
@@ -86,4 +85,7 @@
     border-style : solid;
     border-radius : 5px;
     text-align : center;
+}
+.description {
+    
 }
