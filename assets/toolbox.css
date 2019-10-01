@@ -86,6 +86,8 @@
     border-radius : 5px;
     text-align : center;
 }
-.description {
-    
+.splom-choices {
+    display: inline-block;
+    width : 33%;
+    padding-right: 5px;
 }

@@ -10,6 +10,7 @@ import dash_table
 import plotly.graph_objs as go
 import uuid
 from flask_caching import Cache
+import plotly.express as px
 
 from dash.dependencies import Input, Output, State
 
@@ -27,6 +28,27 @@ cache = Cache(app.server, config={
     'CACHE_TYPE' : 'filesystem',
     'CACHE_DIR' : 'cache',
 })
+
+#--------CONSTANT VARIABLES------------
+COLORSCALES_DICT = [
+    {'value': 'Blackbody', 'label': 'Blackbody'},
+    {'value': 'Bluered', 'label': 'Bluered'},
+    {'value': 'Blues', 'label': 'Blues'},
+    {'value': 'Earth', 'label': 'Earth'},
+    {'value': 'Electric', 'label': 'Electric'},
+    {'value': 'Greens', 'label': 'Greens'},
+    {'value': 'Greys', 'label': 'Greys'},
+    {'value': 'Hot', 'label': 'Hot'},
+    {'value': 'Jet', 'label': 'Jet'},
+    {'value': 'Picnic', 'label': 'Picnic'},
+    {'value': 'Portland', 'label': 'Portland'},
+    {'value': 'Rainbow', 'label': 'Rainbow'},
+    {'value': 'RdBu', 'label': 'RdBu'},
+    {'value': 'Reds', 'label': 'Reds'},
+    {'value': 'Viridis', 'label': 'Viridis'},
+    {'value': 'YlGnBu', 'label': 'YlGnBu'},
+    {'value': 'YlOrRd', 'label': 'YlOrRd'},
+]
 
 #Begin the layout of the app layout
 app.layout = html.Div(children = [
@@ -49,7 +71,7 @@ app.layout = html.Div(children = [
         parent_className='custom-tabs', 
         className ='custom-tabs-container',
         children=[
-            #Data Upload Tab
+            #Each tab has a label and different value, the value will determine what the output is
             dcc.Tab(label='Data Upload', value='upload', className='custom-tab', selected_className='custom-tab--selected'),
             dcc.Tab(label='Scatter Plot', value='scatter', className='custom-tab', selected_className='custom-tab--selected'),
             dcc.Tab(label='Line Plot', value='line', className='custom-tab', selected_className='custom-tab--selected'),
@@ -62,17 +84,21 @@ app.layout = html.Div(children = [
         className="custom-tabs-inline",
     )
 ])
-#Callbacks for the tbas inside the Uload Tab
+#Callbacks for the tabs
 @app.callback(Output('tabs-content-inline', 'children'),
               [Input('tabs-styled-with-inline', 'value'),])
 def render_content(tab):
+    #Based on the value of the tabs....
     if tab == 'upload':
+        #If Upload is selected then show the content for uploading and data cleaning recommendation
         return html.Div([
             dcc.Tabs(
                 id='tabs-styled-in-upload',
                 value='upload-data',
                 className="custom-tabs-container-upload",
+                #Tabs are vertical
                 vertical=True,
+                #Tabs for inside the Data Cleaning Recommendation Page
                 children=[
                     dcc.Tab(label='Upload Your Data', value='upload-data', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
                     dcc.Tab(label='Your Uploaded Data', value='uploaded', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
@@ -204,7 +230,9 @@ def render_upload_content(tab, session_id):
             )
     elif tab == 'uploaded':
         if df is None:
+            #Take a look at the uploaded data in a table
             return html.Div([
+                #However if we have no data, we leave a message.
                 dcc.Markdown('''
                 ## No Data Uploaded
                 Please go to **Upload Your Data** and select an Excel or CSV file to upload
@@ -212,6 +240,7 @@ def render_upload_content(tab, session_id):
                 '''),
             ])
         else:
+            #Create the conditionals list of dictionaries, starting by highlighting each odd row
             conditionals = [
                 {
                     'if': {'row_index': 'odd'},
@@ -222,6 +251,7 @@ def render_upload_content(tab, session_id):
             for col in df.columns:
                 conditionals.append(
                     {
+                        #If the data in the cell is None, NaN, NA, null then highlight in orange red
                         'if': {
                             'column_id': col,
                             'filter_query': '{{{}}} is nil'.format(col)
@@ -247,16 +277,19 @@ def render_upload_content(tab, session_id):
                     columns=[{'name': i, 'id': i} for i in df.columns],
                     #Fix the headers on the table
                     fixed_rows={ 'headers': True, 'data': 0 },
-                    #Ensure scrolling for smaller screens
+                    #Ensure scrolling for smaller screens, but also ensure it fills the container
                     style_table={
                         'overflowX' : 'scroll', 
                         'overflowY' : 'scroll',
                         'mid-width' : '90%',
                     },
+                    #Each cell should be a minimum of 100 pixels in width
                     style_cell={
                         'minWidth' : '100px',
                     },
+                    #Apply the conditionals to the cells to highlight missing values
                     style_data_conditional=conditionals,
+                    #Chnage the style of the header
                     style_header={
                         'backgroundColor': 'rgb(230, 230, 230)',
                         'fontWeight': 'bold'
@@ -266,6 +299,7 @@ def render_upload_content(tab, session_id):
     elif tab == 'description':
         if df is None:
             return html.Div([
+                #There is no data so leave a message
                 dcc.Markdown('''
                 ## No Data Uploaded
                 Please go to **Upload Your Data** and select an Excel or CSV file to upload
@@ -331,15 +365,44 @@ def render_upload_content(tab, session_id):
             ], className='description')
     elif tab == 'scatterplot-matrix':
         if df is None:
+            #Leave a message as there is no data
             return html.Div([
                 dcc.Markdown('''
                 ## No Data Uploaded
                 Please go to **Upload Your Data** and select an Excel or CSV file to upload
-                Once you have done this, your data will appear here.
+                Once you have done this, a scatter plot matrix will appear here.
                 '''),
             ])
         else:
-            pass
+            num_column_names = df.select_dtypes(include='number').columns.values
+            return html.Div([
+                html.Div([
+                    html.H3("Choose Your Features"),
+                    dcc.Dropdown(
+                        id='splom-column',
+                        options=[{'label': i, 'value': i} for i in num_column_names],
+                        value=[num_column_names[0]],
+                        multi=True,
+                    ),
+                ], className='splom-choices'),
+                html.Div([
+                    html.H3("Choose your Colorscale"),
+                    dcc.Dropdown(
+                        id='splom-colorscale',
+                        options=COLORSCALES_DICT,
+                        value='Greys',
+                    ),
+                ], className='splom-choices'),
+                html.Div([
+                    html.H3("Choose the Feature for the Colour and Hovertext"),
+                    dcc.Dropdown(
+                        id='splom-color-chooser',
+                        options=[{'label': i, 'value': i} for i in df.columns],
+                        value=df.columns[0],
+                    ),
+                ], className='splom-choices'),
+                dcc.Graph(id="scatter-matrix-fig"),
+            ])
 
 @app.callback([Output('upload-data-output', 'children'),
                Output('markdown-message', 'hidden')],
@@ -351,6 +414,46 @@ def update_output(content, session, name, date):
     if content is not None:
         return parse_contents(content, session, name, date), True
 
+@app.callback(Output('scatter-matrix-fig', 'figure'),
+              [Input('session_id', 'children'),
+              Input('splom-column', 'value'),
+              Input('splom-colorscale', 'value'),
+              Input('splom-color-chooser', 'value')])
+def render_splom(session_id, columns, colorscale, color):
+    #Get the dataframe
+    df = cache.get(session_id + '-df')
+    #Get all the number columns
+    num_column_names = df.select_dtypes(include='number').columns.values
+    #If we choose a categorical variable for matching colors
+    if color not in num_column_names:
+        #Show scale is false
+        showscale=False
+        #Get the category codes
+        marker_color = df[color].astype('category').cat.codes
+
+    else:
+        marker_color = df[color]
+        showscale = True
+
+    
+    return {'data': [
+                go.Splom(
+                    dimensions=[{'label': i, 'values': df[i]} for i in columns],
+                    text=df[color],
+                    marker=dict(
+                        colorscale=colorscale,
+                        color=marker_color,
+                        showscale=showscale,
+                    ),    
+                )
+            ],
+            'layout' : go.Layout(
+                title="Scatter Plot Matrix for {}".format(cache.get(session_id + '-name')),
+                dragmode='select',
+                width=1500,
+                height=1000,
+            )
+        }
 
 if __name__ == '__main__':
     app.run_server(debug=True)
