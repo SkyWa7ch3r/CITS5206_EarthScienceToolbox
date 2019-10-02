@@ -46,15 +46,18 @@
     border-top: 3px solid #d6c544 !important;
 }
 .custom-tabs-container-upload {
-    padding-top: 20px;
-    float : left !important;
+    padding : 0px;
+    margin : 0px;
+    padding-top: 0px;
 }
 .custom-tabs-upload {
-    float : right;
+    float : center;
     text-align: center;
     align-content: center;
-    width : 80%;
-    padding-right: 4vw;
+    width : 98%;
+    padding : 0px;
+    padding-left : 1%;
+    margin : 0px;
 }
 .custom-tab-upload {
     color:#424242;
@@ -63,20 +66,19 @@
     border-left: 0px !important;
     border-right: 0px !important;
     border-bottom: 0px !important;
-    background-color: #cfcfcf;
+    background-color: rgb(192, 192, 192);
     padding: 12px !important;
     font-family: "system-ui";
     display: flex !important;
     align-items: center;
     justify-content: center;
-    height: 20vh;
 }
 .custom-tab--selected-upload {
     color: black;
     box-shadow: 1px 1px 0px white;
     border-left: 1px solid lightgrey !important;
     border-right: 1px solid lightgrey !important;
-    border-top: 3px solid #d6c544 !important;
+    border-top: 3px solid #000000 !important;
 }
 .data-upload {
     height : 50px;
@@ -89,5 +91,6 @@
 .splom-choices {
     display: inline-block;
     width : 33%;
-    padding-right: 5px;
+    padding: 0px;
+    margin : 0px;
 }

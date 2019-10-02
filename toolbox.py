@@ -96,8 +96,6 @@ def render_content(tab):
                 id='tabs-styled-in-upload',
                 value='upload-data',
                 className="custom-tabs-container-upload",
-                #Tabs are vertical
-                vertical=True,
                 #Tabs for inside the Data Cleaning Recommendation Page
                 children=[
                     dcc.Tab(label='Upload Your Data', value='upload-data', className='custom-tab-upload', selected_className='custom-tab--selected-upload'),
@@ -226,7 +224,7 @@ def render_upload_content(tab, session_id):
                     ]),
                     #Show the uploaded file name and last modified timestamp 
                     html.Div(id='upload-data-output'),
-                ], style={'width' : '100%'}
+                ],
             )
     elif tab == 'uploaded':
         if df is None:
@@ -282,6 +280,7 @@ def render_upload_content(tab, session_id):
                         'overflowX' : 'scroll', 
                         'overflowY' : 'scroll',
                         'mid-width' : '90%',
+                        'min-height' : '70%',
                     },
                     #Each cell should be a minimum of 100 pixels in width
                     style_cell={
@@ -451,7 +450,7 @@ def render_splom(session_id, columns, colorscale, color):
                 title="Scatter Plot Matrix for {}".format(cache.get(session_id + '-name')),
                 dragmode='select',
                 width=1500,
-                height=1000,
+                height=900,
             )
         }
 
