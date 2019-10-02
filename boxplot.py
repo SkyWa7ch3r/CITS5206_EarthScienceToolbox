@@ -166,7 +166,7 @@ app.layout = html.Div(children=[
                 ], style=content_style_odd
                 ),
                 html.Div(className="col-md-4", children=[
-                    # X Axis Config
+                    # X Axis Label Config
                     html.Div(className='row', children=[
                         # X Axis label
                         html.Div(className='col-md-12', children=[
@@ -186,7 +186,7 @@ app.layout = html.Div(children=[
                 ], style=content_style_odd
                 ),
                 html.Div(className="col-md-4", children=[
-                    # Y Axis Config
+                    # Y Axis label Config
                     html.Div(className='row', children=[
                         # Y Axis label
                         html.Div(className='col-md-12', children=[
