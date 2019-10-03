@@ -39,11 +39,14 @@ cat_features = df.select_dtypes(exclude='number').columns.values
 # Init Dash App
 app = dash.Dash(__name__)
 
-label_background_color = '#9ad1d4'
-border_color = '#9ad1d4'
+label_background_color = '#67acb7'
+content_background_color = '#c0fdfb'
+border_color = '#868686'
 main_panel_padding = '10px 25px'
 label_padding = '10px 10px 0px 10px'
-toggle_switch_color = '#e71d36'
+toggle_switch_color = '#91c153'
+
+line_style = ['solid', 'dash', 'dot', 'longdash', 'dashdot', 'longdashdot']
 
 content_style_even = {
     'margin': '0px',
@@ -57,7 +60,7 @@ content_style_odd = {
     'border-width': '2px',
     'border-color': border_color,
     'border-style': 'solid',
-    'background-color': '#ffffff', }
+    'background-color': content_background_color, }
 
 content_style_dropdown_inline = {
     'margin': '0px',
@@ -228,7 +231,7 @@ app.layout = html.Div(children=[
                     html.H5('Data Transformation'),
                 ], style={
                     'padding': '0px 10px 0px 10px',
-                    'background-color': '#ffffff', }
+                    'background-color': content_background_color, }
                 ),
                 # Data Transformation Toogle Switch
                 html.Div(className='col-md-7', children=[
@@ -240,7 +243,7 @@ app.layout = html.Div(children=[
                         color=toggle_switch_color, ),
                 ], style={
                     'padding': '9px 10px 5px 10px',
-                    'background-color': '#ffffff', }
+                    'background-color': content_background_color, }
                 ),
             ], style=content_style_odd
             ),
@@ -292,16 +295,16 @@ app.layout = html.Div(children=[
                 'border-width': '2px',
                 'border-color': border_color,
                 'border-style': 'solid',
-                'background-color': '#ffffff', }
+                'background-color': content_background_color, }
             ),
             # Show/hide Legend
             html.Div(className='row', children=[
                 # Show/hide Legend Label
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-legend',
                         on=True,
-                        size='35',
+                        # size='35',
                         label='Legend',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -313,10 +316,10 @@ app.layout = html.Div(children=[
                 ),
                 # Show/hide Legend Toogle Switch
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-ndata',
                         on=True,
-                        size='35',
+                        # size='35',
                         label='N Data',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -327,10 +330,10 @@ app.layout = html.Div(children=[
                 ], style=content_style_odd
                 ),
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-percentiles',
                         on=False,
-                        size='35',
+                        # size='35',
                         label='Percentiles',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -348,10 +351,10 @@ app.layout = html.Div(children=[
             html.Div(className='row', children=[
                 # Show/hide Gridlines
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-gridlines',
                         on=True,
-                        size='35',
+                        # size='35',
                         label='Gridlines',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -363,10 +366,10 @@ app.layout = html.Div(children=[
                 ),
                 # Show/hide X Axis Zerolines
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-zeroline-x',
                         on=True,
-                        size='35',
+                        # size='35',
                         label='X Zeroline',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -378,10 +381,10 @@ app.layout = html.Div(children=[
                 ),
                 # Show/hide Y Axis Zerolines
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-zeroline-y',
                         on=True,
-                        size='35',
+                        # size='35',
                         label='Y Zeroline',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -399,10 +402,10 @@ app.layout = html.Div(children=[
             html.Div(className='row', children=[
                 # Show/hide Mean
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-mean',
                         on=False,
-                        size='35',
+                        # size='35',
                         label='Mean',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -414,10 +417,10 @@ app.layout = html.Div(children=[
                 ),
                 # Show/hide SD
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
+                    daq.BooleanSwitch(
                         id='show-sd',
                         on=False,
-                        size='35',
+                        # size='35',
                         label='Std. Dev.',
                         labelPosition='top',
                         color=toggle_switch_color,
@@ -429,14 +432,14 @@ app.layout = html.Div(children=[
                 ),
                 # Show/hide Not Implement yet
                 html.Div(className='col-md-4', children=[
-                    daq.PowerButton(
-                        id='show-000',
+                    daq.BooleanSwitch(
+                        id='show-stats',
                         on=False,
-                        size='35',
-                        label='N/A',
+                        # size='35',
+                        label='Stats',
                         labelPosition='top',
                         color=toggle_switch_color,
-                        disabled=True,
+                        # disabled=True,
                         style={
                             'padding': '10px',
                         }
@@ -447,13 +450,108 @@ app.layout = html.Div(children=[
                 'padding': '0px',
                 'margin': '0px'}
             ),
+            # Show/hide Treshold
+            html.Div(className='row', children=[
+                # Show/hide Treshold
+                html.Div(className='col-md-4', children=[
+                    html.Div(className='row', children=[
+                        html.Div(className='col-md-12', children=[
+                            daq.BooleanSwitch(
+                                id='show-treshold',
+                                on=False,
+                                label='Treshold',
+                                labelPosition='top',
+                                color=toggle_switch_color,
+                                style={
+                                    'padding': '10px',
+                                }
+                            ),
+                        ],
+                        ),
+                    ],
+                    ),
+                    html.Div(className='row', children=[
+                        # Treshold value Label
+                        html.Div(className='col-md-12', children=[
+                            html.H5('Value')
+                        ], style={'padding': '0px 0px 0px 5px'}
+                        ),
+                    ],
+                    ),
+                    html.Div(className='row', children=[
+                        # Treshold Input
+                        html.Div(className='col-md-12', children=[
+                            dcc.Input(
+                                id='treshold-value',
+                                type='text',
+                                placeholder='Enter here',
+                                size='17',
+                                disabled=True),
+                        ], style={'padding': '0px 0px 5px 5px'}
+                        ),
+                    ],
+                    ),
+                    html.Div(className="row", children=[
+                        # Treshold Drop Down Line Style
+                        html.H5('Style'),
+                    ], style={
+                        'padding': '0px 10px 0px 10px', }
+                    ),
+                    html.Div(className="row", children=[
+                        # Variable Drop Down List
+                        dcc.Dropdown(
+                            id='treshold-style',
+                            options=[{'label': i, 'value': i} for i in line_style],
+                            value=str(line_style[0]),
+                            disabled=True
+                        ),
+                    ], style={
+                        'padding': '0px 5px 5px 5px', }
+                    ),
+                    html.Div(className="row", children=[
+                        # Treshold Drop Down Line Style
+                        daq.NumericInput(
+                            id='treshold-line-size',
+                            min=1,
+                            max=10,
+                            value=2,
+                            label='Size:',
+                        ),
+                    ], style={
+                        'padding': '0px 10px 0px 10px', }
+                    ),
+                ],
+                ),
+                # Line color selection
+                html.Div(className='col-md-8', children=[
+                    daq.ColorPicker(
+                        id='treshold-line-color',
+                        label='Treshold Color',
+                        style={'background-color': 'white'},
+                        value=dict(rgb=dict(r=0, g=0, b=255, a=1))
+                    )
+                ], style={'padding': '10px 5px 5px 5px'}
+                ),
+            ], style=content_style_odd
+            ),
         ], style={
             'padding': main_panel_padding,
             'background-color': '#ffffff', }
         ),
         # Right Panel
         html.Div(className="col-md-9", children=[
-            dcc.Graph(id='box-plot'),
+            html.Div(className='row', children=[
+                daq.Slider(
+                    id='graph-height',
+                    min=600, max=1000, value=600, step=50,
+                    handleLabel={"showCurrentValue": True, "label": "Height"},
+                )
+            ], style={'margin': '0px', 'padding': '50px 0px 0px 0px', }
+            ),
+            html.Div(className='row', children=[
+                dcc.Graph(id='box-plot'),
+            ],
+            ),
         ], style={
             'padding': main_panel_padding,
             'background-color': '#ffffff', }
@@ -463,32 +561,53 @@ app.layout = html.Div(children=[
 
 
 @app.callback(
+    Output('treshold-value', 'value'),
+    [Input('show-treshold', 'on'),
+     Input('select-variable', 'value'),
+     ]
+)
+def update_treshold_value(
+    is_tresholdshow, variable
+):
+    return np.around(np.mean(df[variable]), 0) if is_tresholdshow else ' '
+
+
+@app.callback(
+    [Output('treshold-value', 'disabled'),
+     Output('treshold-style', 'disabled'), ],
+    [Input('show-treshold', 'on'), ]
+)
+def update_treshold(
+    is_tresholdshow
+):
+    return not is_tresholdshow, not is_tresholdshow
+
+
+@app.callback(
     Output('box-plot', 'figure'),
     [
-        Input('select-variable', 'value'),
-        Input('select-groupby', 'value'),
-        Input('main-title', 'value'),
-        Input('xaxis-title', 'value'),
-        Input('yaxis-title', 'value'),
-        Input('show-gridlines', 'on'),
-        Input('show-zeroline-x', 'on'),
-        Input('show-zeroline-y', 'on'),
-        Input('show-legend', 'on'),
-        Input('show-percentiles', 'on'),
-        Input('graph-alignment', 'value'),
-        Input('data-transform', 'value'),
-        Input('select-outliers', 'value'),
-        Input('show-ndata', 'on'),
-        Input('show-percentiles', 'on'),
-        Input('show-mean', 'on'),
-        Input('show-sd', 'on'),
+        Input('select-variable', 'value'), Input('select-groupby', 'value'),
+        Input('main-title', 'value'), Input('xaxis-title', 'value'),
+        Input('yaxis-title', 'value'), Input('show-gridlines', 'on'),
+        Input('show-zeroline-x', 'on'), Input('show-zeroline-y', 'on'),
+        Input('show-legend', 'on'), Input('show-percentiles', 'on'),
+        Input('graph-alignment', 'value'), Input('data-transform', 'value'),
+        Input('select-outliers', 'value'), Input('show-ndata', 'on'),
+        Input('show-percentiles', 'on'), Input('show-mean', 'on'),
+        Input('show-sd', 'on'), Input('show-treshold', 'on'),
+        Input('treshold-value', 'value'), Input('treshold-style', 'value'),
+        Input('treshold-line-color', 'value'),
+        Input('treshold-line-size', 'value'),
+        Input('show-stats', 'on'), Input('graph-height', 'value'),
     ]
 )
-def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
-            gridshow, xzeroline, yzeroline, legendshow,
-            datapointsshow, is_vertical, is_log, outliersshow, is_ndatashow,
-            is_percentileshow, is_meanshow, is_sdshow
-    ):
+def update_figure(
+    variable, groupby, main_title, xaxis_title, yaxis_title,
+    gridshow, xzeroline, yzeroline, legendshow,
+    datapointsshow, is_vertical, is_log, outliersshow, is_ndatashow,
+    is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
+    treshold_style, treshold_color, treshold_size, is_statshow, graph_height
+):
     # Title and axises label modificator
     if xaxis_title is None:
         xaxis_title = groupby
@@ -513,11 +632,14 @@ def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
     data_list = []
     n_data = []
     data_mean = []
+    data_median = []
     percentile_5 = []
     percentile_10 = []
     percentile_90 = []
     percentile_95 = []
     annots_ndata = []
+    annots_mean = []
+    annots_median = []
     annots_idx = 0
 
     # Computing N Data
@@ -551,8 +673,9 @@ def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
         percentile_90.append(np.percentile((df[df[groupby] == i][variable]), 90))
         percentile_95.append(np.percentile((df[df[groupby] == i][variable]), 95))
 
-        # Calculating mean
-        data_mean.append(np.mean((df[df[groupby] == i][variable])))
+        # Calculating mean and median
+        data_mean.append(np.around(np.mean((df[df[groupby] == i][variable])), 2))
+        data_median.append(np.around(np.median((df[df[groupby] == i][variable])), 2))
 
         # Counting number of data for each category
         df_shape = df[df[groupby] == i][variable].shape
@@ -566,6 +689,32 @@ def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
             showarrow=False,
             )
         )
+
+        # Generating annotations of mean
+        annots_mean.append(go.layout.Annotation(
+            x=data_mean[annots_idx] if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else data_mean[annots_idx],
+            xref='x',
+            yref='y',
+            text='Mean: {}'.format(data_mean[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (100/len(group_list))*5,
+            ay=(100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=6,
+        ))
+
+        # Generating annotations of mean
+        annots_median.append(go.layout.Annotation(
+            x=data_median[annots_idx] if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else data_median[annots_idx],
+            xref='x',
+            yref='y',
+            text='Med: {}'.format(data_median[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (-100/len(group_list))*4,
+            ay=(-100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
 
         annots_idx = annots_idx + 1
 
@@ -599,6 +748,31 @@ def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
     if (not is_ndatashow):
         annots_ndata = []
 
+    if (not is_statshow):
+        annots_mean = []
+        annots_median = []
+
+    annots_ndata = annots_ndata + annots_mean + annots_median
+
+    treshold_shape = []
+
+    if is_tresholdshow:
+        treshold_shape.append(dict(line=dict(
+                                # color="rgba(68, 68, 68, 0.5)",
+                                color='rgba({}, {}, {}, {})'.format(
+                                    treshold_color['rgb']['r'],
+                                    treshold_color['rgb']['g'],
+                                    treshold_color['rgb']['b'],
+                                    treshold_color['rgb']['a'], ),
+                                width=treshold_size, dash=treshold_style,
+                                ),
+            type='line',
+            x0=-0.5 if not is_vertical else treshold_value,
+            x1=len(group_list)-0.5 if not is_vertical else treshold_value,
+            y0=treshold_value if not is_vertical else -0.5,
+            y1=treshold_value if not is_vertical else len(group_list)-0.5,
+        ))
+
     # Returning figure
     return{
         'data': data_list,
@@ -617,8 +791,9 @@ def update_figure(variable, groupby, main_title, xaxis_title, yaxis_title,
             ),
             title=main_title,
             showlegend=legendshow,
-            height=650,
+            height=graph_height,
             annotations=annots_ndata,
+            shapes=treshold_shape,
         )
     }
 
