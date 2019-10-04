@@ -46,7 +46,7 @@ main_panel_padding = '10px 25px'
 label_padding = '10px 10px 0px 10px'
 toggle_switch_color = '#91c153'
 
-line_style = ['solid', 'dash', 'dot', 'longdash', 'dashdot', 'longdashdot']
+line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 
 content_style_even = {
     'margin': '0px',
@@ -320,7 +320,7 @@ app.layout = html.Div(children=[
                         id='show-ndata',
                         on=True,
                         # size='35',
-                        label='N Data',
+                        label='Frequency',
                         labelPosition='top',
                         color=toggle_switch_color,
                         style={
@@ -459,7 +459,7 @@ app.layout = html.Div(children=[
                             daq.BooleanSwitch(
                                 id='show-treshold',
                                 on=False,
-                                label='Treshold',
+                                label='Threshold',
                                 labelPosition='top',
                                 color=toggle_switch_color,
                                 style={
@@ -501,8 +501,8 @@ app.layout = html.Div(children=[
                         # Variable Drop Down List
                         dcc.Dropdown(
                             id='treshold-style',
-                            options=[{'label': i, 'value': i} for i in line_style],
-                            value=str(line_style[0]),
+                            options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
+                            value=(str(line_style[0]).replace(" ", "")).lower(),
                             disabled=True
                         ),
                     ], style={
@@ -526,7 +526,7 @@ app.layout = html.Div(children=[
                 html.Div(className='col-md-8', children=[
                     daq.ColorPicker(
                         id='treshold-line-color',
-                        label='Treshold Color',
+                        label='Threshold Color',
                         style={'background-color': 'white'},
                         value=dict(rgb=dict(r=0, g=0, b=255, a=1))
                     )
@@ -584,6 +584,14 @@ def update_treshold(
 
 
 @app.callback(
+    Output('show-stats', 'on'),
+    [Input('select-outliers', 'value'), ]
+)
+def update_showstat(outliersshow):
+    return False if outliersshow == 'all' else None
+
+
+@app.callback(
     Output('box-plot', 'figure'),
     [
         Input('select-variable', 'value'), Input('select-groupby', 'value'),
@@ -637,14 +645,24 @@ def update_figure(
     percentile_10 = []
     percentile_90 = []
     percentile_95 = []
+    percentile_25 = []
+    percentile_75 = []
     annots_ndata = []
     annots_mean = []
     annots_median = []
+    annots_p5 = []
+    annots_p10 = []
+    annots_p25 = []
+    annots_p75 = []
+    annots_p90 = []
+    annots_p95 = []
     annots_idx = 0
 
     # Computing N Data
     max_n = df[variable].max()
-    max_n = np.log(max_n/10) if is_log else 1.1*max_n
+    max_n = 1.05*np.log10(max_n) if is_log else 1.05*max_n
+    # max_n = 1.1*max_n
+
     # Generate boxplot
     for i in group_list:
         if (not is_vertical):
@@ -668,10 +686,12 @@ def update_figure(
             )
 
         # Counting percentiles
-        percentile_5.append(np.percentile((df[df[groupby] == i][variable]), 5))
-        percentile_10.append(np.percentile((df[df[groupby] == i][variable]), 10))
-        percentile_90.append(np.percentile((df[df[groupby] == i][variable]), 90))
-        percentile_95.append(np.percentile((df[df[groupby] == i][variable]), 95))
+        percentile_5.append(np.around(np.percentile((df[df[groupby] == i][variable]), 5), 2))
+        percentile_10.append(np.around(np.percentile((df[df[groupby] == i][variable]), 10), 2))
+        percentile_90.append(np.around(np.percentile((df[df[groupby] == i][variable]), 90), 2))
+        percentile_95.append(np.around(np.percentile((df[df[groupby] == i][variable]), 95), 2))
+        percentile_25.append(np.around(np.percentile((df[df[groupby] == i][variable]), 25), 2))
+        percentile_75.append(np.around(np.percentile((df[df[groupby] == i][variable]), 75), 2))
 
         # Calculating mean and median
         data_mean.append(np.around(np.mean((df[df[groupby] == i][variable])), 2))
@@ -685,28 +705,32 @@ def update_figure(
         annots_ndata.append(go.layout.Annotation(
             x=max_n if is_vertical else annots_idx,
             y=annots_idx if is_vertical else max_n,
+            xref='x',
+            yref='y',
             text='N = {}'.format(n_data[annots_idx]),
             showarrow=False,
+            ax=0 if is_vertical else annots_idx,
+            ay=annots_idx if is_vertical else 0,
             )
         )
 
         # Generating annotations of mean
         annots_mean.append(go.layout.Annotation(
-            x=data_mean[annots_idx] if is_vertical else annots_idx,
-            y=annots_idx if is_vertical else data_mean[annots_idx],
+            x=(np.log10(data_mean[annots_idx]) if is_log else data_mean[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(data_mean[annots_idx]) if is_log else data_mean[annots_idx]),
             xref='x',
             yref='y',
             text='Mean: {}'.format(data_mean[annots_idx]),
             showarrow=True,
             ax=0 if is_vertical else (100/len(group_list))*5,
             ay=(100/len(group_list))*2 if is_vertical else 0,
-            arrowhead=6,
+            arrowhead=7,
         ))
 
         # Generating annotations of mean
         annots_median.append(go.layout.Annotation(
-            x=data_median[annots_idx] if is_vertical else annots_idx,
-            y=annots_idx if is_vertical else data_median[annots_idx],
+            x=(np.log10(data_median[annots_idx]) if is_log else data_median[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(data_median[annots_idx]) if is_log else data_median[annots_idx]),
             xref='x',
             yref='y',
             text='Med: {}'.format(data_median[annots_idx]),
@@ -716,7 +740,100 @@ def update_figure(
             arrowhead=7,
         ))
 
+        # Generating annotations of percentile 5
+        annots_p5.append(go.layout.Annotation(
+            x=(np.log10(percentile_5[annots_idx]) if is_log else percentile_5[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_5[annots_idx]) if is_log else percentile_5[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P5: {}'.format(percentile_5[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (-100/len(group_list))*4,
+            ay=(-100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        # Generating annotations of percentile 10
+        annots_p10.append(go.layout.Annotation(
+            x=(np.log10(percentile_10[annots_idx]) if is_log else percentile_10[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_10[annots_idx]) if is_log else percentile_10[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P10: {}'.format(percentile_10[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (100/len(group_list))*5,
+            ay=(100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        # Generating annotations of percentile 25
+        annots_p25.append(go.layout.Annotation(
+            x=(np.log10(percentile_25[annots_idx]) if is_log else percentile_25[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_25[annots_idx]) if is_log else percentile_25[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P25: {}'.format(percentile_25[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (-100/len(group_list))*4,
+            ay=(-100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        # Generating annotations of percentile 75
+        annots_p75.append(go.layout.Annotation(
+            x=(np.log10(percentile_75[annots_idx]) if is_log else percentile_75[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_75[annots_idx]) if is_log else percentile_75[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P75: {}'.format(percentile_75[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (100/len(group_list))*5,
+            ay=(100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        # Generating annotations of percentile 90
+        annots_p90.append(go.layout.Annotation(
+            x=(np.log10(percentile_90[annots_idx]) if is_log else percentile_90[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_90[annots_idx]) if is_log else percentile_90[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P90: {}'.format(percentile_90[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (-100/len(group_list))*4,
+            ay=(-100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        # Generating annotations of percentile 95
+        annots_p95.append(go.layout.Annotation(
+            x=(np.log10(percentile_95[annots_idx]) if is_log else percentile_95[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(percentile_95[annots_idx]) if is_log else percentile_95[annots_idx]),
+            xref='x',
+            yref='y',
+            text='P95: {}'.format(percentile_95[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (100/len(group_list))*5,
+            ay=(100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
         annots_idx = annots_idx + 1
+
+    if (not is_ndatashow):
+        annots_ndata = []
+
+    if (not is_statshow):
+        annots_mean = []
+        annots_median = []
+        annots_p5 = []
+        annots_p10 = []
+        annots_p25 = []
+        annots_p90 = []
+        annots_p75 = []
+        annots_p95 = []
+
+    annots_ndata = annots_ndata + annots_mean + annots_median + annots_p5 + annots_p10 + annots_p25 + annots_p75 + annots_p90 + annots_p95
 
     symbol_size = 8
 
@@ -744,15 +861,6 @@ def update_figure(
             data_list.append(go.Scatter(x=group_list, y=percentile_10, mode='markers', name='10%', marker=dict(symbol='cross', size=symbol_size)))
             data_list.append(go.Scatter(x=group_list, y=percentile_90, mode='markers', name='90%', marker=dict(symbol='triangle-up', size=symbol_size)))
             data_list.append(go.Scatter(x=group_list, y=percentile_95, mode='markers', name='95%', marker=dict(symbol='star', size=symbol_size)))
-
-    if (not is_ndatashow):
-        annots_ndata = []
-
-    if (not is_statshow):
-        annots_mean = []
-        annots_median = []
-
-    annots_ndata = annots_ndata + annots_mean + annots_median
 
     treshold_shape = []
 
