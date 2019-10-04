@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import dash_daq as daq
 from dash.dependencies import Input, Output
+import colorlover as cl
 
 
 def read_file(filename):
@@ -45,6 +46,9 @@ border_color = '#868686'
 main_panel_padding = '10px 25px'
 label_padding = '10px 10px 0px 10px'
 toggle_switch_color = '#91c153'
+
+box_color_saved = {}
+default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 
 line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 
@@ -534,6 +538,31 @@ app.layout = html.Div(children=[
                 ),
             ], style=content_style_odd
             ),
+            html.Div(className='row', children=[
+                html.Div(className='col-md-4', children=[
+                    html.Div(className='row', children=[
+                        html.H5('Select Box')
+                    ],
+                    ),
+                    html.Div(className='row', children=[
+                        dcc.Checklist(
+                            id='select-box',
+                        )
+                    ],
+                    ),
+                ],
+                ),
+                html.Div(className='col-md-8', children=[
+                    daq.ColorPicker(
+                        id='box-color',
+                        label='Box Marker Color',
+                        style={'background-color': 'white'},
+                        value=dict(rgb=dict(r=222, g=110, b=75, a=1))
+                    )
+                ], style={'padding': '10px 5px 5px 5px'}
+                ),
+            ], style=content_style_odd
+            ),
         ], style={
             'padding': main_panel_padding,
             'background-color': '#ffffff', }
@@ -558,6 +587,18 @@ app.layout = html.Div(children=[
         ),
     ]),
 ])
+
+
+@app.callback(
+    Output('select-box', 'options'),
+    [Input('select-groupby', 'value'), ]
+)
+def update_select_box(groupby):
+    idx = 0
+    for i in df[groupby].unique():
+        box_color_saved[i] = default_color[idx%5]
+        idx += 1
+    return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
 
 @app.callback(
@@ -607,6 +648,7 @@ def update_showstat(outliersshow):
         Input('treshold-line-color', 'value'),
         Input('treshold-line-size', 'value'),
         Input('show-stats', 'on'), Input('graph-height', 'value'),
+        Input('select-box', 'value'), Input('box-color', 'value'),
     ]
 )
 def update_figure(
@@ -614,7 +656,8 @@ def update_figure(
     gridshow, xzeroline, yzeroline, legendshow,
     datapointsshow, is_vertical, is_log, outliersshow, is_ndatashow,
     is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
-    treshold_style, treshold_color, treshold_size, is_statshow, graph_height
+    treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
+    selected_box, box_color
 ):
     # Title and axises label modificator
     if xaxis_title is None:
@@ -663,8 +706,22 @@ def update_figure(
     max_n = 1.05*np.log10(max_n) if is_log else 1.05*max_n
     # max_n = 1.1*max_n
 
+    picker_box_color = 'rgba({}, {}, {}, {})'.format(
+        box_color['rgb']['r'],
+        box_color['rgb']['g'],
+        box_color['rgb']['b'],
+        box_color['rgb']['a'],)
+
+    color_idx = 0
     # Generate boxplot
     for i in group_list:
+        if selected_box is not None:
+            if i in selected_box:
+                box_color_saved[i] = picker_box_color
+            else:
+                box_color_saved[i] = default_color[color_idx % 5]
+        color_idx += 1
+
         if (not is_vertical):
             data_list.append(
                 go.Box(
@@ -672,6 +729,7 @@ def update_figure(
                     name=i,
                     boxpoints=showpoints,
                     boxmean='sd' if is_sdshow else None,
+                    marker_color=box_color_saved[i],
                 )
             )
         else:
@@ -682,6 +740,7 @@ def update_figure(
                     orientation='h',
                     boxpoints=showpoints,
                     boxmean='sd' if is_sdshow else None,
+                    marker_color=box_color_saved[i],
                 )
             )
 
