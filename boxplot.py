@@ -23,7 +23,7 @@ def read_file(filename):
 
 
 # Loading Data
-file_name = 'data2.xlsx'
+file_name = 'data3.xlsx'
 df = read_file(file_name)
 
 # Loading Numeric Data from Dataframe
@@ -47,8 +47,18 @@ main_panel_padding = '10px 25px'
 label_padding = '10px 10px 0px 10px'
 toggle_switch_color = '#91c153'
 
+default_alpha = 0.65
 box_color_saved = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
+
+col_idx = 0
+for i in default_color:
+    start_idx = i.find('(')
+    i = i[start_idx+1:len(i)-1]
+    i = i.split(",")
+    i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_alpha)
+    default_color[col_idx] = i
+    col_idx += 1
 
 line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 
@@ -263,7 +273,7 @@ app.layout = html.Div(children=[
                 html.Div(className='col-md-7', children=[
                     daq.ToggleSwitch(
                         id='graph-alignment',
-                        label=['Horizontal', 'Vertical'],
+                        label=['Vertical', 'Horizontal'],
                         value=False,
                         size='35',
                         color=toggle_switch_color, ),
@@ -545,7 +555,7 @@ app.layout = html.Div(children=[
                     ],
                     ),
                     html.Div(className='row', children=[
-                        dcc.Checklist(
+                        dcc.RadioItems(
                             id='select-box',
                         )
                     ],
@@ -557,7 +567,7 @@ app.layout = html.Div(children=[
                         id='box-color',
                         label='Box Marker Color',
                         style={'background-color': 'white'},
-                        value=dict(rgb=dict(r=222, g=110, b=75, a=1))
+                        value=dict(rgb=dict(r=222, g=110, b=75, a=default_alpha))
                     )
                 ], style={'padding': '10px 5px 5px 5px'}
                 ),
@@ -575,7 +585,7 @@ app.layout = html.Div(children=[
                     min=600, max=1000, value=600, step=50,
                     handleLabel={"showCurrentValue": True, "label": "Height"},
                 )
-            ], style={'margin': '0px', 'padding': '50px 0px 0px 0px', }
+            ], style={'margin': '10px', 'padding': '50px 0px 0px 0px', }
             ),
             html.Div(className='row', children=[
                 dcc.Graph(id='box-plot'),
@@ -590,13 +600,27 @@ app.layout = html.Div(children=[
 
 
 @app.callback(
+    Output('box-color', 'value'),
+    [Input('select-box', 'value')]
+)
+def update_box_color_selector(box):
+    temp_str = box_color_saved.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
+    if isinstance(temp_str, str):
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+    return temp_str
+
+
+@app.callback(
     Output('select-box', 'options'),
     [Input('select-groupby', 'value'), ]
 )
 def update_select_box(groupby):
     idx = 0
     for i in df[groupby].unique():
-        box_color_saved[i] = default_color[idx%5]
+        box_color_saved[i] = default_color[idx % 5]
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
@@ -684,6 +708,8 @@ def update_figure(
     n_data = []
     data_mean = []
     data_median = []
+    data_max = []
+    data_min = []
     percentile_5 = []
     percentile_10 = []
     percentile_90 = []
@@ -693,6 +719,8 @@ def update_figure(
     annots_ndata = []
     annots_mean = []
     annots_median = []
+    annots_max = []
+    annots_min = []
     annots_p5 = []
     annots_p10 = []
     annots_p25 = []
@@ -716,10 +744,13 @@ def update_figure(
     # Generate boxplot
     for i in group_list:
         if selected_box is not None:
-            if i in selected_box:
+            print('selected_box : {}'.format(selected_box))
+            print('box color 1 : {}'.format(box_color_saved))
+            if i == selected_box:
                 box_color_saved[i] = picker_box_color
-            else:
-                box_color_saved[i] = default_color[color_idx % 5]
+                print('box color 2 : {}'.format(box_color_saved))
+            # else:
+            #    box_color_saved[i] = default_color[color_idx % 5]
         color_idx += 1
 
         if (not is_vertical):
@@ -730,6 +761,7 @@ def update_figure(
                     boxpoints=showpoints,
                     boxmean='sd' if is_sdshow else None,
                     marker_color=box_color_saved[i],
+                    fillcolor=box_color_saved[i],
                 )
             )
         else:
@@ -741,6 +773,7 @@ def update_figure(
                     boxpoints=showpoints,
                     boxmean='sd' if is_sdshow else None,
                     marker_color=box_color_saved[i],
+                    fillcolor=box_color_saved[i],
                 )
             )
 
@@ -749,8 +782,10 @@ def update_figure(
         percentile_10.append(np.around(np.percentile((df[df[groupby] == i][variable]), 10), 2))
         percentile_90.append(np.around(np.percentile((df[df[groupby] == i][variable]), 90), 2))
         percentile_95.append(np.around(np.percentile((df[df[groupby] == i][variable]), 95), 2))
-        percentile_25.append(np.around(np.percentile((df[df[groupby] == i][variable]), 25), 2))
-        percentile_75.append(np.around(np.percentile((df[df[groupby] == i][variable]), 75), 2))
+        percentile_25.append(np.percentile((df[df[groupby] == i][variable]), 25))
+        percentile_75.append(np.percentile((df[df[groupby] == i][variable]), 75))
+        data_max.append(np.around(np.max((df[df[groupby] == i][variable])), 2))
+        data_min.append(np.around(np.min((df[df[groupby] == i][variable])), 2))
 
         # Calculating mean and median
         data_mean.append(np.around(np.mean((df[df[groupby] == i][variable])), 2))
@@ -831,7 +866,7 @@ def update_figure(
             y=annots_idx if is_vertical else (np.log10(percentile_25[annots_idx]) if is_log else percentile_25[annots_idx]),
             xref='x',
             yref='y',
-            text='P25: {}'.format(percentile_25[annots_idx]),
+            text='Q1: {}'.format(np.around(percentile_25[annots_idx], 2)),
             showarrow=True,
             ax=0 if is_vertical else (-100/len(group_list))*4,
             ay=(-100/len(group_list))*2 if is_vertical else 0,
@@ -844,7 +879,7 @@ def update_figure(
             y=annots_idx if is_vertical else (np.log10(percentile_75[annots_idx]) if is_log else percentile_75[annots_idx]),
             xref='x',
             yref='y',
-            text='P75: {}'.format(percentile_75[annots_idx]),
+            text='Q3: {}'.format(np.around(percentile_75[annots_idx], 2)),
             showarrow=True,
             ax=0 if is_vertical else (100/len(group_list))*5,
             ay=(100/len(group_list))*2 if is_vertical else 0,
@@ -877,6 +912,31 @@ def update_figure(
             arrowhead=7,
         ))
 
+        # Generating annotations of max
+        annots_max.append(go.layout.Annotation(
+            x=(np.log10(data_max[annots_idx]) if is_log else data_max[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(data_max[annots_idx]) if is_log else data_max[annots_idx]),
+            xref='x',
+            yref='y',
+            text='Max: {}'.format(data_max[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (-100/len(group_list))*4,
+            ay=(-100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
+        annots_min.append(go.layout.Annotation(
+            x=(np.log10(data_min[annots_idx]) if is_log else data_min[annots_idx]) if is_vertical else annots_idx,
+            y=annots_idx if is_vertical else (np.log10(data_min[annots_idx]) if is_log else data_min[annots_idx]),
+            xref='x',
+            yref='y',
+            text='Min: {}'.format(data_min[annots_idx]),
+            showarrow=True,
+            ax=0 if is_vertical else (100/len(group_list))*5,
+            ay=(100/len(group_list))*2 if is_vertical else 0,
+            arrowhead=7,
+        ))
+
         annots_idx = annots_idx + 1
 
     if (not is_ndatashow):
@@ -891,8 +951,10 @@ def update_figure(
         annots_p90 = []
         annots_p75 = []
         annots_p95 = []
+        annots_max = []
+        annots_min = []
 
-    annots_ndata = annots_ndata + annots_mean + annots_median + annots_p5 + annots_p10 + annots_p25 + annots_p75 + annots_p90 + annots_p95
+    annots_ndata = annots_ndata + annots_mean + annots_median + annots_p5 + annots_p10 + annots_p25 + annots_p75 + annots_p90 + annots_p95 + annots_max + annots_min
 
     symbol_size = 8
 
