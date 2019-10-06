@@ -14,22 +14,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='UWA_acid_base_table.xlsx'
+file_name='../../UWA_acid_base_table.xlsx'
 
-
-def read_file(filename):
-    try:
-        if 'csv' in filename:
-            dff = pd.read_csv(filename)
-        elif ('xls' or 'xlsx') in filename:
-            dff = pd.read_excel(filename)
-    except Exception as e:
-        print (e)
-        return u'There was an error opening {}'.format(filename)
-    return dff
-
-
-df = read_file(file_name)
+df = pd.read_excel(file_name)
 
 cnames = df.select_dtypes(include='number').columns.values
 
@@ -54,49 +41,59 @@ COLORSCALES_DICT = [
 ]
 
 MARKERS_DICT = [
-    {'value': 'circle', 'label': 'circle'},
-    {'value': 'square', 'label': 'square'},
-    {'value': 'diamond', 'label': 'diamond'},
-    {'value': 'cross', 'label': 'cross'},
+    {'value': 'circle', 'label': 'Circle'},
+    {'value': 'square', 'label': 'Square'},
+    {'value': 'diamond', 'label': 'Diamond'},
+    {'value': 'cross', 'label': 'Cross'},
     {'value': 'x', 'label': 'x'},
-    {'value': 'triangle-up', 'label': 'triangle-up'},
-    {'value': 'pentagon', 'label': 'pentagon'},
-    {'value': 'hexagon', 'label': 'hexagon'},
-    {'value': 'hexagon2', 'label': 'hexagon2'},
-    {'value': 'octagon', 'label': 'octagon'},
-    {'value': 'star', 'label': 'star'},
-    {'value': 'hexagram', 'label': 'hexagram'},
-    {'value': 'star-triangle-up', 'label': 'star-triangle-up'},
-    {'value': 'hourglass', 'label': 'hourglass'},
-    {'value': 'bowtie', 'label': 'bowtie'},
+    {'value': 'triangle-up', 'label': 'Triangle-up'},
+    {'value': 'pentagon', 'label': 'Pentagon'},
+    {'value': 'hexagon', 'label': 'Hexagon'},
+    {'value': 'hexagon2', 'label': 'Hexagon2'},
+    {'value': 'octagon', 'label': 'Octagon'},
+    {'value': 'star', 'label': 'Star'},
+    {'value': 'hexagram', 'label': 'Hexagram'},
+    {'value': 'star-triangle-up', 'label': 'Star-triangle-up'},
+    {'value': 'hourglass', 'label': 'Hourglass'},
+    {'value': 'bowtie', 'label': 'Bowtie'},
 ]
 
 
 
 app.layout = html.Div([
     html.Div([
-
         html.Div([
+        	#set an option to choose the X value
+        	html.H6("Choose X value:"),
             dcc.Dropdown(
                 id='xaxis-column',
                 options=[{'label': i, 'value': i} for i in cnames],
                 value=cnames[0],
             ),
+
+            #set an option to choose the Y value
+            html.H6("Choose Y Value:"),
+            dcc.Dropdown(
+                id='yaxis-column',
+                options=[{'label': i, 'value': i} for i in cnames],
+                value=cnames[-1],
+            )
+            
+        ],
+        style={'width': '48%', 'display': 'inline-block'}),
+
+        html.Div([
+        	#set a radio to choose linear or logarithmic for X
+        	html.H6("Linear or Logarithmic:"),
             dcc.RadioItems(
                 id='xaxis-type',
                 options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
                 value='Linear',
                 labelStyle={'display': 'inline-block'}
-            )
-        ],
-        style={'width': '48%', 'display': 'inline-block'}),
-
-        html.Div([
-            dcc.Dropdown(
-                id='yaxis-column',
-                options=[{'label': i, 'value': i} for i in cnames],
-                value=cnames[-1],
             ),
+
+            #set a radio to choose linear or logarithmic for Y
+            html.H6("Linear or Logarithmic:"),
             dcc.RadioItems(
                 id='yaxis-type',
                 options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
@@ -105,89 +102,120 @@ app.layout = html.Div([
             )
         ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
-                
-        html.Div([
-            html.Button('Swap Axes', id='swap'),
-            ]),
 
         html.Div([
-            html.Button('Show the Linear Fit', id='linear'),
-            ]),
-
-
-        html.Div([
+        	#set an input box for inputing title
+        	html.H6("Input a Title:"),
             dcc.Input(
                 id="title",
                 type="text",
                 placeholder="title")
-            ]
-            + [html.Div(id="out-all-types")]
-            ),
+            ],
+        	style={'width': '33%', 'float': 'left', 'display': 'inline-block'}),
 
         html.Div([
-            dcc.Input(
+        	#set an input box for inputing X label
+        	html.H6("Input X Label:"),
+        	dcc.Input(
                 id="x_label",
-                type="text",
-                placeholder="x_label"),
+                type="text")
+        	],
+        	style={'width': '33%', 'float': 'center', 'display': 'inline-block'}),
 
+        html.Div([
+        	#set an input box for inputing Y label
+        	html.H6("Input Y Label:"),
             dcc.Input(
                 id="y_label",
-                type="text",
-                placeholder="y_label")
-            ]),
+                type="text")
+            ],
+            style={'width': '33%', 'float': 'right', 'display': 'inline-block'}),
 
-        html.Div([
-            html.Button('Hide or Show grid line', id='GL'),
-            html.Button('Hide or Show zero line', id='OL')
-            ])
-    
-    ]),
-
-    html.Div(id='alignment-body', className='app-body', children=[
-        html.Div([
-            html.Div(id='alignment-control-tabs', className='control-tabs', children=[
-                        dcc.Tab(
-                            label='Graph',
-                            value='control-tab-customize',
-                            children=html.Div(className='control-tab', children=[
-                                html.Div([
-                                    html.H3('General', className='alignment-settings-section'),
-                                    html.Div(
-                                        className='app-controls-block',
-                                        children=[
-                                            html.Div(className='app-controls-name',
-                                                     children="Colorscale"),
-                                            dcc.Dropdown(
-                                                id='alignment-colorscale-dropdown',
-                                                className='app-controls-block-dropdown',
-                                                options=COLORSCALES_DICT,
-                                                value='Blackbody',
-                                            ),
-                                            html.Div(
-                                                className='app-controls-desc',
-                                                children='Choose the color theme of the viewer.'
-                                            )
-                                        ],
-                                    ),
-                                ]),
-                                
-                            ]),
-                        ),
-            ]),
-        ]),
-        dcc.Store(id='alignment-data-store'),
-    ]),
-
-    dcc.Dropdown(
+        html.H6("Change Marker Style:"),
+        dcc.Dropdown(
+        	#set an option for choosing the markers' style
             id='alignment-markers-dropdown',
             className='markers-controls-block-dropdown',
             options=MARKERS_DICT,
             value='circle',
-    ),
+    		),
 
-    dcc.Graph(id='indicator-graphic'),
+        html.H6("Functional Buttons:"),
+        html.Div([
+        	#set a button for swaping X and Y
+            html.Button('Swap Axes', id='swap'),
+            #set a button for showing the linear fit
+            html.Button('Show Linear Best Fit', id='linear'),
+            #set a button for hiding or showing the grid line
+            html.Button('Toggle Grid Lines', id='GL'),
+            #set a button for hiding or showing the zero line
+            html.Button('Toggle Zero Marker', id='OL'),
+            #set a button for hiding or showing legends
+            html.Button('Show Legend', id='LD')
+            ], style={'width': '100%', 'display': 'inline-block'}),
+
+        html.H6("Change Opacity:"),
+        html.Div([
+        	dcc.Slider(
+        		id='opacity-slider',
+        		min=0,
+        		max=100,
+        		value=70,
+        		)
+        	]),
+
+        html.H6("Change Distance of X ticks:"),
+        html.Div([
+        	dcc.Input(
+                id="X-dtick",
+                type="number")
+        	]),
+
+        html.H6("Change Distance of Y ticks:"),
+        html.Div([
+        	dcc.Input(
+                id="Y-dtick",
+                type="number")
+        	]),
+
+    	html.Div([
+    		html.H6("Change Colorscale:"),
+        	dcc.Dropdown(
+        		#set an option for choosing the colorscale
+            	id='alignment-colorscale-dropdown',
+            	className='app-controls-block-dropdown',
+            	options=COLORSCALES_DICT,
+            	value='Blackbody',
+            	),
+
+        	html.Div("Color and Hover Text Grouping"),
+        	dcc.Dropdown(
+				id='color-drop',
+				options=[{'label': i, 'value': i} for i in df.columns],
+				value=df.columns[0],
+				)
+    		]),
+    ], style={'width': '45%', 'height':'100%', 'display': 'inline-block', 'float': 'left'}),
+
+    html.Div([
+    	dcc.Graph(
+    		id='indicator-graphic'
+    		),
+    	], style={'width': '50%', 'height':'100%', 'display': 'inline-block', 'float': 'right'})
 ])
 
+
+@app.callback(
+    Output('x_label', 'value'),
+    [Input('xaxis-column', 'value')])
+def set_cities_options(X_c):
+    return X_c
+
+@app.callback(
+    Output('y_label', 'value'),
+    [Input('yaxis-column', 'value')])
+def set_cities_options(Y_c):
+    return Y_c
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -203,51 +231,69 @@ app.layout = html.Div([
      Input('y_label', 'value'),
      Input('GL', 'n_clicks'),
      Input('OL', 'n_clicks'),
-     Input('alignment-markers-dropdown', 'value')])
+     Input('alignment-markers-dropdown', 'value'),
+     Input('color-drop', 'value'),
+     Input('LD', 'n_clicks'),
+     Input('opacity-slider', 'value'),
+     Input('X-dtick', 'value'),
+     Input('Y-dtick', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, swap, linear, x_label, y_label, GL, OL, alignment_markers_dropdown):
+                 title_1, alignment_colorscale_dropdown, 
+                 swap, linear, x_label, y_label, GL, OL, 
+                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
 
 
     if swap != None and int(swap) % 2 == 1:
+    	# Swapping the x and y axes names and values
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
-
-
-    if swap != None and int(swap) % 2 == 1:
-        tmp = x_label
+        tmp1 = x_label
         x_label = y_label
-        y_label = tmp
+        y_label = tmp1
+        tmp2 = X_D
+        X_D = Y_D
+        Y_D = tmp2
 
+
+    # Showing the fit linear
     l_click = False
     if linear != None and int(linear) % 2 == 1:
         l_click = True
     
+    # Showing the grid line
     G_click = False
     if GL != None and int(GL) % 2 == 1:
         G_click = True
 
+    # Showing the zero line
     O_click = False
     if OL != None and int(OL) % 2 == 1:
         O_click = True
+
+    # Showing the zero line
+    LD_click = True
+    if LD != None and int(LD) % 2 == 1:
+        LD_click = False
 
     return {
         'data': [go.Scatter(
             x=df[xaxis_column_name],
             y=df[yaxis_column_name],
-            text=xaxis_column_name,
             mode='markers',
+            text=df[color_var],
+            opacity=OS/100,
             marker=dict(
                 size = 15,
                 opacity = 0.5,
                 line = {'width': 0.5, 'color': 'white'},
-                color = df[xaxis_column_name],
+                color = df[color_var],
                 colorscale = alignment_colorscale_dropdown,
-                showscale = True,
+                showscale = LD_click,
                 symbol = alignment_markers_dropdown
             ),
 
@@ -263,7 +309,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                     line = {'width': 0.5, 'color': 'white'},
                     color = 'black',
                     colorscale = alignment_colorscale_dropdown,
-                    showscale = True,
+                    showscale = LD_click,
             ),
                 name='Fit',
                 visible=l_click
@@ -275,17 +321,18 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'title': x_label,
                 'type': 'linear' if xaxis_type == 'Linear' else 'log',
                 'showgrid': G_click,
-                'zeroline': O_click
+                'zeroline': O_click,
+                'dtick': X_D
             },
             yaxis={
                 'title': y_label,
                 'type': 'linear' if yaxis_type == 'Linear' else 'log',
                 'showgrid': G_click,
-                'zeroline': O_click
+                'zeroline': O_click,
+                'dtick': Y_D
             },
-
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
+            showlegend = LD_click,
             hovermode='closest'
         )
     }
