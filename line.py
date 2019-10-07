@@ -7,6 +7,7 @@ import plotly.express as px
 from numpy import arange, array, ones
 import pandas as pd
 import plotly.graph_objs as go
+import dash_daq as daq
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
