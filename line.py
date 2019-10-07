@@ -44,6 +44,9 @@ for col in names:
 
 ynames = df.select_dtypes(include='number').columns.values
 
+
+
+
 COLORSCALES_DICT = [
     {'value': 'Blackbody', 'label': 'Blackbody'},
     {'value': 'Bluered', 'label': 'Bluered'},
@@ -93,23 +96,29 @@ LINESTYLE_DICT = [
 
 app.layout = html.Div([
      html.Div([
-
         html.Div([
+            # option to choose x value
+            html.H6("Choose X value:"),
             dcc.Dropdown(
                 id='xaxis-column',
                 options=[{'label': i, 'value': i} for i in xnames],
                 value=xnames[0],
             ),
+
+            # option to choose y value, move from right side to choose x value to underneath x value 
+            html.H6("Choose Y value:"),
+            dcc.Dropdown(
+                id = 'yaxis-column',
+                options = [{'label': i, 'value': i} for i in ynames],
+                value = [ynames[0]],
+                multi = True
+            )
         ],
         style={'width': '48%', 'display': 'inline-block'}),
 
+        #option to choose linear or log for y value
         html.Div([
-            dcc.Dropdown(
-                id='yaxis-column',
-                options=[{'label': i, 'value': i} for i in ynames],
-                value=[ynames[0]],
-                multi=True,
-            ),
+            html.H6("Linear or Logarithmic:"),
             dcc.RadioItems(
                 id='yaxis-type',
                 options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
@@ -118,77 +127,113 @@ app.layout = html.Div([
             )
         ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
-        #This is the form for the title of the plot
+
+        # Set the title of the plot
         html.Div([
-            html.H5('Plot Title'),
+            html.H6('Plot Title'),
             dcc.Input(
                 id="title",
                 type="text",
                 placeholder="title")
-            ]
-        , style={'display' : 'inline-block', 'padding-right' : '5px'}),
-        #This is the title for the X axes
+            ],
+            style={'width': '33%', 'float': 'left', 'display' : 'inline-block'}),
+
+        #This is the title for X axes
         html.Div([
-            html.H5('X-Axis Title:'),
-            dcc.Input(id='xaxis_title', value=xnames[0], type='text')
-            ], style={'display' : 'inline-block', 'padding-right' : '5px'}),
+            html.H6('X-Axis Title:'),
+            dcc.Input(
+                id='xaxis_title',
+                value=xnames[0],
+                type='text')
+            ],
+            style={'width': '33%', 'float': 'center', 'display' : 'inline-block'}),
+
         #This is the title for Y axes
         html.Div([
-            html.H5('Y-Axis Title:'),
-            dcc.Input(id='yaxis_title', value=ynames[0], type='text')
-            ], style={'display' : 'inline-block'}),
+            html.H6('Y-Axis Title:'),
+            dcc.Input(id='yaxis_title',
+                value=ynames[0],
+                type='text')
+            ],
+            style={'width': '33%', 'float': 'rifght', 'display' : 'inline-block'}),
+
+        # option to choose marker style
+        html.H6("Change Marker Style:"),
+        dcc.Dropdown(
+            id = 'alignment-markers-dropdown',
+            className = 'markers-controls-block-dropdown',
+            options = MARKERS_DICT,
+            value = 'circle'
+            ),
+
+        # All kinds of function buttons
+        html.H6("Function Buttons:"),
         html.Div([
             html.Button('Hide or Show grid line', id = 'GL'),
             html.Button('Hide or Show zero line', id = 'OL')
-            ])
-    
-    ]),
+            ],
+            style = {'width': '100%', 'display': 'inline-block'}),
 
-
-
-        html.Div(id='alignment-body', className='app-body', children=[
+        html.H6("Change Opacity:"),
         html.Div([
-            html.Div(id='alignment-control-tabs', className='control-tabs', children=[
-                        dcc.Tab(
-                            label='Graph',
-                            value='control-tab-customize',
-                            children=html.Div(className='control-tab', children=[
-                                html.Div([
-                                    html.H3('General', className='alignment-settings-section'),
-                                    html.Div(
-                                        className='app-controls-block',
-                                        children=[
-                                            html.Div(className='app-controls-name',
-                                                     children="Colorscale"),
-                                            dcc.Dropdown(
-                                                id='alignment-colorscale-dropdown',
-                                                className='app-controls-block-dropdown',
-                                                options=COLORSCALES_DICT,
-                                                value='Blackbody',
-                                            ),
-                                            html.Div(
-                                                className='app-controls-desc',
-                                                children='Choose the color theme of the viewer.'
-                                            )
-                                        ],
-                                    ),
-                                ]),
-                                
-                            ]),
-                        ),
-            ]),
+            dcc.Slider(
+                id = 'opacity-slider',
+                min = 0,
+                max = 100,
+                value = 50
+            )
         ]),
-        dcc.Store(id='alignment-data-store'),
-    ]),
 
-    dcc.Dropdown(
-        id = 'alignment-markers-dropdown',
-        className = 'markers-controls-block-dropdown',
-        options = MARKERS_DICT,
-        value = 'square'),
+        # Change distance of X ticks and Y ticks
+        html.H6("Change X ticks:"),
+        html.Div([
+            dcc.Input(
+                id = 'X-dtick',
+                type = 'number')
+            ]),
 
-    dcc.Graph(id='indicator-graphic'),
+        html.H6("Change Y ticks:"),
+        html.Div([
+            dcc.Input(
+                id = 'Y-dtick',
+                type = 'number')
+            ]),    
+
+        html.Div([
+            html.H6("Change Colorscale:"),
+            dcc.Dropdown(
+                # option to choose colorscale
+                id = 'alignment-colorscale-dropdown',
+                className = 'app-controls-block-dropdown',
+                options = COLORSCALES_DICT,
+                value = 'Blackbody'
+            ),
+
+            html.Div("Color and Hover Text Grouping"),
+            dcc.Dropdown(
+                id = 'color-drop',
+                options = [{'label': i, 'value': i} for i in df.columns],
+                value = df.columns[0]
+                )
+            ]),
+    ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
+
+    html.Div([html.Span(ynames[0], className="column",
+        style={"text-align": "center", "border": "1px solid #ccc"}),
+        html.Div([dcc.RangeSlider(id='range1',min=0,max=100000000,step=500,updatemode="drag",value=[0, 20000000],
+                marks={10000000: "10M",20000000: "20M",30000000: "30M",40000000: "40M",
+                50000000: "50M",60000000: "60M",70000000: "70M",80000000: "80M",
+                90000000: "90M",100000000: "100M"})], className="column",
+        style={"margin": 0, "padding": 10})], className="row", style={'width': '48%', 'padding': 15}),
+
+    # main graph
+    html.Div([
+        dcc.Graph(
+            id = 'indicator-graphic'),
+            # set width and height of the main graph and move it to the right side of the page
+            ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'})
 ])
+
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -201,12 +246,13 @@ app.layout = html.Div([
      Input('yaxis_title', 'value'),
      Input('GL', 'n_clicks'),
      Input('OL', 'n_clicks'),
-     Input('alignment-markers-dropdown', 'value')])
+     Input('alignment-markers-dropdown', 'value'),
+     Input('range1', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
-                 alignment_markers_dropdown):
+                 alignment_markers_dropdown, range1):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
@@ -252,7 +298,9 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'title' : yaxis_title,
                 'type' : yaxis_type.lower(),
                 'showgrid': G_click,
-                'zeroline': O_click
+                'zeroline': O_click,
+                # new
+                'range1': range1[0]
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
