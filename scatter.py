@@ -156,6 +156,7 @@ app.layout = html.Div([
 
         html.H6("Change Opacity:"),
         html.Div([
+        	#set a slider to change the opacity
         	dcc.Slider(
         		id='opacity-slider',
         		min=0,
@@ -166,16 +167,38 @@ app.layout = html.Div([
 
         html.H6("Change Distance of X ticks:"),
         html.Div([
+        	#set an input to change the distance between x ticks
         	dcc.Input(
                 id="X-dtick",
-                type="number")
+                type="number",
+                min=1)
         	]),
 
         html.H6("Change Distance of Y ticks:"),
         html.Div([
+        	#set an input to change the distance between y ticks
         	dcc.Input(
                 id="Y-dtick",
-                type="number")
+                type="number",
+                min=1)
+        	]),
+
+        html.H6("Add a thredshold for X:"),
+        html.Div([
+        	#set an input to add a threshold for X
+        	dcc.Input(
+        		id='X-thredshold',
+        		type='number'
+        		)
+        	]),
+
+        html.H6("Add a thredshold for Y:"),
+        html.Div([
+        	#set an input to add a threshold for Y
+        	dcc.Input(
+        		id='Y-thredshold',
+        		type='number'
+        		)
         	]),
 
     	html.Div([
@@ -203,7 +226,6 @@ app.layout = html.Div([
     		),
     	], style={'width': '50%', 'height':'100%', 'display': 'inline-block', 'float': 'right'})
 ])
-
 
 @app.callback(
     Output('x_label', 'value'),
@@ -236,12 +258,14 @@ def set_cities_options(Y_c):
      Input('LD', 'n_clicks'),
      Input('opacity-slider', 'value'),
      Input('X-dtick', 'value'),
-     Input('Y-dtick', 'value')])
+     Input('Y-dtick', 'value'),
+     Input('X-thredshold', 'value'),
+     Input('Y-thredshold', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
-                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D):
+                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -255,9 +279,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         tmp1 = x_label
         x_label = y_label
         y_label = tmp1
-        tmp2 = X_D
-        X_D = Y_D
-        Y_D = tmp2
 
 
     # Showing the fit linear
@@ -280,6 +301,29 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if LD != None and int(LD) % 2 == 1:
         LD_click = False
 
+    threshold_shape = []
+
+    #if users set a thredshold for X, then show this line
+    if X_T !=None:
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=X_T,
+    	x1=X_T,
+    	y0=df[yaxis_column_name].min(),
+    	y1=df[yaxis_column_name].max()
+    	))
+
+    #if users set a thredshold for Y, then show this line
+    if Y_T !=None:
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=df[xaxis_column_name].min(),
+    	x1=df[xaxis_column_name].max(),
+    	y0=Y_T,
+    	y1=Y_T
+    	))
+
+
     return {
         'data': [go.Scatter(
             x=df[xaxis_column_name],
@@ -293,7 +337,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 line = {'width': 0.5, 'color': 'white'},
                 color = df[color_var],
                 colorscale = alignment_colorscale_dropdown,
-                showscale = LD_click,
+                showscale = False,
                 symbol = alignment_markers_dropdown
             ),
 
@@ -333,6 +377,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             },
             title= title_1,
             showlegend = LD_click,
+            shapes=threshold_shape,
             hovermode='closest'
         )
     }
