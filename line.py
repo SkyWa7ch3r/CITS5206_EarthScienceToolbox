@@ -13,10 +13,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-#df = pd.read_csv('https://raw.githubusercontent.com/cszdzr/DataFile_RainierWeather/master/Rainier_Weather.csv?token=AM4CACREQ55DGSX372CISTK5PHQ6O')
 
-
-#data = df.select_dtypes(include = 'datetime').columns.values
 
 file_name='Rainier_Weather.csv'
 
@@ -90,7 +87,9 @@ LINESTYLE_DICT = [
     {'value': 'solid', 'label': 'solid'}, 
     {'value': 'dash', 'label': 'dash'},
     {'value': 'dot', 'label': 'dot'},
-    {'value': 'dashdot', 'label': 'dashdot'}
+    {'value': 'dashDot', 'label': 'dashDot'},
+    {'value': 'longDash', 'label': 'longDash'},
+    {'value': 'longDashDot', 'label': 'longDashDot'}
 ]
 
 
@@ -234,15 +233,6 @@ app.layout = html.Div([
             ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'})
 ])
 
-'''
-@app.callback(
-    [Output('treshold-value', 'disabled'),
-     Output('treshold-style', 'disabled'), ],
-    [Input('show-treshold', 'on'), ]
-)
-def update_treshold(is_tresholdshow):
-    return not is_tresholdshow, not is_tresholdshow
-'''
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -256,12 +246,13 @@ def update_treshold(is_tresholdshow):
      Input('GL', 'n_clicks'),
      Input('OL', 'n_clicks'),
      Input('alignment-markers-dropdown', 'value'),
-     Input('range1', 'value')])
+     Input('range1', 'value'),
+     Input('line-style', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
-                 alignment_markers_dropdown, range1):
+                 alignment_markers_dropdown, range1, line_style):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
