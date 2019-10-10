@@ -234,6 +234,15 @@ app.layout = html.Div([
             ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'})
 ])
 
+'''
+@app.callback(
+    [Output('treshold-value', 'disabled'),
+     Output('treshold-style', 'disabled'), ],
+    [Input('show-treshold', 'on'), ]
+)
+def update_treshold(is_tresholdshow):
+    return not is_tresholdshow, not is_tresholdshow
+'''
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -300,7 +309,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'showgrid': G_click,
                 'zeroline': O_click,
                 # new
-                'range1': range1[0]
+                'range': [range1[0], range1[1]]
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
