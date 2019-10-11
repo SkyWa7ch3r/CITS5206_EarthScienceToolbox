@@ -14,7 +14,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-
 file_name='Rainier_Weather.csv'
 
 
@@ -41,7 +40,12 @@ for col in names:
 
 ynames = df.select_dtypes(include='number').columns.values
 
-
+# Users can choose lines only, lines and markers and lines, markers and text
+LABELSTYLE_DICT = [
+    {'label': 'lines', 'value': 'lines'},
+    {'label': 'lines+markers', 'value': 'lines+markers'},
+    {'label': 'lines+markers+text', 'value': 'lines+markers+text'}
+]
 
 
 COLORSCALES_DICT = [
@@ -82,7 +86,7 @@ MARKERS_DICT = [
     {'value': 'bowtie', 'label': 'bowtie'},
 ]
 
-LINESTYLE_DICT = [
+LINESTYLES_DICT = [
 
     {'value': 'solid', 'label': 'solid'}, 
     {'value': 'dash', 'label': 'dash'},
@@ -165,6 +169,27 @@ app.layout = html.Div([
             value = 'circle'
             ),
 
+        html.H6("Change Line Style:"),
+        dcc.Dropdown(
+            id = 'alignment-linestyle-dropdown',
+            className = 'linestyle-controls-block-dropdown',
+            options = LINESTYLES_DICT,
+            value = 'solid'
+            ),
+
+        html.H6("Change Label Style:"),
+        dcc.Dropdown(
+            id = 'alignment-labelstyle-dropdown',
+            options = LABELSTYLE_DICT,
+            value = 'lines'
+            ),
+
+        html.Div([
+            daq.BooleanSwitch(label = 'Show Gaps', id = 'SG', on = False),
+            daq.BooleanSwitch(label = 'Add Line Fill', id = 'ALF', on = False)],
+            style = {'width': '50%', 'display': 'inline-block', 'padding': '10px'}),
+
+
         # All kinds of function buttons
         html.H6("Function Buttons:"),
         html.Div([
@@ -217,14 +242,6 @@ app.layout = html.Div([
             ]),
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
 
-    html.Div([html.Span(ynames[0], className="column",
-        style={"text-align": "center", "border": "1px solid #ccc"}),
-        html.Div([dcc.RangeSlider(id='range1',min=0,max=100000000,step=500,updatemode="drag",value=[0, 20000000],
-                marks={10000000: "10M",20000000: "20M",30000000: "30M",40000000: "40M",
-                50000000: "50M",60000000: "60M",70000000: "70M",80000000: "80M",
-                90000000: "90M",100000000: "100M"})], className="column",
-        style={"margin": 0, "padding": 10})], className="row", style={'width': '48%', 'padding': 15}),
-
     # main graph
     html.Div([
         dcc.Graph(
@@ -246,13 +263,15 @@ app.layout = html.Div([
      Input('GL', 'n_clicks'),
      Input('OL', 'n_clicks'),
      Input('alignment-markers-dropdown', 'value'),
-     Input('range1', 'value'),
-     Input('line-style', 'value')])
+     Input('alignment-labelstyle-dropdown', 'value'),
+     Input('SG', 'on'),
+     Input('ALF', 'on')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
-                 alignment_markers_dropdown, range1, line_style):
+                 alignment_markers_dropdown,
+                 alignment_labelstyle_dropdown, SG, ALF):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
@@ -262,6 +281,13 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if OL != None and int(OL) % 2 == 1:
         O_click = True
 
+    ConnectGaps = True
+    if SG:
+         ConnectGaps = False
+
+    Fill = "none"
+    if ALF:
+        Fill = "toself"
 
     traces_list = []
     for col in yaxis_column_name:
@@ -269,16 +295,18 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             go.Scatter(
                 x=df[xaxis_column_name],
                 y=df[col],
-                text=xaxis_column_name,
-                mode='lines',
+                text=df[col],
+                mode=alignment_labelstyle_dropdown,
                 name=col,
+                connectgaps = ConnectGaps,
+                fill = Fill,
                 marker=dict(
-                    size = 15,
+                    size = 8,
                     opacity = 0.5,
                     line = {'width': 0.5, 'color': 'white'},
-                    color = df[col],
-                    colorscale = alignment_colorscale_dropdown,
-                    showscale = True,
+                    #color = df[col],
+                    #colorscale = alignment_colorscale_dropdown,
+                    #showscale = True,
                     symbol = alignment_markers_dropdown
                 )
             )
@@ -300,7 +328,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'showgrid': G_click,
                 'zeroline': O_click,
                 # new
-                'range': [range1[0], range1[1]]
+                #'range': [range1[0], range1[1]]
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
             title= title_1,
