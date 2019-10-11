@@ -265,13 +265,14 @@ app.layout = html.Div([
      Input('alignment-markers-dropdown', 'value'),
      Input('alignment-labelstyle-dropdown', 'value'),
      Input('SG', 'on'),
-     Input('ALF', 'on')])
+     Input('ALF', 'on'),
+     Input('opacity-slider', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
                  alignment_markers_dropdown,
-                 alignment_labelstyle_dropdown, SG, ALF):
+                 alignment_labelstyle_dropdown, SG, ALF, OS):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
@@ -300,6 +301,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 name=col,
                 connectgaps = ConnectGaps,
                 fill = Fill,
+                opacity = OS/100,
                 marker=dict(
                     size = 8,
                     opacity = 0.5,
