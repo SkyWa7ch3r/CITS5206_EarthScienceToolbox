@@ -8,6 +8,8 @@ from numpy import arange, array, ones
 import pandas as pd
 import plotly.graph_objs as go
 import dash_daq as daq
+import colorlover as cl
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -95,6 +97,10 @@ LINESTYLES_DICT = [
     {'value': 'longDash', 'label': 'longDash'},
     {'value': 'longDashDot', 'label': 'longDashDot'}
 ]
+
+LINECOLOR_DICT = {}
+default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
+default_alpha = 0.65
 
 
 app.layout = html.Div([
@@ -241,6 +247,28 @@ app.layout = html.Div([
                 )
             ]),
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
+    
+
+    html.Div([
+        html.H6('Select Line'),
+
+        html.Div([
+        dcc.Dropdown(
+            id = 'select-yaxis',
+            options = [{'label': i, 'value': i} for i in ynames],
+            value = ynames[0])
+        ]),
+
+
+        html.Div([
+            daq.ColorPicker(
+                id = 'line-color',
+                label = 'Line Color',
+                value = dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
+            ]),
+        ], style = {'width': '48%', 'display': 'inline-block'}),
+
+
 
     # main graph
     html.Div([
@@ -249,6 +277,18 @@ app.layout = html.Div([
             # set width and height of the main graph and move it to the right side of the page
             ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'})
 ])
+
+
+
+@app.callback(
+    Output('line-color', 'value'),
+    [Input('select-yaxis', 'value')]
+)
+def update_line_color(yaxis):
+    temp = LINECOLOR_DICT.get(yaxis, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
+    return temp
+
+
 
 
 @app.callback(
@@ -266,13 +306,14 @@ app.layout = html.Div([
      Input('alignment-labelstyle-dropdown', 'value'),
      Input('SG', 'on'),
      Input('ALF', 'on'),
-     Input('opacity-slider', 'value')])
+     Input('opacity-slider', 'value'),
+     Input('line-color', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
                  alignment_markers_dropdown,
-                 alignment_labelstyle_dropdown, SG, ALF, OS):
+                 alignment_labelstyle_dropdown, SG, ALF, OS, line_color):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
