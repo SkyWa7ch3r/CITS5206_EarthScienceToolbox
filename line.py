@@ -253,10 +253,9 @@ app.layout = html.Div([
         html.H6('Select Line'),
 
         html.Div([
-        dcc.Dropdown(
+        dcc.RadioItems(
             id = 'select-yaxis',
-            options = [{'label': i, 'value': i} for i in ynames],
-            value = ynames[0])
+            )
         ]),
 
 
@@ -264,7 +263,7 @@ app.layout = html.Div([
             daq.ColorPicker(
                 id = 'line-color',
                 label = 'Line Color',
-                value = dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
+                value = dict(rgb = dict(r = 0, g = 0, b = 255, a = 1)))
             ]),
         ], style = {'width': '48%', 'display': 'inline-block'}),
 
@@ -289,6 +288,16 @@ def update_line_color(yaxis):
     return temp
 
 
+@app.callback(
+    Output('select-yaxis', 'options'),
+    [Input('yaxis-column', 'value')]
+)
+def update_yaxis(yaxis_column):
+    idx = 0
+    for i in df[yaxis_column]:
+        LINECOLOR_DICT[i] = default_color[idx % 5]
+        idx += 1
+    return [{'label': i, 'value': i} for i in df[yaxis_column]]
 
 
 @app.callback(
@@ -307,13 +316,15 @@ def update_line_color(yaxis):
      Input('SG', 'on'),
      Input('ALF', 'on'),
      Input('opacity-slider', 'value'),
-     Input('line-color', 'value')])
+     Input('line-color', 'value'),
+     Input('select-yaxis', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
                  alignment_markers_dropdown,
-                 alignment_labelstyle_dropdown, SG, ALF, OS, line_color):
+                 alignment_labelstyle_dropdown, SG, ALF, OS, line_color,
+                 select_yaxis):
     
     G_click = False
     if GL != None and int(GL) % 2 == 1:
@@ -331,6 +342,28 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if ALF:
         Fill = "toself"
 
+    lineStyle = dict()
+    MarkerOnly = dict()
+    if alignment_labelstyle_dropdown == 'lines':
+        MarkerOnly = None
+        lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
+                line_color['rgb']['r'],
+                line_color['rgb']['g'],
+                line_color['rgb']['b'],
+                line_color['rgb']['a'],), width = 3)
+    elif alignment_labelstyle_dropdown == 'lines+markers':
+        MarkerOnly = dict(
+            size = 8,
+            opacity = 0.5,
+            line = {'width': 0.5, 'color': 'white'},
+            symbol = alignment_markers_dropdown
+        )
+        lineStyle = None
+    #else:
+
+        
+
+
     traces_list = []
     for col in yaxis_column_name:
         traces_list.append(
@@ -343,15 +376,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 connectgaps = ConnectGaps,
                 fill = Fill,
                 opacity = OS/100,
-                marker=dict(
-                    size = 8,
-                    opacity = 0.5,
-                    line = {'width': 0.5, 'color': 'white'},
-                    #color = df[col],
-                    #colorscale = alignment_colorscale_dropdown,
-                    #showscale = True,
-                    symbol = alignment_markers_dropdown
-                )
+                marker = MarkerOnly,
+                line = lineStyle
             )
         )
         
