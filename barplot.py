@@ -1,4 +1,3 @@
-# Importing Libraries
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -21,12 +20,12 @@ def read_file(filename):
         return u'There was an error opening {}'.format(filename)
     return dff
 
-file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
+# Loading Data
+file_name = r'C:\Users\James\Downloads\5206\UWA\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
 
-
 # Loading Numeric Data from Dataframe
-features=df.select_dtypes(include='number').columns.values
+features=df.select_dtypes(exclude='number').columns.values
 # Loading non-Numeric Data from Dataframe
 cat_features=df.select_dtypes(exclude='number').columns.values
 
@@ -42,7 +41,7 @@ app.layout = html.Div([
         dcc.Dropdown(
             id='dd_features',
             options=[{'label':i, 'value':i} for i in features],
-            value=str(features[0])
+            value=str(features[1])
         ),
         html.H5('Group By:'),
         dcc.Dropdown(
@@ -100,8 +99,8 @@ app.layout = html.Div([
 
     # Right Graph
     html.Div([
-        html.H5('Bar Chart'),
-        dcc.Graph(id='bar_plot')
+        html.H5('Right Panel'),
+        dcc.Graph(id='box-plot')
     ], style={'width':'70%', 'display':'inline-block', 'vertical-align':'top'})
 ], style={'padding':'10px'})
 
@@ -116,7 +115,7 @@ def update_value(opacity_value):
 
 
 @app.callback(
-    Output('bar_plot', 'figure'),
+    Output('box-plot', 'figure'),
     [Input('dd_features', 'value'),
      Input('dd_group', 'value'),
      Input('main_title', 'value'),
@@ -132,15 +131,19 @@ def update_value(opacity_value):
 def update_figure(
     variable, groupby,
     main_title, xaxis_title, yaxis_title,
-    transform, orient,
-    show_legend,
+    transform, orient,show_legend,
     alpha, color_scale):
-
-    group_list=df[groupby].unique()
+    # generate list of unique elements on variable
+    var_list = df[variable].unique()
+    # generate list of unique elements on groupby
+    group_list = df[groupby].unique()
     data_list=[]
 
-    # Change Variable and Group By
+    pct = []
+    cnt = []
+    idx = 0
 
+    # Change Variable and Group By
     if (color_scale=='Colors01'):
         colors = [
         'rgba(93, 164, 200, 0.5)',
@@ -188,24 +191,33 @@ def update_figure(
 
     color_idx=0
     for i in group_list:
+        for j in var_list:
+            # counting all elements for each var_list
+            count_all=df[df[variable]==j][variable].count()
+            # counting all elements for each var_list for each group_list
+            count_me=df[df[variable]==j][df[groupby]==i][groupby].count()
+            # store percentage in array
+            pct.append(count_me*100/count_all)
+            cnt.append(count_me)
         if (orient=='h'):
             data_list.append(
-                go.bar(
-                    x=df[df[groupby]==i][variable],
-                    y=df,
-                    name=i,
-                    boxmean=box_mean
-                )
+                go.Bar(
+                    x=pct,
+                    y=var_list,
+                    orientation='h',
             )
+
+        )
         else:
             data_list.append(
                 go.Bar(
-                    x=df.index,
-                    y=df.[groupby],
+                    x=var_list,
+                    y=pct,
                     name=i,
-
-                )
             )
+        )
+        color_idx+=1
+        pct = []
     if show_legend=='True':
         show_legend=True
     else:
@@ -214,6 +226,8 @@ def update_figure(
     return{
         'data':data_list,
         'layout':go.Layout(
+            bargap=0.15, bargroupgap=0.1,
+            barmode='stack'
             xaxis=go.layout.XAxis(
                 title=xaxis_title
             ),
@@ -222,12 +236,9 @@ def update_figure(
                 showgrid=True,
                 type='linear' if transform=='lin' else 'log',
             ),
-            title=main_title,
             showlegend=show_legend,
-            barmode='group'
+            title=main_title,
         )
     }
-
-
 if __name__ == '__main__':
     app.run_server(debug=True)
