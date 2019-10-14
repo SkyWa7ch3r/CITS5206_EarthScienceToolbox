@@ -23,6 +23,8 @@ line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 default_alpha = 0.65
 box_color_saved = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
+dtick_value = None
+
 # generate default colors list
 col_idx = 0
 for i in default_color:
@@ -88,9 +90,15 @@ def render_radio_format(id, options):
 
 # Function: Render text input
 # Input: id, placeholder
-# Output: dcc.RadioItems
+# Output: dcc.Input
 def render_input(id, placeholder):
     return dcc.Input(id=id, type='text', placeholder=placeholder, style={'width': '100%'})
+
+# Function: Render number input
+# Input: id, placeholder
+# Output: dcc.Input
+def render_input_number(id, placeholder):
+    return dcc.Input(id=id, type='number', min=0, placeholder=placeholder, style={'width': '100%'})
 
 # Function: Render text input with delay feature, will callback after enter key pressed or input area loss its focus
 # Input: id, placeholder
@@ -137,6 +145,31 @@ def render_colorpicker(id, color, r, g, b, a):
 # Output: daq.NumericInput
 def render_numinput(id, min, max, value):
     return daq.NumericInput(id=id, min=min, max=max, value=value )
+
+# Function: Get Quantile
+# Input: df
+# Output: Q1
+def get_quantile(df):
+    df=df.sort_values()
+    n = len(df)
+    n_q1=n//2
+    q1_idx=(n_q1//2)
+    q3_idx=n-q1_idx
+    df_keys=df.keys()
+    if n_q1%2==0:
+        q1=(df[df_keys[q1_idx]]+df[df_keys[q1_idx-1]])/2
+        q3=(df[df_keys[q3_idx]]+df[df_keys[q3_idx-1]])/2
+    else:
+        q1=df[df_keys[(q1_idx)]]
+        q3=df[df_keys[(q3_idx-1)]]
+    #if n%2==0:
+    #print ('Data: \n{}'.format(df))
+    #print ('Data: \n{}'.format(df_keys))
+    #print ('Num of data: {}'.format(n))
+    #print ('Q1: {}'.format(q1))
+    #print ('Q3: {}'.format(q3))
+    return q1, q3
+
 
 
 # MAIN APP HERE
@@ -214,10 +247,6 @@ app.layout=html.Div(className='row', children=[
                     dbc.Collapse(
                         dbc.CardBody(children=[
                             dbc.Card([
-                                dbc.CardHeader(html.H2('Data Transformation')),
-                                dbc.CardBody(children=render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
-                            ]),
-                            dbc.Card([
                                 dbc.CardHeader(html.H2('Graph Orientation')),
                                 dbc.CardBody(children=render_toggleswitch('graph-alignment', ['Vertical', 'Horizontal'], False))
                             ]),
@@ -258,7 +287,7 @@ app.layout=html.Div(className='row', children=[
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H2('Tick Step')),
-                                dbc.CardBody(children=render_input_delay('delta-tick', 'Tick Step'))
+                                dbc.CardBody(children=render_input_number('delta-tick', 'Tick Step'))
                             ], className='col-md-6'
                             ),
                         ]),
@@ -268,11 +297,15 @@ app.layout=html.Div(className='row', children=[
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
-                            "Statistic Informations", id='group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                            "Statistic Information", id='group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
                         dbc.CardBody(children=[
+                            dbc.Card([
+                                dbc.CardHeader(html.H2('Data Transformation')),
+                                dbc.CardBody(children=render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
+                            ]),
                             dbc.Card([
                                 dbc.CardHeader(html.H2('Group by')),
                                 dbc.CardBody(children=render_radio_outliers('select-outliers'))
@@ -407,6 +440,16 @@ def toggle_accordion(n1, n2, n3, n4, n5, n6, is_open1, is_open2, is_open3, is_op
         return False, False, False, False, False, not is_open6
     return False, False, False, False, False, False
 
+# Turn Y Tick Disabled when in Logarithmic and Enabled when in Linear
+# Turn Y Tick Value to None when in Logarithmic end recall previous value when turn back to Linear
+@app.callback(
+    [Output('delta-tick', 'disabled'),
+     Output('delta-tick', 'value')],
+    [Input('data-transform', 'value')]
+)
+def update_delta_tick_disabled(is_log):
+    return is_log, None if is_log else dtick_value
+
 # Box Color Selector Callback
 @app.callback(
     Output('box-color', 'value'),
@@ -483,6 +526,10 @@ def update_figure(
     treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
     graph_width, selected_box, box_color, grid_width, dtick
 ):
+    # Update dtick_value
+    if dtick != None:
+        dtick_value = dtick
+
     # Title and axises label modificator
     if xaxis_title is None:
         xaxis_title = groupby
@@ -577,8 +624,8 @@ def update_figure(
         percentile_10.append(np.around(np.percentile((df[df[groupby] == i][variable]), 10), 2))
         percentile_90.append(np.around(np.percentile((df[df[groupby] == i][variable]), 90), 2))
         percentile_95.append(np.around(np.percentile((df[df[groupby] == i][variable]), 95), 2))
-        percentile_25.append(np.percentile((df[df[groupby] == i][variable]), 25))
-        percentile_75.append(np.percentile((df[df[groupby] == i][variable]), 75))
+        percentile_25.append(np.around(np.percentile((df[df[groupby] == i][variable]), 25), 2))
+        percentile_75.append(np.around(np.percentile((df[df[groupby] == i][variable]), 75), 2))
         data_max.append(np.around(np.max((df[df[groupby] == i][variable])), 2))
         data_min.append(np.around(np.min((df[df[groupby] == i][variable])), 2))
 
