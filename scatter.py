@@ -60,7 +60,14 @@ MARKERS_DICT = [
     {'value': 'bowtie', 'label': 'Bowtie'},
 ]
 
-
+DASH_DICT = [
+    {'value': 'solid', 'label': 'Solid'}, 
+    {'value': 'dash', 'label': 'Dash'},
+    {'value': 'dot', 'label': 'Dot'},
+    {'value': 'dashdot', 'label': 'DashDot'},
+    {'value': 'longdash', 'label': 'LongDash'},
+    {'value': 'longdashdot', 'label': 'LongDashDot'}
+]
 
 app.layout = html.Div([
     html.Div([
@@ -147,8 +154,10 @@ app.layout = html.Div([
             daq.BooleanSwitch(label='Toggle Zero Marker', id='OL', on=False),
             #set a button for hisding or showing the label
             daq.BooleanSwitch(label='Show Label', id='LB', on=False),
-            #set a button for hiding or showing legends
-            daq.BooleanSwitch(label='Show Legend', id='LD', on=True),
+            #set a button for hiding or showing legends of traces
+            daq.BooleanSwitch(label='Show Legend of Traces', id='LD', on=True),
+            #set a button for hiding or showing legends of colorscale
+            daq.BooleanSwitch(label='Show Legend of Colorscale', id='LS', on=False),
             ], style={'width': '100%', 'display': 'inline-block'}),
 
         html.H6("Change Opacity:"),
@@ -198,6 +207,14 @@ app.layout = html.Div([
         		)
         	]),
 
+        html.H6("Change the Type of Best Fit Line"),
+        html.Div([
+        	dcc.Dropdown(
+        		id='change-dash',
+                options=DASH_DICT
+        		)
+        	]),
+
     	html.Div([
     		
 
@@ -227,8 +244,7 @@ app.layout = html.Div([
     		]),
 
     	html.Div([
-    		html.H6("Chose a Trace (If the trace is number, selcet the color through the Colorscale):"),
-    		dcc.RadioItems(
+    		dcc.Dropdown(
     			id='selected-groupby'
     			)
     		],
@@ -256,14 +272,29 @@ app.layout = html.Div([
 ])
 
 @app.callback(
-	Output('selected-groupby', 'options'),
+	[Output('selected-groupby', 'options'),
+	Output('alignment-colorscale-dropdown', 'disabled'),
+	Output('my-color-picker','disabled'),
+	Output('LS', 'disabled')
+	],
 	[Input('color-drop', 'value'),]
 	)
 def traces_groupby(color_drop):
 	if df[color_drop].dtypes =='object':
-		return [{'label': i, 'value': i} for i in df[color_drop].unique()]
+		return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True
 	else:
-		return [{'label': color_drop, 'value': color_drop}]
+		return [{'label': color_drop, 'value': color_drop}], False, True, False
+
+@app.callback(
+	Output('change-dash', 'disabled'),
+	[Input('linear', 'on'),]
+	)
+def show_linear(on):
+	if on:
+		return False
+	else:
+		return True
+
 
 @app.callback(
     Output('x_label', 'value'),
@@ -301,12 +332,14 @@ def set_cities_options(Y_c):
      Input('Y-thredshold', 'value'),
      Input('selected-groupby', 'value'),
      Input('my-color-picker', 'value'),
-     Input('LB', 'on'),])
+     Input('LB', 'on'),
+     Input('LS', 'on'),
+     Input('change-dash', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
-                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB):
+                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -366,7 +399,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	       			'size': 15,
 	       			'line': {'width' :0.5, 'color': 'white'},
 	       			'symbol': alignment_markers_dropdown,
-	       			'color': C_P['hex']
+	       			'color': C_P['hex'],
+	       			'symbol':alignment_markers_dropdown
 	       		},
 	       		name=i
 	       		))
@@ -380,8 +414,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 		       		opacity=OS/100,
 		       		marker={
 		       			'size': 15,
-		       			'line': {'width' :0.5, 'color': 'white'},
-		       			'symbol': alignment_markers_dropdown
+		       			'line': {'width' :0.5, 'color': 'white'}
 		       		},
 		       		name=i
 		    	))
@@ -399,7 +432,10 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	        	line = {'width': 0.5, 'color': 'white'},
 	        	color = df[xaxis_column_name],
 	        	colorscale = alignment_colorscale_dropdown,
-	        	showscale = LD,
+	        	colorbar=dict(
+	        		title=xaxis_column_name
+	        		),
+	        	showscale = LS,
 	        	symbol = alignment_markers_dropdown
 	    	),
 	    	name='{} VS {}'.format(xaxis_column_name, yaxis_column_name)
@@ -409,14 +445,17 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     	x=df[xaxis_column_name],
         y=line,
         mode='lines',
+        name='Y = {}*X + {}'.format(slope, intercept),
         marker=dict(
             size = 15,
             opacity = 0.5,
             line = {'width': 0.5, 'color': 'white'},
             color = 'black',
-            showscale = LD,
+            showscale = LD
         ),
-        name='Fit',
+        line = dict(
+        	dash=CD
+        	),
         visible=linear
     ))
 
@@ -436,7 +475,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             'dtick': Y_D
         },
         title= title_1,
-        legend=dict(x=-.1, y=1.2),
         showlegend = LD,
         shapes=threshold_shape,
         hovermode='closest'
