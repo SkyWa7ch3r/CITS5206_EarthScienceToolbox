@@ -470,11 +470,20 @@ def update_bar_color_selector(bar):
     [Input('select-groupby', 'value'), ]
 )
 def update_select_bar(groupby):
+
     idx = 0
-    for i in df[groupby].unique():
-        bar_color_saved[i] = default_color[idx % 5]
-        idx += 1
-    return [{'label': i, 'value': i} for i in df[groupby].unique()]
+    if(plottype=="Single"):
+        variable = groupby
+        for i in df[variable].unique():
+            bar_color_saved[i] = default_color[idx % 5]
+            idx += 1
+        return [{'label': i, 'value': i} for i in df[variable].unique()]
+
+    else :
+        for i in df[groupby].unique():
+            bar_color_saved[i] = default_color[idx % 5]
+            idx += 1
+        return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
 # Threshold Line Callback
 @app.callback(
@@ -601,7 +610,7 @@ def update_figure(
                         y=[var_list[idx]],
                         name=i,
                         orientation='h',
-                        text =pct,
+                        text =pct if is_ndatashow else None,
                         textposition ="auto",
                     )
                 )
@@ -613,7 +622,7 @@ def update_figure(
                         x=[var_list[idx]],
                         y=[pct[0]],
                         name=i,
-                        text=pct,
+                        text=pct if is_ndatashow else None,
                         textposition ="auto",
                     )
                 )
