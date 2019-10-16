@@ -773,7 +773,7 @@ def update_figure(
             showlegend=legendshow,
             height=graph_height,
             width=graph_width,
-            annotations=annots_ndata,
+            #annotations=annots_ndata,
             shapes=treshold_shape,
         )
     }
