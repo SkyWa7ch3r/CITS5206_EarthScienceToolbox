@@ -189,7 +189,7 @@ app.layout = html.Div([
                 min=1)
         	]),
 
-        html.H6("Add a thredshold for X:"),
+        html.H6("Add a Thredshold for X:"),
         html.Div([
         	#set an input to add a threshold for X
         	dcc.Input(
@@ -198,7 +198,7 @@ app.layout = html.Div([
         		)
         	]),
 
-        html.H6("Add a thredshold for Y:"),
+        html.H6("Add a Thredshold for Y:"),
         html.Div([
         	#set an input to add a threshold for Y
         	dcc.Input(
@@ -342,7 +342,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
-    line = slope*df[xaxis_column_name]+intercept
+    
 
 
     if swap:
@@ -353,6 +353,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         tmp1 = x_label
         x_label = y_label
         y_label = tmp1
+
+    line = slope*df[xaxis_column_name]+intercept
 
 
     threshold_shape = []
@@ -433,7 +435,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	        	color = df[xaxis_column_name],
 	        	colorscale = alignment_colorscale_dropdown,
 	        	colorbar=dict(
-	        		title=xaxis_column_name
+	        		title=color_var
 	        		),
 	        	showscale = LS,
 	        	symbol = alignment_markers_dropdown
