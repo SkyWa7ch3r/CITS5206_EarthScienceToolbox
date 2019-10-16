@@ -61,7 +61,7 @@ def render_radio(id, options):
 # Function: Render radio items for plottype
 # Input: id
 # Output: dcc.RadioItems
-def render_radio_outliers(id):
+def render_radio_plotype(id):
     return dcc.RadioItems(
         id=id,
         options=[
@@ -214,9 +214,9 @@ app.layout=html.Div(className='row', children=[
                     dbc.Collapse(
                         dbc.CardBody(children=[
                             dbc.Card([
-                                dbc.CardHeader(html.H2('Group by')),
+                                dbc.CardHeader(html.H2('Bar Plot Type')),
                                 dbc.CardBody(children=render_radio_plotype('select-barplot'))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                            ],
                             ),
                         ]),
                         id='collapse-3'
@@ -450,21 +450,12 @@ def update_select_bar(groupby):
 @app.callback(
     Output('treshold-value', 'value'),
     [Input('show-treshold', 'on'),
-     Input('select-variable', 'value'),
      ]
 )
 def update_treshold_value(
-    is_tresholdshow, variable
+    is_tresholdshow
 ):
     return '25' if is_tresholdshow else ' '
-
-# Statistics Show Hide Callback
-@app.callback(
-    Output('show-stats', 'on'),
-    [Input('select-outliers', 'value'), ]
-)
-def update_showstat(outliersshow):
-    return False if outliersshow == 'all' else None
 
 # Figure Callback
 @app.callback(
@@ -472,28 +463,25 @@ def update_showstat(outliersshow):
     [
         Input('select-variable', 'value'), Input('select-groupby', 'value'),
         Input('main-title', 'value'), Input('xaxis-title', 'value'),
-        Input('yaxis-title', 'value'), Input('show-gridlines', 'on'),
+        Input('yaxis-title', 'value'), Input('select-barplot', 'value'),
+        Input('show-gridlines', 'on'),
         Input('show-zeroline-x', 'on'), Input('show-zeroline-y', 'on'),
-        Input('show-legend', 'on'), Input('show-percentiles', 'on'),
+        Input('show-legend', 'on'),
         Input('graph-alignment', 'value'), Input('data-transform', 'value'),
-        Input('select-outliers', 'value'), Input('show-ndata', 'on'),
-        Input('show-percentiles', 'on'), Input('show-mean', 'on'),
-        Input('show-sd', 'on'), Input('show-treshold', 'on'),
+        Input('show-ndata', 'on'), Input('show-treshold', 'on'),
         Input('treshold-value', 'value'), Input('treshold-style', 'value'),
         Input('treshold-line-color', 'value'),
-        Input('treshold-line-size', 'value'),
-        Input('show-stats', 'on'), Input('graph-height', 'value'),
+        Input('treshold-line-size', 'value'),Input('graph-height', 'value'),
         Input('graph-width', 'value'),
         Input('select-bar', 'value'), Input('bar-color', 'value'),
         Input('grid-width', 'value'), Input('delta-tick', 'value'),
     ]
 )
 def update_figure(
-    variable, groupby, main_title, xaxis_title, yaxis_title,
+    variable, groupby, main_title, xaxis_title, yaxis_title,plottype,
     gridshow, xzeroline, yzeroline, legendshow,
-    datapointsshow, is_vertical, is_log, outliersshow, is_ndatashow,
-    is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
-    treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
+    is_vertical, is_log,is_ndatashow,is_tresholdshow, treshold_value,
+    treshold_style, treshold_color, treshold_size, graph_height,
     graph_width, selected_bar, bar_color, grid_width, dtick
 ):
     # Update dtick_value
@@ -510,14 +498,6 @@ def update_figure(
     if main_title is None:
         main_title = str(variable + " VS " + groupby)
 
-    # Outliers Selector
-    showpoints = ""
-    if (outliersshow == 'False'):
-        showpoints = False
-    elif (outliersshow == 'suspectedoutliers'):
-        showpoints = outliersshow
-    else:
-        showpoints = outliersshow
 
     # Initialising data list
     data_list = []
