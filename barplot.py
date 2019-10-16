@@ -24,7 +24,7 @@ default_alpha = 0.65
 bar_color_saved = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 dtick_value = None
-plottype = "Single"
+plottype = "Stacked_Percentage"
 
 # generate default colors list
 col_idx = 0
@@ -177,12 +177,6 @@ def get_quantile(df):
 # Loading Data
 file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
-
-# Loading Numeric Data from Dataframe
-# Please be aware with categoric data stored in numeric data
-# example: gender variable coded by 1 and 2, this feature will
-#          fall into numeric data instead of categoric.
-#          proposed solution: modify file by recode to alphabetic
 
 
 # Loading non-Numeric Data from Dataframe
@@ -651,7 +645,7 @@ def update_figure(
                             x=var_list,
                             y=pct,
                             name=i,
-                            text =pct_text,
+                            text =pct_text if is_ndatashow else None,
                             textposition ="auto",
                         )
                     )
@@ -666,7 +660,7 @@ def update_figure(
                             y=var_list,
                             name=i,
                             orientation='h',
-                            text =pct_text,
+                            text =pct_text if is_ndatashow else None,
                             textposition ="auto",
                         )
                     )
@@ -675,7 +669,7 @@ def update_figure(
                 pct_idx += 1
                 pct_text=[]
             # Counting number of data for each category
-            df_shape = df[df[groupby] == i][variable].shape
+            df_shape= df[df[groupby] == i][variable].shape
             n_data.append(df_shape[0])
 
             # Generating annotations of n of data
@@ -720,7 +714,7 @@ def update_figure(
                             x=var_list,
                             y=cnt,
                             name=i,
-                            text =cnt_text,
+                            text =cnt_text if is_ndatashow else None,
                             textposition ="auto",
                         )
                     )
@@ -735,7 +729,7 @@ def update_figure(
                             y=var_list,
                             name=i,
                             orientation='h',
-                            text =cnt_text,
+                            text =cnt_text if is_ndatashow else None,
                             textposition ="auto",
                         )
                     )
@@ -789,7 +783,7 @@ def update_figure(
                 type=type_x,
                 gridwidth=grid_width,
                 gridcolor='lightgrey',
-                dtick=dtick if is_vertical else None,
+                dtick=None if is_vertical else dtick,
             ),
             yaxis=go.layout.YAxis(
                 title=yaxis_title,
@@ -798,7 +792,7 @@ def update_figure(
                 type=type_y,
                 gridwidth=grid_width,
                 gridcolor='lightgrey',
-                dtick=None if is_vertical else dtick,
+                dtick=dtick if is_vertical else None,
             ),
             barmode = "stack",
             title=main_title,
