@@ -24,7 +24,7 @@ default_alpha = 0.65
 bar_color_saved = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 dtick_value = None
-plottype = "Stacked_Percentage"
+plottype = " "
 
 # generate default colors list
 col_idx = 0
@@ -66,9 +66,9 @@ def render_radio_plotype(id):
         id=id,
         options=[
             {'label': 'Single', 'value': 'Single'},
-            {'label': 'Stacked Percentage', 'value': 'Stacked_Percentage'},
+            {'label': 'Percentage', 'value': 'Stacked_Percentage'},
             {'label': 'Side by Side', 'value': 'Side_by_Side'},
-            {'label': 'Stacked', 'value': "Stacked"},
+            {'label': 'Stacked', 'value': 'Stacked'},
         ],
         value='plottype',
         labelStyle={'display': 'block'} )
@@ -153,7 +153,7 @@ file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
 
 
-# Loading non-Numeric Data from Dataframe for the barplot input
+# Loading non-Numeric Data from Dataframe
 cat_features = df.select_dtypes(exclude='number').columns.values
 
 
@@ -741,7 +741,7 @@ def update_figure(
                 gridcolor='lightgrey',
                 dtick=dtick if is_vertical else None,
             ),
-            barmode = "stack",
+            barmode = "group" if is_side else "stack",
             title=main_title,
             showlegend=legendshow,
             height=graph_height,
