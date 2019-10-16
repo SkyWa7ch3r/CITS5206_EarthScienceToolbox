@@ -488,15 +488,35 @@ def update_figure(
     if dtick != None:
         dtick_value = dtick
 
-    # Title and axises label modificator
-    if xaxis_title is None:
-        xaxis_title = groupby
+    # Title and axis default title
+    if(plottype=="Single"):
+        if xaxis_title is None:
+            xaxis_title = str("Count")
 
-    if yaxis_title is None:
-        yaxis_title = variable
+        if yaxis_title is None:
+            yaxis_title = variable
 
-    if main_title is None:
-        main_title = str(variable + " VS " + groupby)
+        if main_title is None:
+            main_title = str("BARPLOT")
+    elif(plottype=="Stacked_Percentage"):
+        if xaxis_title is None:
+            xaxis_title = str("Percentage % ")
+
+        if yaxis_title is None:
+            yaxis_title = variable
+
+        if main_title is None:
+            main_title = str("BARPLOT")
+
+    else:
+        if xaxis_title is None:
+            xaxis_title = str("Count")
+
+        if yaxis_title is None:
+            yaxis_title = variable
+
+        if main_title is None:
+            main_title = str("BARPLOT")
 
 
     # Initialising data list
