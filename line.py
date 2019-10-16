@@ -267,7 +267,7 @@ app.layout = html.Div([
         
         html.Div([
         dcc.RadioItems(
-            id = 'select-yaxis',
+            id = 'select-line',
             )
         ]),
 
@@ -276,7 +276,7 @@ app.layout = html.Div([
             daq.ColorPicker(
                 id = 'line-color',
                 label = 'Line Color',
-                value = dict(rgb = dict(r = 0, g = 0, b = 255, a = 1)))
+                value = dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
             ]),
         ], style = {'width': '48%', 'display': 'inline-block'}),
 
@@ -290,18 +290,23 @@ app.layout = html.Div([
 ])
 
 
-# 这里可能需要一个循环?
+
 @app.callback(
     Output('line-color', 'value'),
-    [Input('select-yaxis', 'value')]
+    [Input('select-line', 'value')]
 )
 def update_line_color(yaxis):
-    temp = LINECOLOR_DICT.get(yaxis, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
-    return temp
+    temp_str = LINECOLOR_DICT.get(yaxis, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
+    if isinstance(temp_str, str):
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb = dict(r = temp_str[0], g = temp_str[1], b = temp_str[2], a = temp_str[3]))
+    return temp_str
 
 # Change the selected y axis
 @app.callback(
-    Output('select-yaxis', 'options'),
+    Output('select-line', 'options'),
     [Input('yaxis-column', 'value')]
 )
 def update_yaxis(yaxis_column):
@@ -329,15 +334,34 @@ def update_yaxis(yaxis_column):
      Input('ALF', 'on'),
      Input('opacity-slider', 'value'),
      Input('line-color', 'value'),
-     Input('select-yaxis', 'value')])
+     Input('select-line', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  yaxis_type,
                  title_1, alignment_colorscale_dropdown,
                  xaxis_title, yaxis_title, GL, OL,
                  alignment_markers_dropdown,
                  alignment_labelstyle_dropdown, SG, ALF, OS, line_color,
-                 select_yaxis):
+                 select_line):
     
+    yaxis_list = ynames
+    
+    picker_line_color = 'rgba({}, {}, {}, {})'.format(
+        line_color['rgb']['r'],
+        line_color['rgb']['g'],
+        line_color['rgb']['b'],
+        line_color['rgb']['a'])
+    
+    color_idx = 0
+    for i in yaxis_list:
+        if select_line is not None:
+            print('select_line: {}'.format(select_line))
+            print('line color 1: {}'.format(LINECOLOR_DICT))
+            if i == select_line:
+                LINECOLOR_DICT[i] = picker_line_color
+
+        color_idx += 1
+
+
     G_click = False
     if GL != None and int(GL) % 2 == 1:
         G_click = True

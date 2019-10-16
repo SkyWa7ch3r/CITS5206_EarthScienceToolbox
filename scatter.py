@@ -8,13 +8,15 @@ from scipy import stats
 from numpy import arange,array,ones
 import pandas as pd
 import plotly.graph_objs as go
+import dash_daq as daq
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='UWA_acid_base_table.xlsx'
+file_name='../../UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -63,8 +65,8 @@ MARKERS_DICT = [
 app.layout = html.Div([
     html.Div([
         html.Div([
-        	#set an option to choose the X value
-        	html.H6("Choose X value:"),
+            #set an option to choose the X value
+            html.H6("Choose X value:"),
             dcc.Dropdown(
                 id='xaxis-column',
                 options=[{'label': i, 'value': i} for i in cnames],
@@ -83,8 +85,8 @@ app.layout = html.Div([
         style={'width': '48%', 'display': 'inline-block'}),
 
         html.Div([
-        	#set a radio to choose linear or logarithmic for X
-        	html.H6("Linear or Logarithmic:"),
+            #set a radio to choose linear or logarithmic for X
+            html.H6("Linear or Logarithmic:"),
             dcc.RadioItems(
                 id='xaxis-type',
                 options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
@@ -104,106 +106,164 @@ app.layout = html.Div([
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
 
         html.Div([
-        	#set an input box for inputing title
-        	html.H6("Input a Title:"),
+            #set an input box for inputing title
+            html.H6("Input a Title:"),
             dcc.Input(
                 id="title",
                 type="text",
                 placeholder="title")
             ],
-        	style={'width': '33%', 'float': 'left', 'display': 'inline-block'}),
+            style={'width': '33%', 'float': 'left', 'display': 'inline-block'}),
 
         html.Div([
-        	#set an input box for inputing X label
-        	html.H6("Input X Label:"),
-        	dcc.Input(
+            #set an input box for inputing X label
+            html.H6("Input X Label:"),
+            dcc.Input(
                 id="x_label",
                 type="text")
-        	],
-        	style={'width': '33%', 'float': 'center', 'display': 'inline-block'}),
+            ],
+            style={'width': '33%', 'float': 'center', 'display': 'inline-block'}),
 
         html.Div([
-        	#set an input box for inputing Y label
-        	html.H6("Input Y Label:"),
+            #set an input box for inputing Y label
+            html.H6("Input Y Label:"),
             dcc.Input(
                 id="y_label",
                 type="text")
             ],
             style={'width': '33%', 'float': 'right', 'display': 'inline-block'}),
 
-        html.H6("Change Marker Style:"),
-        dcc.Dropdown(
-        	#set an option for choosing the markers' style
-            id='alignment-markers-dropdown',
-            className='markers-controls-block-dropdown',
-            options=MARKERS_DICT,
-            value='circle',
-    		),
+        
 
         html.H6("Functional Buttons:"),
         html.Div([
-        	#set a button for swaping X and Y
-            html.Button('Swap Axes', id='swap'),
+            #set a button for swaping X and Y
+            daq.BooleanSwitch(label='Swap Axes', id='swap', on=False),
             #set a button for showing the linear fit
-            html.Button('Show Linear Best Fit', id='linear'),
+            daq.BooleanSwitch(label='Show Linear Best Fit', id='linear', on=False),
             #set a button for hiding or showing the grid line
-            html.Button('Toggle Grid Lines', id='GL'),
+            daq.BooleanSwitch(label='Toggle Grid Lines', id='GL', on=False),
             #set a button for hiding or showing the zero line
-            html.Button('Toggle Zero Marker', id='OL'),
+            daq.BooleanSwitch(label='Toggle Zero Marker', id='OL', on=False),
+            #set a button for hisding or showing the label
+            daq.BooleanSwitch(label='Show Label', id='LB', on=False),
             #set a button for hiding or showing legends
-            html.Button('Show Legend', id='LD')
+            daq.BooleanSwitch(label='Show Legend', id='LD', on=True),
             ], style={'width': '100%', 'display': 'inline-block'}),
 
         html.H6("Change Opacity:"),
         html.Div([
-        	dcc.Slider(
-        		id='opacity-slider',
-        		min=0,
-        		max=100,
-        		value=70,
-        		)
-        	]),
+            #set a slider to change the opacity
+            dcc.Slider(
+                id='opacity-slider',
+                min=0,
+                max=100,
+                value=70,
+                )
+            ]),
 
         html.H6("Change Distance of X ticks:"),
         html.Div([
-        	dcc.Input(
+            #set an input to change the distance between x ticks
+            dcc.Input(
                 id="X-dtick",
-                type="number")
-        	]),
+                type="number",
+                min=1)
+            ]),
 
         html.H6("Change Distance of Y ticks:"),
         html.Div([
-        	dcc.Input(
+            #set an input to change the distance between y ticks
+            dcc.Input(
                 id="Y-dtick",
-                type="number")
-        	]),
+                type="number",
+                min=1)
+            ]),
 
-    	html.Div([
-    		html.H6("Change Colorscale:"),
-        	dcc.Dropdown(
-        		#set an option for choosing the colorscale
-            	id='alignment-colorscale-dropdown',
-            	className='app-controls-block-dropdown',
-            	options=COLORSCALES_DICT,
-            	value='Blackbody',
-            	),
+        html.H6("Add a thredshold for X:"),
+        html.Div([
+            #set an input to add a threshold for X
+            dcc.Input(
+                id='X-thredshold',
+                type='number'
+                )
+            ]),
 
-        	html.Div("Color and Hover Text Grouping"),
-        	dcc.Dropdown(
-				id='color-drop',
-				options=[{'label': i, 'value': i} for i in df.columns],
-				value=df.columns[0],
-				)
-    		]),
+        html.H6("Add a thredshold for Y:"),
+        html.Div([
+            #set an input to add a threshold for Y
+            dcc.Input(
+                id='Y-thredshold',
+                type='number'
+                )
+            ]),
+
+        html.Div([
+            
+
+            html.H6("Color and Hover Text Grouping"),
+            dcc.Dropdown(
+                id='color-drop',
+                options=[{'label': i, 'value': i} for i in df.columns],
+                value=df.columns[0],
+                ),
+
+            html.H6("Change Marker Style:"),
+            dcc.Dropdown(
+                #set an option for choosing the markers' style
+                id='alignment-markers-dropdown',
+                className='markers-controls-block-dropdown',
+                options=MARKERS_DICT,
+                value='circle',
+                ),
+
+            html.H6("Change Colorscale:"),
+            dcc.Dropdown(
+                #set an option for choosing the colorscale
+                id='alignment-colorscale-dropdown',
+                options=COLORSCALES_DICT,
+                value='Greys',
+                )
+            ]),
+
+        html.Div([
+            html.H6("Chose a Trace (If the trace is number, selcet the color through the Colorscale):"),
+            dcc.RadioItems(
+                id='selected-groupby'
+                )
+            ],
+            style={'width': '45%', 'float': 'left', 'display': 'inline-block'}),
+
+        html.Div([
+            html.H6("Chose a Color:"),
+            daq.ColorPicker(
+                id='my-color-picker',
+                value={
+                'rgb': {'a': 1, 'r': 22, 'b': 222, 'g': 160},
+                'hex': '#16a0de'
+                }
+                )
+            ],
+            style={'float': 'right', 'display': 'inline-block'})
     ], style={'width': '45%', 'height':'100%', 'display': 'inline-block', 'float': 'left'}),
 
+
     html.Div([
-    	dcc.Graph(
-    		id='indicator-graphic'
-    		),
-    	], style={'width': '50%', 'height':'100%', 'display': 'inline-block', 'float': 'right'})
+        dcc.Graph(
+            id='indicator-graphic'
+            ),
+        ], style={'width': '50%', 'height':'100%', 'display': 'inline-block', 'float': 'right'})
 ])
 
+@app.callback(
+    Output('selected-groupby', 'options'),
+    [Input('color-drop', 'value'),]
+    )
+def traces_groupby(color_drop):
+    if df[color_drop].dtypes =='object':
+        return [{'label': i, 'value': i} for i in df[color_drop].unique()]
+    else:
+        return [{'label': color_drop, 'value': color_drop}]
 
 @app.callback(
     Output('x_label', 'value'),
@@ -225,115 +285,169 @@ def set_cities_options(Y_c):
      Input('yaxis-type', 'value'),
      Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
-     Input('swap', 'n_clicks'),
-     Input('linear', 'n_clicks'),
+     Input('swap', 'on'),
+     Input('linear', 'on'),
      Input('x_label', 'value'),
      Input('y_label', 'value'),
-     Input('GL', 'n_clicks'),
-     Input('OL', 'n_clicks'),
+     Input('GL', 'on'),
+     Input('OL', 'on'),
      Input('alignment-markers-dropdown', 'value'),
      Input('color-drop', 'value'),
-     Input('LD', 'n_clicks'),
+     Input('LD', 'on'),
      Input('opacity-slider', 'value'),
      Input('X-dtick', 'value'),
-     Input('Y-dtick', 'value')])
+     Input('Y-dtick', 'value'),
+     Input('X-thredshold', 'value'),
+     Input('Y-thredshold', 'value'),
+     Input('selected-groupby', 'value'),
+     Input('my-color-picker', 'value'),
+     Input('LB', 'on'),])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
-                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D):
+                 alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
 
 
-    if swap != None and int(swap) % 2 == 1:
-    	# Swapping the x and y axes names and values
+    if swap:
+        # Swapping the x and y axes names and values
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
         tmp1 = x_label
         x_label = y_label
         y_label = tmp1
-        tmp2 = X_D
-        X_D = Y_D
-        Y_D = tmp2
 
 
-    # Showing the fit linear
-    l_click = False
-    if linear != None and int(linear) % 2 == 1:
-        l_click = True
-    
-    # Showing the grid line
-    G_click = False
-    if GL != None and int(GL) % 2 == 1:
-        G_click = True
+    threshold_shape = []
 
-    # Showing the zero line
-    O_click = False
-    if OL != None and int(OL) % 2 == 1:
-        O_click = True
 
-    # Showing the zero line
-    LD_click = True
-    if LD != None and int(LD) % 2 == 1:
-        LD_click = False
+    #if users set a thredshold for X, then show this line
+    if X_T !=None:
+        threshold_shape.append(dict(
+        type='line',
+        x0=X_T,
+        x1=X_T,
+        y0=df[yaxis_column_name].min(),
+        y1=df[yaxis_column_name].max()
+        ))
 
-    return {
-        'data': [go.Scatter(
+    #if users set a thredshold for Y, then show this line
+    if Y_T !=None:{
+        threshold_shape.append(dict(
+        type='line',
+        x0=df[xaxis_column_name].min(),
+        x1=df[xaxis_column_name].max(),
+        y0=Y_T,
+        y1=Y_T
+        ))}
+
+    mode_t='markers'
+    if LB:
+        mode_t='markers+text'
+
+    traces = []
+    #if the data type of the group by column is object, it will show each different values with different colors
+    if df[color_var].dtypes=='object':
+        for i in df[color_var].unique():
+            df_by = df[df[color_var] == i]
+            if i == G_t:
+                traces.append(go.Scatter(
+                x=df_by[xaxis_column_name],
+                y=df_by[yaxis_column_name],
+                mode=mode_t,                
+                text=i,
+                textposition='top center',
+                opacity=OS/100,
+                marker={
+                    'size': 15,
+                    'line': {'width' :0.5, 'color': 'white'},
+                    'symbol': alignment_markers_dropdown,
+                    'color': C_P['hex']
+                },
+                name=i
+                ))
+            else:
+                traces.append(go.Scatter(
+                    x=df_by[xaxis_column_name],
+                    y=df_by[yaxis_column_name],
+                    mode=mode_t,
+                    text=i,
+                    textposition='top center',
+                    opacity=OS/100,
+                    marker={
+                        'size': 15,
+                        'line': {'width' :0.5, 'color': 'white'},
+                        'symbol': alignment_markers_dropdown
+                    },
+                    name=i
+                ))
+
+    #if the data type of the group by column is int or float, it will show the VS, and the color based on the X values
+    if df[color_var].dtypes=='int64' or df[color_var].dtypes=='float64':
+        traces.append(go.Scatter(
             x=df[xaxis_column_name],
             y=df[yaxis_column_name],
-            mode='markers',
-            text=df[color_var],
+            mode=mode_t,
+            text = color_var,
             opacity=OS/100,
             marker=dict(
                 size = 15,
-                opacity = 0.5,
                 line = {'width': 0.5, 'color': 'white'},
-                color = df[color_var],
+                color = df[xaxis_column_name],
                 colorscale = alignment_colorscale_dropdown,
-                showscale = LD_click,
+                showscale = LD,
                 symbol = alignment_markers_dropdown
             ),
+            name='{} VS {}'.format(xaxis_column_name, yaxis_column_name)
+        ))
 
+    traces.append(go.Scatter(
+        x=df[xaxis_column_name],
+        y=line,
+        mode='lines',
+        marker=dict(
+            size = 15,
+            opacity = 0.5,
+            line = {'width': 0.5, 'color': 'white'},
+            color = 'black',
+            showscale = LD,
         ),
-        
-        go.Scatter(
-                x=df[xaxis_column_name],
-                y=line,
-                mode='lines',
-                marker=dict(
-                    size = 15,
-                    opacity = 0.5,
-                    line = {'width': 0.5, 'color': 'white'},
-                    color = 'black',
-                    colorscale = alignment_colorscale_dropdown,
-                    showscale = LD_click,
-            ),
-                name='Fit',
-                visible=l_click
-                    )
-        ],
+        name='Fit',
+        visible=linear
+    ))
+
+    layou_t=dict(
+        xaxis={
+            'title': x_label,
+            'type': 'linear' if xaxis_type == 'Linear' else 'log',
+            'showgrid': GL,
+            'zeroline': OL,
+            'dtick': X_D
+        },
+        yaxis={
+            'title': y_label,
+            'type': 'linear' if yaxis_type == 'Linear' else 'log',
+            'showgrid': GL,
+            'zeroline': OL,
+            'dtick': Y_D
+        },
+        title= title_1,
+        legend=dict(x=-.1, y=1.2),
+        showlegend = LD,
+        shapes=threshold_shape,
+        hovermode='closest'
+        )
+
+    return {
+        'data': 
+            traces,
 
         'layout': go.Layout(
-            xaxis={
-                'title': x_label,
-                'type': 'linear' if xaxis_type == 'Linear' else 'log',
-                'showgrid': G_click,
-                'zeroline': O_click,
-                'dtick': X_D
-            },
-            yaxis={
-                'title': y_label,
-                'type': 'linear' if yaxis_type == 'Linear' else 'log',
-                'showgrid': G_click,
-                'zeroline': O_click,
-                'dtick': Y_D
-            },
-            title= title_1,
-            showlegend = LD_click,
-            hovermode='closest'
+            layou_t
         )
     }
 
