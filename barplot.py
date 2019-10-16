@@ -153,7 +153,7 @@ file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
 
 
-# Loading non-Numeric Data from Dataframe
+# Loading non-Numeric Data from Dataframe for the barplot input
 cat_features = df.select_dtypes(exclude='number').columns.values
 
 
