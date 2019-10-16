@@ -149,7 +149,7 @@ def render_numinput(id, min, max, value):
 
 # MAIN APP HERE
 # Loading Data
-file_name = '../UWA_acid_base_table.xlsx'
+file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
 
 
@@ -546,50 +546,12 @@ def update_figure(
         group_list = df[variable].unique()
         var_list = df[variable].unique()
         groupby=variable
-
     else :
         group_list = df[groupby].unique()
         var_list = df[variable].unique()
     # Generate barplot
     idx=0
-    if(plottype=="Single"):
-        print(plottype)
-        for i in var_list:
-            if selected_bar is not None:
-                print('selected_bar : {}'.format(selected_bar))
-                print('bar color 1 : {}'.format(bar_color_saved))
-                if i == selected_bar:
-                    bar_color_saved[i] = picker_bar_color
-                    print('bar color 2 : {}'.format(bar_color_saved))
-            color_idx += 1
-            pct.append(df[df[variable]==i][variable].count()),
-
-            if (not is_vertical):
-                data_list.append(
-                    go.Bar(
-                        x=[pct[0]],
-                        y=[var_list[idx]],
-                        name=i,
-                        orientation='h',
-                        text =pct if is_ndatashow else None,
-                        textposition ="auto",
-                    )
-                )
-                pct =[]
-                idx += 1
-            else:
-                data_list.append(
-                    go.Bar(
-                        x=[var_list[idx]],
-                        y=[pct[0]],
-                        name=i,
-                        text=pct if is_ndatashow else None,
-                        textposition ="auto",
-                    )
-                )
-                pct =[]
-                idx += 1
-    elif(plottype== "Stacked_Percentage"):
+    if(plottype== "Stacked_Percentage"):
         print(plottype)
         for i in group_list:
             pct_idx=0
@@ -659,7 +621,7 @@ def update_figure(
         annots_ndata= annots_ndata
 
 
-    else:
+    elif(plottype=="Side_by_Side" or plottype== "Stacked"):
         for i in group_list:
             if selected_bar is not None:
                 print('selected_bar : {}'.format(selected_bar))
@@ -704,7 +666,42 @@ def update_figure(
                 cnt_idx += 1
                 cnt = []
                 cnt_text=[]
+    else:
+        for i in var_list:
+            if selected_bar is not None:
+                print('selected_bar : {}'.format(selected_bar))
+                print('bar color 1 : {}'.format(bar_color_saved))
+                if i == selected_bar:
+                    bar_color_saved[i] = picker_bar_color
+                    print('bar color 2 : {}'.format(bar_color_saved))
+            color_idx += 1
+            pct.append(df[df[variable]==i][variable].count()),
 
+            if (not is_vertical):
+                data_list.append(
+                    go.Bar(
+                        x=[pct[0]],
+                        y=[var_list[idx]],
+                        name=i,
+                        orientation='h',
+                        text =pct if is_ndatashow else None,
+                        textposition ="auto",
+                    )
+                )
+                pct =[]
+                idx += 1
+            else:
+                data_list.append(
+                    go.Bar(
+                        x=[var_list[idx]],
+                        y=[pct[0]],
+                        name=i,
+                        text=pct if is_ndatashow else None,
+                        textposition ="auto",
+                    )
+                )
+                pct =[]
+                idx += 1
     # Change Orientation
     type_x = None
     type_y = None
