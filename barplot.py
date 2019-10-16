@@ -58,19 +58,19 @@ def render_radio(id, options):
     return dcc.RadioItems(id=id, options=[{'label': i, 'value': i} for i in options],
         value=str(options[0]), labelStyle={'display': 'block'} )
 
-# Function: Render radio items for data points and outlies
+# Function: Render radio items for plottype
 # Input: id
 # Output: dcc.RadioItems
 def render_radio_outliers(id):
     return dcc.RadioItems(
         id=id,
         options=[
-            {'label': 'Default', 'value': 'outliers'},
-            {'label': 'Only Wiskers', 'value': 'False'},
-            {'label': 'Suspected Outliers', 'value': 'suspectedoutliers'},
-            {'label': 'All Points', 'value': 'all'},
+            {'label': 'Single', 'value': 'Single'},
+            {'label': 'Stacked Percentage', 'value': 'Stacked_Percentage'},
+            {'label': 'Side by Side', 'value': 'Side_by_Side'},
+            {'label': 'Stacked', 'value': "Stacked"},
         ],
-        value='outliers',
+        value='plottype',
         labelStyle={'display': 'block'} )
 
 # Function: Render radio items contain id only
@@ -147,32 +147,6 @@ def render_colorpicker(id, color, r, g, b, a):
 def render_numinput(id, min, max, value):
     return daq.NumericInput(id=id, min=min, max=max, value=value )
 
-# Function: Get Quantile
-# Input: df
-# Output: Q1
-def get_quantile(df):
-    df=df.sort_values()
-    n = len(df)
-    n_q1=n//2
-    q1_idx=(n_q1//2)
-    q3_idx=n-q1_idx
-    df_keys=df.keys()
-    if n_q1%2==0:
-        q1=(df[df_keys[q1_idx]]+df[df_keys[q1_idx-1]])/2
-        q3=(df[df_keys[q3_idx]]+df[df_keys[q3_idx-1]])/2
-    else:
-        q1=df[df_keys[(q1_idx)]]
-        q3=df[df_keys[(q3_idx-1)]]
-    #if n%2==0:
-    #print ('Data: \n{}'.format(df))
-    #print ('Data: \n{}'.format(df_keys))
-    #print ('Num of data: {}'.format(n))
-    #print ('Q1: {}'.format(q1))
-    #print ('Q3: {}'.format(q3))
-    return q1, q3
-
-
-
 # MAIN APP HERE
 # Loading Data
 file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
@@ -234,8 +208,24 @@ app.layout=html.Div(className='row', children=[
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
+                        dbc.Button("Select Bar Plot Type", id='group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                        )
+                    ),
+                    dbc.Collapse(
+                        dbc.CardBody(children=[
+                            dbc.Card([
+                                dbc.CardHeader(html.H2('Group by')),
+                                dbc.CardBody(children=render_radio_plotype('select-barplot'))
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                            ),
+                        ]),
+                        id='collapse-3'
+                    ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                dbc.Card([
+                    dbc.CardHeader(
                         dbc.Button(
-                            "Graph Setting", id='group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                            "Graph Setting", id='group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
@@ -285,13 +275,13 @@ app.layout=html.Div(className='row', children=[
                             ], className='col-md-6'
                             ),
                         ]),
-                        id='collapse-3'
+                        id='collapse-4'
                     ),
                 ], color='info', outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
-                            "Statistic Information", id='group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                            "Statistic Information", id='group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
@@ -301,43 +291,18 @@ app.layout=html.Div(className='row', children=[
                                 dbc.CardBody(children=render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
                             ]),
                             dbc.Card([
-                                dbc.CardHeader(html.H2('Group by')),
-                                dbc.CardBody(children=render_radio_outliers('select-outliers'))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
-                            ),
-                            dbc.Card([
                                 dbc.CardHeader(html.H2('Frequency')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-ndata', False))
-                            ], className='col-md-6',
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H2('Percentiles')),
-                                dbc.CardBody(children=render_booleanswitch_nolab('show-percentiles', False))
-                            ], className='col-md-6',
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H2('Mean')),
-                                dbc.CardBody(children=render_booleanswitch_nolab('show-mean', False))
-                            ], className='col-md-6',
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H2('Std. Dev.')),
-                                dbc.CardBody(children=render_booleanswitch_nolab('show-sd', False))
-                            ], className='col-md-6',
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H2('Summary Stats')),
-                                dbc.CardBody(children=render_booleanswitch_nolab('show-stats', False))
-                            ], className='col-md-6',
+                            ],
                             ),
                         ]),
-                        id='collapse-4'
+                        id='collapse-5'
                     ),
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
-                            "Threshold Setting", id='group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                            "Threshold Setting", id='group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
@@ -368,13 +333,13 @@ app.layout=html.Div(className='row', children=[
                             ],
                             ),
                         ]),
-                        id='collapse-5'
+                        id='collapse-6'
                     ),
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
-                            "Color Setting", id='group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                            "Color Setting", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
@@ -390,7 +355,7 @@ app.layout=html.Div(className='row', children=[
                             ],
                             ),
                         ]),
-                        id='collapse-6'
+                        id='collapse-7'
                     ),
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} )
             ])
@@ -408,11 +373,11 @@ app.layout=html.Div(className='row', children=[
 # CALLBACK GOES HERE
 # Accordion Toggle Callback
 @app.callback(
-    [Output(f'collapse-{i}', 'is_open') for i in range(1,7)],
-    [Input(f'group-{i}-toggle', 'n_clicks') for i in range(1,7)],
-    [State(f'collapse-{i}', 'is_open') for i in range(1,7)]
+    [Output(f'collapse-{i}', 'is_open') for i in range(1,8)],
+    [Input(f'group-{i}-toggle', 'n_clicks') for i in range(1,8)],
+    [State(f'collapse-{i}', 'is_open') for i in range(1,8)]
 )
-def toggle_accordion(n1, n2, n3, n4, n5, n6, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6):
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7):
     ctx = dash.callback_context
 
     if not ctx.triggered:
@@ -421,18 +386,20 @@ def toggle_accordion(n1, n2, n3, n4, n5, n6, is_open1, is_open2, is_open3, is_op
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if button_id ==  'group-1-toggle' and n1:
-        return not is_open1, False, False, False, False, False
+        return not is_open1, False, False, False, False, False, False
     elif button_id ==  'group-2-toggle' and n2:
-        return False, not is_open2, False, False, False, False
+        return False, not is_open2, False, False, False, False, False
     elif button_id ==  'group-3-toggle' and n3:
-        return False, False, not is_open3, False, False, False
+        return False, False, not is_open3, False, False, False, False
     elif button_id ==  'group-4-toggle' and n4:
-        return False, False, False, not is_open4, False, False
+        return False, False, False, not is_open4, False, False, False
     elif button_id ==  'group-5-toggle' and n5:
-        return False, False, False, False, not is_open5, False
+        return False, False, False, False, not is_open5, False, False
     elif button_id ==  'group-6-toggle' and n6:
-        return False, False, False, False, False, not is_open6
-    return False, False, False, False, False, False
+        return False, False, False, False, False, not is_open6, False
+    elif button_id ==  'group-7-toggle' and n7:
+        return False, False, False, False, False, False, not is_open7
+    return False, False, False, False, False, False, False
 
 # Turn Y Tick Disabled when in Logarithmic and Enabled when in Linear
 # Turn Y Tick Value to None when in Logarithmic end recall previous value when turn back to Linear
