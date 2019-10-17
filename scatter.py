@@ -340,9 +340,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
-    
-    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
-    
+        
 
 
     if swap:
@@ -353,6 +351,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         tmp1 = x_label
         x_label = y_label
         y_label = tmp1
+
+    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
 
     line = slope*df[xaxis_column_name]+intercept
 
