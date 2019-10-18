@@ -586,6 +586,7 @@ def update_figure(
                             name=i,
                             text =pct_text if is_ndatashow else None,
                             textposition ="auto",
+                            marker_color=bar_color_saved[i],
                         )
                     )
                 pct=[]
@@ -601,6 +602,7 @@ def update_figure(
                             orientation='h',
                             text =pct_text if is_ndatashow else None,
                             textposition ="auto",
+                            marker_color=bar_color_saved[i],
                         )
                     )
                 pct =[]
@@ -655,6 +657,7 @@ def update_figure(
                             name=i,
                             text =cnt_text if is_ndatashow else None,
                             textposition ="auto",
+                            marker_color=bar_color_saved[i]
                         )
                     )
                 cnt = []
@@ -670,6 +673,7 @@ def update_figure(
                             orientation='h',
                             text =cnt_text if is_ndatashow else None,
                             textposition ="auto",
+                            marker_color=bar_color_saved[i]
                         )
                     )
                 idx +=1
@@ -696,6 +700,7 @@ def update_figure(
                         orientation='h',
                         text =pct if is_ndatashow else None,
                         textposition ="auto",
+                        marker_color=bar_color_saved[i],
                     )
                 )
                 pct =[]
@@ -708,6 +713,7 @@ def update_figure(
                         name=i,
                         text=pct if is_ndatashow else None,
                         textposition ="auto",
+                        marker_color=bar_color_saved[i],
                     )
                 )
                 pct =[]
@@ -773,7 +779,7 @@ def update_figure(
             showlegend=legendshow,
             height=graph_height,
             width=graph_width,
-            #annotations=annots_ndata,
+            annotations=annots_ndata,
             shapes=treshold_shape,
         )
     }
