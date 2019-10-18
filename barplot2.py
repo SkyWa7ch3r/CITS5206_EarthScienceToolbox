@@ -256,7 +256,7 @@ app.layout=html.Div(className='row', children=[
                         dbc.CardBody(children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Graph Orientation')),
-                                dbc.CardBody(children=render_toggleswitch('graph-alignment', ['Vertical', 'Horizontal'], False))
+                                dbc.CardBody(children=render_toggleswitch('graph-alignment', ['Horizontal', 'Vertical'], True))
                             ], style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
