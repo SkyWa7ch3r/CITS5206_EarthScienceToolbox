@@ -403,6 +403,7 @@ app.layout=html.Div(className='row', children=[
         dbc.Row(children=[
             dcc.Graph(id='bar-plot',
                     style={'width' : '90%', 'padding-left' : '3%'},
+                    config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'titleText': True}},
             ),
         ]),
     ], className='col-md-9'
