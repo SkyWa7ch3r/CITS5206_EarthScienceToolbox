@@ -66,6 +66,27 @@ def read_file(filename):
         return u'There was an error opening {}'.format(filename)
     return dff
 
+# Function: Render drop down list
+# Input: id, [options]
+# Output: dcc.Dropdown
+def render_dropdown(id, options):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options],
+        className='card h-100' )
+
+# Function: Render drop down list without any options
+# Input: id
+# Output: dcc.Dropdown
+def render_dropdown_blank(id):
+    return dcc.Dropdown(id=id)
+
+
+# Function: Render drop down list with label formatting (remove space between words and turn to lower case)
+# Input: id, [options]
+# Output: dcc.Dropdown
+def render_dropdown_format(id, options):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options],
+        className='card h-100' )
+
 # Function: Render radio items
 # Input: id, [options]
 # Output: dcc.RadioItems
@@ -149,12 +170,18 @@ def render_slider(id, min, max, value, step, marks):
         mymark[i]=str(i)
     return daq.Slider(id=id, min=min, max=max, value=value, step=step, marks=mymark )
 
+# Function: Render Range slider
+# Input: id, min, max, [value], step, {marks}
+# Output: dcc.RangeSlider
+def render_range_slider(id, min, max, value, step, marks):
+    return dcc.RangeSlider(id=id, min=min, max=max, value=value, step=step, marks=marks )
+
 # Function: Render color picker
 # Input: id, min, max, value, step, label
 # Output: daq.ColorPicker
 def render_colorpicker(id, color, r, g, b, a):
     value=dict(rgb=dict(r=r, g=g, b=b, a=a))
-    return daq.ColorPicker(id=id, style={'background-color': color}, value=value, size=160 )
+    return daq.ColorPicker(id=id, value=value)
 
 # Function: Render numeric Input
 # Input: id, min, max, value
@@ -164,7 +191,7 @@ def render_numinput(id, min, max, value):
 
 # MAIN APP HERE
 # Loading Data
-file_name = 'data2.xlsx'
+file_name = 'data3.xlsx'
 df = read_file(file_name)
 
 # Loading Numeric Data from Dataframe
@@ -176,8 +203,26 @@ df = read_file(file_name)
 features = df.select_dtypes(include='number').columns.values
 
 # Loading non-Numeric Data from Dataframe
-cat_features = df.select_dtypes(exclude='number').columns.values
+cat_features = df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values
 
+# Loading datetime from Dataframe
+datetime_feature = df.select_dtypes(include=['datetime', 'datetime64']).columns.values
+if datetime_feature.shape[0]==0:
+    df_no_time=True
+else:
+    print('have a time')
+    df_no_time=False
+    dt_min=df[datetime_feature[0]].min()
+    dt_max=df[datetime_feature[0]].max()
+    dt_range=((dt_max.year + 1) - dt_min.year)*12
+
+    # Generate date time slider marks
+    dt_slider_marks = {}
+    for i in range(0, dt_range+1):
+        if i % 12 == 0:
+            dt_slider_marks[i]=str(dt_min.year + (i//12))
+
+## MAIN APP HERE
 app = dash.Dash(__name__)
 app.layout=html.Div(className='row', children=[
     html.Div(children=[
@@ -206,27 +251,6 @@ app.layout=html.Div(className='row', children=[
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
-                        dbc.Button("Graph Size", id='group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
-                        )
-                    ),
-                    dbc.Collapse(
-                        dbc.CardBody(children=[
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Graph Height')),
-                                dbc.CardBody(children=render_slider('graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]))
-                            ], style={'width': '100%', 'padding': '20px 0px'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Graph Width')),
-                                dbc.CardBody(children=render_slider('graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]))
-                            ], style={'width': '100%', 'padding': '20px 0px'}
-                            ),
-                        ]),
-                        id='collapse-2'
-                    ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
-                dbc.Card([
-                    dbc.CardHeader(
                         dbc.Button(
                             "Plot Setting", id='group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
@@ -236,36 +260,37 @@ app.layout=html.Div(className='row', children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Graph Orientation')),
                                 dbc.CardBody(children=render_toggleswitch('graph-alignment', ['Vertical', 'Horizontal'], False))
-                            ]),
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Legend')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-legend', True))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Grid Lines')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-gridlines', True))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('X Zero Line')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-zeroline-x', True))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Y Zero Line')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-zeroline-y', True))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Grid Width')),
                                 dbc.CardBody(children=render_numinput('grid-width', 1, 5, 1))
-                            ], className='col-md-6'
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Tick Step')),
                                 dbc.CardBody(children=render_input_number('delta-tick', 'Tick Step'))
-                            ], className='col-md-6'
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
                         id='collapse-3'
@@ -282,7 +307,8 @@ app.layout=html.Div(className='row', children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Data Transformation')),
                                 dbc.CardBody(children=render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
-                            ]),
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Boxplot type')),
                                 dbc.CardBody(children=render_radio_outliers('select-outliers'))
@@ -291,25 +317,62 @@ app.layout=html.Div(className='row', children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Frequency')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-ndata', True))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Mean')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-mean', False))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Std. Dev.')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-sd', False))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Summary Stats')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-stats', False))
-                            ], className='col-md-6',
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
                         id='collapse-4'
+                    ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                dbc.Card([
+                    dbc.CardHeader(
+                        dbc.Button(
+                            "Percentiles", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                        )
+                    ),
+                    dbc.Collapse(
+                        dbc.CardBody(children=[
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Show Percentiles')),
+                                dbc.CardBody(children=render_booleanswitch_nolab('show-percentiles', False))
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Percentile')),
+                                dbc.CardBody(children=render_dropdown('select-percentile', ['5%', '10%', '90%', '95%']))
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Marker Symbol')),
+                                dbc.CardBody(children=render_dropdown_format('marker-symbol', marker_symbols))
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Symbol Size'), className='card w-100'),
+                                dbc.CardBody(children=render_numinput('symbol-size', 1, 15, 8))
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Color')),
+                                dbc.CardBody(children=render_colorpicker('select-percentile-color', 'white', 100, 200, 255, 0.65))
+                            ],
+                            ),
+                        ]),
+                        id='collapse-7'
                     ),
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
@@ -323,7 +386,7 @@ app.layout=html.Div(className='row', children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Threshold')),
                                 dbc.CardBody(children=render_booleanswitch_nolab('show-treshold', False))
-                            ],
+                            ], style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Value')),
@@ -337,13 +400,13 @@ app.layout=html.Div(className='row', children=[
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Line Style')),
-                                dbc.CardBody(children=render_radio_format('treshold-style', line_style))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardBody(children=render_dropdown_format('treshold-style', line_style))
+                            ], style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Line Color')),
                                 dbc.CardBody(children=render_colorpicker('treshold-line-color', 'white', 0, 0, 255, 1))
-                            ],
+                            ], style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
                         id='collapse-5'
@@ -358,19 +421,19 @@ app.layout=html.Div(className='row', children=[
                     dbc.Collapse(
                         dbc.CardBody(children=[
                             dbc.Card([
-                                dbc.CardHeader(html.H5('Select Box')),
-                                dbc.CardBody(children=render_radio_blank('select-box'))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardHeader(html.H5('Fill')),
+                                dbc.CardBody(children=render_toggleswitch('box-color-fill', ['Transparent', 'Colored'], True))
+                            ], style={'margin': '0px 0px 10px 0px'}
+                            ),
+                            dbc.Card([
+                                dbc.CardHeader(html.H5('Select Box'), className='card w-100'),
+                                dbc.CardBody(children=render_dropdown_blank('select-box'))
+                            ], style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Color')),
                                 dbc.CardBody(children=render_colorpicker('box-color', 'white', 0, 0, 255, 0.65))
                             ],
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Fill')),
-                                dbc.CardBody(children=render_toggleswitch('box-color-fill', ['Transparent', 'Colored'], True))
-                            ], style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
                         id='collapse-6'
@@ -378,39 +441,23 @@ app.layout=html.Div(className='row', children=[
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
-                        dbc.Button(
-                            "Percentiles", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                        dbc.Button("Graph Size", id='group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                         )
                     ),
                     dbc.Collapse(
                         dbc.CardBody(children=[
                             dbc.Card([
-                                dbc.CardHeader(html.H5('Show Percentiles')),
-                                dbc.CardBody(children=render_booleanswitch_nolab('show-percentiles', False))
-                            ],
+                                dbc.CardHeader(html.H5('Graph Height')),
+                                dbc.CardBody(children=render_slider('graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]), style={'padding':'5% 5% 10% 5%'})
+                            ], style={'width': '100%'}
                             ),
                             dbc.Card([
-                                dbc.CardHeader(html.H5('Marker Symbol')),
-                                dbc.CardBody(children=render_radio_format('marker-symbol', marker_symbols))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Percentile')),
-                                dbc.CardBody(children=render_radio('select-percentile', ['5%', '10%', '90%', '95%']))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Symbol Size')),
-                                dbc.CardBody(children=render_numinput('symbol-size', 1, 15, 8))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Color')),
-                                dbc.CardBody(children=render_colorpicker('select-percentile-color', 'white', 100, 200, 255, 0.65))
-                            ],
+                                dbc.CardHeader(html.H5('Graph Width')),
+                                dbc.CardBody(children=render_slider('graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]), style={'padding':'5% 5% 10% 5%'})
+                            ], style={'width': '100%'}
                             ),
                         ]),
-                        id='collapse-7'
+                        id='collapse-2'
                     ),
                 ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
             ])
@@ -421,9 +468,21 @@ app.layout=html.Div(className='row', children=[
         dbc.Row(children=[
             dcc.Graph(id='box-plot',
                     style={'width' : '90%', 'padding-left' : '3%'},
-                    config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'legendPosition' : True, 'legendText' : True, 'titleText': True}},
+                    config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'titleText': True}},
             ),
-        ])
+        ],
+        ),
+        dbc.Row(children=[
+            html.Div(id='time-msg-card', children=[
+                dbc.Card([
+                    dbc.CardHeader(html.H5('Select Time Range')),
+                    dbc.CardBody(children=render_range_slider('time-range-slider', 0, 0 if df_no_time else dt_range, [0, 0 if df_no_time else dt_range], 1, {} if df_no_time else dt_slider_marks), style={'padding':'2% 2% 4% 2%'}),
+                    dbc.CardFooter(id='time-range-msg'),
+                ], style={'width': '100%', 'font-size': cardbody_font_size, 'display': 'none' if df_no_time else 'block'}, color=cardbody_color, outline=True,
+                ),
+            ], style={'width': '90%', 'margin': '2%'}
+            ),
+        ]),
     ], className='col-md-9'
     ),
 ], style=main_panel_margin)
@@ -458,6 +517,21 @@ def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, i
     elif button_id ==  'group-7-toggle' and n7:
         return False, False, False, False, False, False, not is_open7
     return False, False, False, False, False, False, False
+
+# Update time range message
+@app.callback(
+    Output('time-range-msg', 'children'),
+    [Input('time-range-slider', 'value'), ]
+)
+def update_time_range_msg(dt_range_slider):
+    if not df_no_time:
+        from_year=dt_min.year+(dt_range_slider[0]//12)
+        from_month=dt_min.month+(dt_range_slider[0]%12)
+        to_year=dt_min.year+(dt_range_slider[1]//12)
+        to_month=dt_range_slider[1]%12+1
+        return html.H5('Time range from {}/{} to {}/{}'.format(from_month, from_year, to_month, to_year))
+    else:
+        return None
 
 # Update marker symbol when percentile selected
 @app.callback(
@@ -578,6 +652,7 @@ def update_showstat(outliersshow):
         Input('box-color-fill', 'value'),
         Input('select-percentile', 'value'), Input('marker-symbol', 'value'),
         Input('select-percentile-color', 'value'), Input('symbol-size', 'value'),
+        Input('time-range-slider', 'value'),
     ]
 )
 def update_figure(
@@ -587,8 +662,23 @@ def update_figure(
     is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
     treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
     graph_width, selected_box, box_color, grid_width, dtick, is_color_filled,
-    select_percentile, marker_symbol, select_percentile_color, symbol_size
+    select_percentile, marker_symbol, select_percentile_color, symbol_size, dt_range_slider
 ):
+    # Set timestamps from time Range
+    if not df_no_time:
+        from_year=dt_min.year+(dt_range_slider[0]//12)
+        from_month=dt_min.month+(dt_range_slider[0]%12)
+        to_year=dt_min.year+(dt_range_slider[1]//12)
+        to_month=dt_range_slider[1]%12+1
+        bottom_time=pd.Timestamp(year=from_year, month=from_month, day=1, hour=0, second=0)
+        upper_time=pd.Timestamp(year=to_year, month=to_month, day=30, hour=23, second=59)
+        print('from: {}'.format(bottom_time))
+        print('until: {}'.format(upper_time))
+        mydf = df[(df[datetime_feature[0]]>=bottom_time) & (df[datetime_feature[0]]<=upper_time)]
+        if mydf.shape[0] == 0:
+            mydf_is_empty=True
+        else:
+            mydf_is_empty=False
     # Update dtick_value
     if dtick != None:
         dtick_value = dtick
