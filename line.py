@@ -19,6 +19,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 file_name='Rainier_Weather.csv'
 
 
+
 def read_file(filename):
     try:
         if 'csv' in filename:
