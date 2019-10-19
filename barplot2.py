@@ -87,12 +87,11 @@ def render_radio_plotype(id):
     return dcc.RadioItems(
         id=id,
         options=[
-            {'label': 'Single', 'value': 'Single'},
+            {'label': 'Stacked', 'value': 'Stacked'},
             {'label': 'Percentage', 'value': 'Stacked_Percentage'},
             {'label': 'Side by Side', 'value': 'Side_by_Side'},
-            {'label': 'Stacked', 'value': 'Stacked'},
         ],
-        value='Single',
+        value='Stacked',
         labelStyle={'display': 'block'} )
 
 # Function: Render radio items contain id only
@@ -228,7 +227,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-1'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button("Select Bar Plottype", id='group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
@@ -244,7 +243,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-2'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
 
                 dbc.Card([
                     dbc.CardHeader(
@@ -292,7 +291,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-3'
                     ),
-                ], color='info', outline=True, style={'font-size': cardbody_font_size} ),
+                ], color='info', outline=True, style={'font-s+ize': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -314,7 +313,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-4'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -351,7 +350,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-5'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -373,7 +372,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-6'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button("Graph Size", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
@@ -394,7 +393,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-7'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
             ])
         ])
     ], className='col-md-3'
@@ -474,18 +473,10 @@ def update_bar_color_selector(bar):
 def update_select_bar(groupby):
 
     idx = 0
-    if(plottype=="Single"):
-        variable = groupby
-        for i in df[variable].unique():
-            bar_color_saved[i] = default_color[idx % 5]
-            idx += 1
-        return [{'label': i, 'value': i} for i in df[variable].unique()]
-
-    else :
-        for i in df[groupby].unique():
-            bar_color_saved[i] = default_color[idx % 5]
-            idx += 1
-        return [{'label': i, 'value': i} for i in df[groupby].unique()]
+    for i in df[groupby].unique():
+        bar_color_saved[i] = default_color[idx % 5]
+        idx += 1
+    return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
 # Threshold Line Callback
 @app.callback(
@@ -537,12 +528,7 @@ def update_figure(
         dtick_value = dtick
 
     # Title and axis default title
-    if(plottype=="Single"):
-        xaxis_title = str("Count")
-        yaxis_title = variable
-        main_title = str("BARPLOT")
-
-    elif(plottype=="Stacked_Percentage"):
+    if(plottype=="Stacked_Percentage"):
         xaxis_title = str("Percentage % ")
         yaxis_title = variable
         main_title = str("BARPLOT")
@@ -566,6 +552,7 @@ def update_figure(
     ndata = []
     # Computing N Data
     max_n = 100
+
     max_n = 1.05*np.log10(max_n) if is_log else 1.05*max_n
 
 
@@ -576,13 +563,9 @@ def update_figure(
         bar_color['rgb']['a'],)
 
     color_idx = 0
-    if(plottype=="Single"):
-        group_list = df[variable].unique()
-        var_list = df[variable].unique()
-        groupby=variable
-    else :
-        group_list = df[groupby].unique()
-        var_list = df[variable].unique()
+
+    group_list = df[groupby].unique()
+    var_list = df[variable].unique()
     # Generate barplot
     idx=0
     if(plottype== "Stacked_Percentage"):
@@ -634,6 +617,7 @@ def update_figure(
                 idx +=1
                 pct_idx += 1
                 pct_text=[]
+
             # Counting number of data for each category
 
             print(ndata)
@@ -706,44 +690,6 @@ def update_figure(
                 cnt_idx += 1
                 cnt = []
                 cnt_text=[]
-    else:
-        for i in var_list:
-            if selected_bar is not None:
-                print('selected_bar : {}'.format(selected_bar))
-                print('bar color 1 : {}'.format(bar_color_saved))
-                if i == selected_bar:
-                    bar_color_saved[i] = picker_bar_color
-                    print('bar color 2 : {}'.format(bar_color_saved))
-            color_idx += 1
-            pct.append(df[df[variable]==i][variable].count()),
-
-            if (not is_vertical):
-                data_list.append(
-                    go.Bar(
-                        x=[pct[0]],
-                        y=[var_list[idx]],
-                        name=i,
-                        orientation='h',
-                        text =pct if is_ndatashow else None,
-                        textposition ="auto",
-                        marker_color=bar_color_saved[i],
-                    )
-                )
-                pct =[]
-                idx += 1
-            else:
-                data_list.append(
-                    go.Bar(
-                        x=[var_list[idx]],
-                        y=[pct[0]],
-                        name=i,
-                        text=pct if is_ndatashow else None,
-                        textposition ="auto",
-                        marker_color=bar_color_saved[i],
-                    )
-                )
-                pct =[]
-                idx += 1
     # Change Orientation
     type_x = None
     type_y = None
