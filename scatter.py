@@ -18,7 +18,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='../UWA_acid_base_table.xlsx'
+file_name='../../UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -391,11 +391,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
-<<<<<<< HEAD
-=======
-        
-
->>>>>>> b6c499b70d5785da1f144b9275755a11cb2de6cc
 
     if swap:
     	# Swapping the x and y axes names and values
@@ -407,10 +402,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         y_label = tmp1
 
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
-<<<<<<< HEAD
-=======
-
->>>>>>> b6c499b70d5785da1f144b9275755a11cb2de6cc
     line = slope*df[xaxis_column_name]+intercept
 
 
