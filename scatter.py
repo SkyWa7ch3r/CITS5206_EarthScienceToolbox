@@ -9,6 +9,8 @@ from numpy import arange,array,ones
 import pandas as pd
 import plotly.graph_objs as go
 import dash_daq as daq
+import colorlover as cl
+import random
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -21,6 +23,18 @@ file_name='../../UWA_acid_base_table.xlsx'
 df = pd.read_excel(file_name)
 
 cnames = df.select_dtypes(include='number').columns.values
+num_of_color=9
+default_alpha = 0.65
+default_color = cl.to_rgb(cl.scales[str(num_of_color)]['qual']['Set1'])
+
+col_idx = 0
+for i in default_color:
+    start_idx = i.find('(')
+    i = i[start_idx+1:len(i)-1]
+    i = i.split(",")
+    i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_alpha)
+    default_color[col_idx] = i
+    col_idx += 1
 
 COLORSCALES_DICT = [
     {'value': 'Blackbody', 'label': 'Blackbody'},
@@ -68,6 +82,13 @@ DASH_DICT = [
     {'value': 'longdash', 'label': 'LongDash'},
     {'value': 'longdashdot', 'label': 'LongDashDot'}
 ]
+
+MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
+'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie'
+]
+
+markers_choice = dict()
+markers_shape = dict()
 
 app.layout = html.Div([
     html.Div([
@@ -167,7 +188,7 @@ app.layout = html.Div([
         		id='opacity-slider',
         		min=0,
         		max=100,
-        		value=70,
+        		value=100,
         		)
         	]),
 
@@ -253,11 +274,7 @@ app.layout = html.Div([
     	html.Div([
     		html.H6("Chose a Color:"),
     		daq.ColorPicker(
-    			id='my-color-picker',
-    			value={
-    			'rgb': {'a': 1, 'r': 22, 'b': 222, 'g': 160},
-    			'hex': '#16a0de'
-    			}
+    			id='my-color-picker'
     			)
     		],
     		style={'float': 'right', 'display': 'inline-block'})
@@ -271,19 +288,53 @@ app.layout = html.Div([
     	], style={'width': '50%', 'height':'100%', 'display': 'inline-block', 'float': 'right'})
 ])
 
+
+@app.callback(
+    Output('my-color-picker', 'value'),
+    [Input('alignment-markers-dropdown', 'value')]
+)
+def update_box_color_selector(box):
+    temp_str = markers_choice.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
+    if isinstance(temp_str, str):
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+    return temp_str
+
+@app.callback(
+	[Output('linear', 'on'),
+	Output('linear', 'disabled')
+	],
+	[Input('xaxis-type', 'value'),
+	Input('yaxis-type', 'value'),
+	]
+	)
+def show_fitline(xv, yv):
+	if xv=='Log' or yv=='Log':
+		return False,True
+	else:
+		return False,False
+
 @app.callback(
 	[Output('selected-groupby', 'options'),
 	Output('alignment-colorscale-dropdown', 'disabled'),
 	Output('my-color-picker','disabled'),
-	Output('LS', 'disabled')
+	Output('LS', 'disabled'),
+	Output('selected-groupby', 'disabled')
 	],
 	[Input('color-drop', 'value'),]
 	)
 def traces_groupby(color_drop):
 	if df[color_drop].dtypes =='object':
-		return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True
+		idx =0
+		for i in df[color_drop].unique():
+			markers_choice[i] = default_color[idx % num_of_color]
+			markers_shape[i] = random.choice(MARKERS_LIST)
+			idx += 1
+		return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True, False
 	else:
-		return [{'label': color_drop, 'value': color_drop}], False, True, False
+		return [{'label': color_drop, 'value': color_drop}], False, True, False, True
 
 @app.callback(
 	Output('change-dash', 'disabled'),
@@ -340,10 +391,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
-    
-    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
-    
-
 
     if swap:
     	# Swapping the x and y axes names and values
@@ -354,6 +401,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         x_label = y_label
         y_label = tmp1
 
+    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
 
 
@@ -384,6 +432,19 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if LB:
     	mode_t='markers+text'
 
+    picker_markers_color = 'rgba({}, {}, {}, {})'.format(
+        C_P['rgb']['r'],
+        C_P['rgb']['g'],
+        C_P['rgb']['b'],
+        C_P['rgb']['a'],)
+
+    if df[color_var].dtypes=='object':
+    	for i in df[color_var].unique():
+    		if color_var is not None:
+    			if i == G_t:
+    				markers_choice[i] = picker_markers_color
+    				markers_shape[i] = alignment_markers_dropdown
+
     traces = []
     #if the data type of the group by column is object, it will show each different values with different colors
     if df[color_var].dtypes=='object':
@@ -401,8 +462,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	       			'size': 15,
 	       			'line': {'width' :0.5, 'color': 'white'},
 	       			'symbol': alignment_markers_dropdown,
-	       			'color': C_P['hex'],
-	       			'symbol':alignment_markers_dropdown
+	       			'color': markers_choice[i],
+	       			'symbol':markers_shape[i]
 	       		},
 	       		name=i
 	       		))
@@ -416,7 +477,9 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 		       		opacity=OS/100,
 		       		marker={
 		       			'size': 15,
-		       			'line': {'width' :0.5, 'color': 'white'}
+		       			'line': {'width' :0.5, 'color': 'white'},
+		       			'color': markers_choice[i],
+		       			'symbol':markers_shape[i]
 		       		},
 		       		name=i
 		    	))
@@ -432,7 +495,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	    	marker=dict(
 	    		size = 15,
 	        	line = {'width': 0.5, 'color': 'white'},
-	        	color = df[xaxis_column_name],
+	        	color = df[color_var],
 	        	colorscale = alignment_colorscale_dropdown,
 	        	colorbar=dict(
 	        		title=color_var
@@ -447,7 +510,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     	x=df[xaxis_column_name],
         y=line,
         mode='lines',
-        name='Y = {}*X + {}'.format(slope, intercept),
+        name='Y = {:.3f}*X + {:.3f}'.format(slope, intercept),
         marker=dict(
             size = 15,
             opacity = 0.5,
