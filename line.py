@@ -47,32 +47,14 @@ for col in names:
 # Other data in ynames
 ynames = df.select_dtypes(include='number').columns.values
 
+# Six defferent line styles to choose from
+line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
+
 # Users can choose lines only, lines and markers and lines, markers and text
 LABELSTYLE_DICT = [
-    {'label': 'lines', 'value': 'lines'},
-    {'label': 'lines+markers', 'value': 'lines+markers'},
-    {'label': 'lines+markers+text', 'value': 'lines+markers+text'}
-]
-
-# Line colors users can choose from 
-COLORSCALES_DICT = [
-    {'value': 'Blackbody', 'label': 'Blackbody'},
-    {'value': 'Bluered', 'label': 'Bluered'},
-    {'value': 'Blues', 'label': 'Blues'},
-    {'value': 'Earth', 'label': 'Earth'},
-    {'value': 'Electric', 'label': 'Electric'},
-    {'value': 'Greens', 'label': 'Greens'},
-    {'value': 'Greys', 'label': 'Greys'},
-    {'value': 'Hot', 'label': 'Hot'},
-    {'value': 'Jet', 'label': 'Jet'},
-    {'value': 'Picnic', 'label': 'Picnic'},
-    {'value': 'Portland', 'label': 'Portland'},
-    {'value': 'Rainbow', 'label': 'Rainbow'},
-    {'value': 'RdBu', 'label': 'RdBu'},
-    {'value': 'Reds', 'label': 'Reds'},
-    {'value': 'Viridis', 'label': 'Viridis'},
-    {'value': 'YlGnBu', 'label': 'YlGnBu'},
-    {'value': 'YlOrRd', 'label': 'YlOrRd'},
+    {'label': 'Lines', 'value': 'lines'},
+    {'label': 'Lines & Markers', 'value': 'lines+markers'},
+    {'label': 'Lines, Markers & Text', 'value': 'lines+markers+text'}
 ]
 
 # Marker styles users can choose from
@@ -94,20 +76,12 @@ MARKERS_DICT = [
     {'value': 'bowtie', 'label': 'bowtie'},
 ]
 
-# Six different line styles users can choose from
-LINESTYLES_DICT = [
-    {'value': 'solid', 'label': 'solid'}, 
-    {'value': 'dash', 'label': 'dash'},
-    {'value': 'dot', 'label': 'dot'},
-    {'value': 'dashDot', 'label': 'dashDot'},
-    {'value': 'longDash', 'label': 'longDash'},
-    {'value': 'longDashDot', 'label': 'longDashDot'}
-]
-
 #
 LINECOLOR_DICT = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 default_alpha = 0.65
+
+toggle_switch_color = '#91c153'
 
 
 app.layout = html.Div([
@@ -134,44 +108,17 @@ app.layout = html.Div([
 
         #option to choose linear or log for y value
         html.Div([
-            html.H6("Linear or Logarithmic:"),
-            dcc.RadioItems(
-                id='yaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
+            html.H6('Data Transformation'),
+            daq.ToggleSwitch(
+                id = 'data-transform',
+                label = ['Linear', 'Logarithmic'],
+                value = False,
+                size = '35',
+                color = toggle_switch_color
+                )
         ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
 
-        # Set the title of the plot
-        html.Div([
-            html.H6('Plot Title'),
-            dcc.Input(
-                id="title",
-                type="text",
-                placeholder="title")
-            ],
-            style={'width': '33%', 'float': 'left', 'display' : 'inline-block'}),
-
-        #This is the title for X axes
-        html.Div([
-            html.H6('X-Axis Title:'),
-            dcc.Input(
-                id='xaxis_title',
-                value=xnames[0],
-                type='text')
-            ],
-            style={'width': '33%', 'float': 'center', 'display' : 'inline-block'}),
-
-        # This is the title for Y axes
-        html.Div([
-            html.H6('Y-Axis Title:'),
-            dcc.Input(id='yaxis_title',
-                value=ynames[0],
-                type='text')
-            ],
-            style={'width': '33%', 'float': 'rifght', 'display' : 'inline-block'}),
 
         # Option to choose marker style
         html.H6("Change Marker Style:"),
@@ -180,15 +127,6 @@ app.layout = html.Div([
             className = 'markers-controls-block-dropdown',
             options = MARKERS_DICT,
             value = 'circle'
-            ),
-
-        # Option to change line style
-        html.H6("Change Line Style:"),
-        dcc.Dropdown(
-            id = 'alignment-linestyle-dropdown',
-            className = 'linestyle-controls-block-dropdown',
-            options = LINESTYLES_DICT,
-            value = 'solid'
             ),
 
         # Option to change lable style
@@ -200,18 +138,44 @@ app.layout = html.Div([
             ),
 
         # All kinds of function buttons
-        html.Div([
-            daq.BooleanSwitch(label = 'Show Gaps', id = 'SG', on = False),
-            daq.BooleanSwitch(label = 'Add Line Fill', id = 'ALF', on = False)],
-            style = {'width': '50%', 'display': 'inline-block', 'padding': '10px'}),
-
-
         html.H6("Function Buttons:"),
         html.Div([
-            html.Button('Hide or Show grid line', id = 'GL'),
-            html.Button('Hide or Show zero line', id = 'OL')
+            daq.BooleanSwitch(
+                id = 'SG',
+                on = False,
+                label = 'Show Gaps',
+                labelPosition = 'top',
+                color = toggle_switch_color),
+            daq.BooleanSwitch(
+                id = 'ALF',
+                on = False,
+                label = 'Add Line Fill',
+                labelPosition = 'top',
+                color = toggle_switch_color),
+            daq.BooleanSwitch(
+                id = 'show-gridlines',
+                on = False,
+                label = 'Gridlines',
+                labelPosition = 'top',
+                color = toggle_switch_color),
+            daq.BooleanSwitch(
+                id = 'show-zeroline-x',
+                on = False,
+                label = 'X Zeroline',
+                labelPosition = 'top',
+                color = toggle_switch_color
+                ),
+            daq.BooleanSwitch(
+                id = 'show-zeroline-y',
+                on = False,
+                label = 'Y Zeroline',
+                labelPosition = 'top',
+                color = toggle_switch_color
+                )
+
             ],
-            style = {'width': '100%', 'display': 'inline-block'}),
+            style = {'width': '50%', 'display': 'inline-block', 'padding': '10px'}),
+
 
         # Slider to change line opacity
         html.H6("Change Opacity:"),
@@ -224,13 +188,6 @@ app.layout = html.Div([
             )
         ]),
 
-        # Change distance of X ticks and Y ticks
-        html.H6("Change X ticks:"),
-        html.Div([
-            dcc.Input(
-                id = 'X-dtick',
-                type = 'number')
-            ]),
 
         # Change distances between y ticks
         html.H6("Change Y ticks:"),
@@ -240,24 +197,6 @@ app.layout = html.Div([
                 type = 'number')
             ]),    
 
-        # Change different colors
-        html.Div([
-            html.H6("Change Colorscale:"),
-            dcc.Dropdown(
-                # option to choose colorscale
-                id = 'alignment-colorscale-dropdown',
-                className = 'app-controls-block-dropdown',
-                options = COLORSCALES_DICT,
-                value = 'Blackbody'
-            ),
-
-            html.Div("Color and Hover Text Grouping"),
-            dcc.Dropdown(
-                id = 'color-drop',
-                options = [{'label': i, 'value': i} for i in df.columns],
-                value = df.columns[0]
-                )
-            ]),
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
     
     
@@ -265,7 +204,6 @@ app.layout = html.Div([
     html.Div([
         html.H6('Select Line'),
 
-        
         html.Div([
         dcc.RadioItems(
             id = 'select-line',
@@ -273,21 +211,35 @@ app.layout = html.Div([
         ]),
 
         # Pick a color for different lines
+        html.H6('Line Style'),
+        html.Div([
+            dcc.Dropdown(
+                id = 'line-style',
+                options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
+                value = (str(line_style[0]).replace(" ", "")).lower(),
+                
+            ),
+        ], style = {'width': '48%', 'display': 'inline-block'}),
+
         html.Div([
             daq.ColorPicker(
                 id = 'line-color',
                 label = 'Line Color',
-                value = dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
-            ]),
+                style = {'background-color': 'white'},
+                value = dict(rgb = dict(r = 0, g = 0, b = 255, a = 1))
+            ),    
         ], style = {'width': '48%', 'display': 'inline-block'}),
 
+    ]),
 
     # main graph
     html.Div([
         dcc.Graph(
-            id = 'indicator-graphic'),
+            id = 'indicator-graphic',
+            config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'legendPosition' : True, 'legendText' : True, 'colorbarPosition' : True, 'colorbarTitleText' : True}}),
             # set width and height of the main graph and move it to the right side of the page
-            ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'})
+            ],style = {'width': '48%', 'height': '100%', 'display': 'inline-block', 'float': 'right'},
+            )
 ])
 
 
@@ -322,28 +274,34 @@ def update_yaxis(yaxis_column):
     Output('indicator-graphic', 'figure'),
     [Input('xaxis-column', 'value'),
      Input('yaxis-column', 'value'),
-     Input('yaxis-type', 'value'),
-     Input('title', 'value'),
-     Input('alignment-colorscale-dropdown', 'value'),
-     Input('xaxis_title', 'value'),
-     Input('yaxis_title', 'value'),
-     Input('GL', 'n_clicks'),
-     Input('OL', 'n_clicks'),
+     Input('data-transform', 'value'),
+     Input('show-gridlines', 'on'),
+     Input('show-zeroline-x', 'on'),
+     Input('show-zeroline-y', 'on'),
      Input('alignment-markers-dropdown', 'value'),
      Input('alignment-labelstyle-dropdown', 'value'),
      Input('SG', 'on'),
      Input('ALF', 'on'),
      Input('opacity-slider', 'value'),
      Input('line-color', 'value'),
-     Input('select-line', 'value')])
+     Input('select-line', 'value'),
+     Input('line-style', 'value')
+     ])
 def update_graph(xaxis_column_name, yaxis_column_name,
-                 yaxis_type,
-                 title_1, alignment_colorscale_dropdown,
-                 xaxis_title, yaxis_title, GL, OL,
+                 data_transform,
+                 show_gridlines, show_zeroline_x, show_zeroline_y,
                  alignment_markers_dropdown,
-                 alignment_labelstyle_dropdown, SG, ALF, OS, line_color,
-                 select_line):
+                 alignment_labelstyle_dropdown, SG, ALF,
+                 OS,
+                 line_color,
+                 select_line,
+                 line_style
+                 ):
     
+    type_y = None
+    if data_transform:
+        type_y = 'log'
+
     yaxis_list = ynames
     
     picker_line_color = 'rgba({}, {}, {}, {})'.format(
@@ -351,25 +309,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         line_color['rgb']['g'],
         line_color['rgb']['b'],
         line_color['rgb']['a'])
-    
-    color_idx = 0
-    for i in yaxis_list:
-        if select_line is not None:
-            print('select_line: {}'.format(select_line))
-            print('line color 1: {}'.format(LINECOLOR_DICT))
-            if i == select_line:
-                LINECOLOR_DICT[i] = picker_line_color
 
-        color_idx += 1
-
-
-    G_click = False
-    if GL != None and int(GL) % 2 == 1:
-        G_click = True
-
-    O_click = False
-    if OL != None and int(OL) % 2 == 1:
-        O_click = True
 
     ConnectGaps = True
     if SG:
@@ -390,12 +330,12 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 line_color['rgb']['r'],
                 line_color['rgb']['g'],
                 line_color['rgb']['b'],
-                line_color['rgb']['a'],), width = 3)
+                line_color['rgb']['a'],), width = 3, dash = line_style)
     elif alignment_labelstyle_dropdown == 'lines+markers':
         MarkerOnly = dict(
             size = 8,
             opacity = 0.5,
-            line = {'width': 0.5, 'color': 'white'},
+            line = {'width': 0.5, 'color': 'white', 'dash': line_style},
             symbol = alignment_markers_dropdown
         )
         lineStyle = None
@@ -408,7 +348,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     for col in yaxis_column_name:
         traces_list.append(
             go.Scatter(
-                x=df[xaxis_column_name],
+                x = xnames[0],
+                #x=df[xaxis_column_name],
                 y=df[col],
                 text=df[col],
                 mode=alignment_labelstyle_dropdown,
@@ -426,21 +367,21 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 
         'layout': go.Layout(
             xaxis={
-                'title' : xaxis_title,
-                'showgrid': G_click,
-                'zeroline': O_click,
+                #'title' : xaxis_title,
+                'showgrid': show_gridlines,
+                'zeroline': show_zeroline_x,
                 'rangeslider': {'visible': True}, 'type': 'date'
             },
             yaxis={
-                'title' : yaxis_title,
-                'type' : yaxis_type.lower(),
-                'showgrid': G_click,
-                'zeroline': O_click,
+                #'title' : yaxis_title,
+                'type' : type_y,
+                'showgrid': show_gridlines,
+                'zeroline': show_zeroline_y,
                 # new
                 #'range': [range1[0], range1[1]]
             },
             margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-            title= title_1,
+            #title= title_1,
             hovermode='closest'
         )
     }
