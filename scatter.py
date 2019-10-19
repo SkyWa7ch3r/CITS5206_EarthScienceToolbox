@@ -18,7 +18,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='../../UWA_acid_base_table.xlsx'
+file_name='../UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -78,9 +78,9 @@ DASH_DICT = [
     {'value': 'solid', 'label': 'Solid'}, 
     {'value': 'dash', 'label': 'Dash'},
     {'value': 'dot', 'label': 'Dot'},
-    {'value': 'dashdot', 'label': 'DashDot'},
-    {'value': 'longdash', 'label': 'LongDash'},
-    {'value': 'longdashdot', 'label': 'LongDashDot'}
+    {'value': 'dashdot', 'label': 'Dash Dot'},
+    {'value': 'longdash', 'label': 'Long Dash'},
+    {'value': 'longdashdot', 'label': 'Long Dash Dot'}
 ]
 
 MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
@@ -210,7 +210,7 @@ app.layout = html.Div([
                 min=1)
         	]),
 
-        html.H6("Add a Thredshold for X:"),
+        html.H6("Add a Threshold for X:"),
         html.Div([
         	#set an input to add a threshold for X
         	dcc.Input(
@@ -219,7 +219,7 @@ app.layout = html.Div([
         		)
         	]),
 
-        html.H6("Add a Thredshold for Y:"),
+        html.H6("Add a Threshold for Y:"),
         html.Div([
         	#set an input to add a threshold for Y
         	dcc.Input(
@@ -391,6 +391,11 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  title_1, alignment_colorscale_dropdown, 
                  swap, linear, x_label, y_label, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
+<<<<<<< HEAD
+=======
+        
+
+>>>>>>> b6c499b70d5785da1f144b9275755a11cb2de6cc
 
     if swap:
     	# Swapping the x and y axes names and values
@@ -402,13 +407,17 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         y_label = tmp1
 
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
+<<<<<<< HEAD
+=======
+
+>>>>>>> b6c499b70d5785da1f144b9275755a11cb2de6cc
     line = slope*df[xaxis_column_name]+intercept
 
 
     threshold_shape = []
 
 
-    #if users set a thredshold for X, then show this line
+    #if users set a threshold for X, then show this line
     if X_T !=None:
     	threshold_shape.append(dict(
     	type='line',
@@ -418,7 +427,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     	y1=df[yaxis_column_name].max()
     	))
 
-    #if users set a thredshold for Y, then show this line
+    #if users set a threshold for Y, then show this line
     if Y_T !=None:{
     	threshold_shape.append(dict(
     	type='line',
