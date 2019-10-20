@@ -380,7 +380,7 @@ app.layout=html.Div(className='row', children=[
                             alignment-colorscale-dropdown needs to be the COLORSCALE DICT as options
                             alignment-markers-dropdown needs to be a dropdown with MARKERS_DICT
                             my-color-picker is a color picker
-                            '''
+                            ''',
                             dbc.Card([
                                 dbc.CardHeader(html.H5('X-Value')),
                                 dbc.CardBody(children=render_radio('select-variable', cnames))
