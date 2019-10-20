@@ -50,6 +50,9 @@ ynames = df.select_dtypes(include='number').columns.values
 # Six defferent line styles to choose from
 line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 
+# Features that are Categorical
+cat_features = df.select_dtypes(include = 'object').columns.values
+
 # Users can choose lines only, lines and markers and lines, markers and text
 LABELSTYLE_DICT = [
     {'label': 'Lines', 'value': 'lines'},
@@ -199,27 +202,37 @@ app.layout = html.Div([
 
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
     
-    
+
     # Select a particular line
     html.Div([
-        html.H6('Select Line'),
 
         html.Div([
-        dcc.RadioItems(
+            html.H6('Group by'),
+            dcc.Dropdown(
+                id = 'select-groupby',
+                options = [{'label': i, 'value': i} for i in cat_features],
+                value = str(cat_features[0])
+                )
+            ], style = {'width': '48%', 'display': 'inline-block', 'float': 'right'}),
+
+        html.Div([
+            html.H6('Select Line'),
+            dcc.RadioItems(
             id = 'select-line',
-            )
-        ]),
+                )
+        ], style = {'width': '48%', 'display': 'inline-block', 'float': 'right'}),
 
         # Pick a color for different lines
-        html.H6('Line Style'),
+        
         html.Div([
+            html.H6('Line Style'), 
             dcc.Dropdown(
                 id = 'line-style',
                 options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
                 value = (str(line_style[0]).replace(" ", "")).lower(),
                 
             ),
-        ], style = {'width': '48%', 'display': 'inline-block'}),
+        ], style = {'width': '48%', 'display': 'inline-block', 'float': 'right'}),
 
         html.Div([
             daq.ColorPicker(
@@ -257,17 +270,18 @@ def update_line_color(yaxis):
         temp_str = dict(rgb = dict(r = temp_str[0], g = temp_str[1], b = temp_str[2], a = temp_str[3]))
     return temp_str
 
+# 改成groupby
 # Change the selected y axis
 @app.callback(
     Output('select-line', 'options'),
-    [Input('yaxis-column', 'value')]
+    [Input('select-groupby', 'value')]
 )
-def update_yaxis(yaxis_column):
+def update_yaxis(groupby):
     idx = 0
-    for i in df[yaxis_column]:
+    for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
         idx += 1
-    return [{'label': i, 'value': i} for i in df[yaxis_column]]
+    return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
 # Main callback
 @app.callback(
@@ -285,7 +299,8 @@ def update_yaxis(yaxis_column):
      Input('opacity-slider', 'value'),
      Input('line-color', 'value'),
      Input('select-line', 'value'),
-     Input('line-style', 'value')
+     Input('line-style', 'value'),
+     Input('select-groupby', 'value')
      ])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  data_transform,
@@ -295,9 +310,12 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  OS,
                  line_color,
                  select_line,
-                 line_style
+                 line_style,
+                 groupby
                  ):
     
+    group_list = df[groupby].unique()
+
     type_y = None
     if data_transform:
         type_y = 'log'
@@ -338,7 +356,13 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             line = {'width': 0.5, 'color': 'white', 'dash': line_style},
             symbol = alignment_markers_dropdown
         )
-        lineStyle = None
+        lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
+                line_color['rgb']['r'],
+                line_color['rgb']['g'],
+                line_color['rgb']['b'],
+                line_color['rgb']['a'],),
+                width = 3,
+                dash = line_style)
     #else:
 
         
@@ -347,9 +371,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     traces_list = []
     for col in yaxis_column_name:
         traces_list.append(
-            go.Scatter(
-                x = xnames[0],
-                #x=df[xaxis_column_name],
+            go.Scatter( 
+                x=df[xaxis_column_name],
                 y=df[col],
                 text=df[col],
                 mode=alignment_labelstyle_dropdown,
