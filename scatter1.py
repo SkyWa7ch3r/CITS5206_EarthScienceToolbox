@@ -5,108 +5,24 @@ from dash.dependencies import Input, Output, State
 import pandas as pd
 import numpy as np
 import colorlover as cl
-import plotly.graph_objs as go
-import dash
 import dash_bootstrap_components as dbc
-import pandas as pd
-import numpy as np
 import dash_core_components as dcc
 import dash_html_components as html
-import numpy as np
 import plotly.express as px
 from scipy import stats
 from numpy import arange,array,ones
-import dash_daq as daq
 import colorlover as cl
 import random
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-
-file_name= r'..\UWA_acid_base_table.xlsx'
-
-df = pd.read_excel(file_name)
-
-cnames = df.select_dtypes(include='number').columns.values
-num_of_color=9
-default_alpha = 0.65
-default_color = cl.to_rgb(cl.scales[str(num_of_color)]['qual']['Set1'])
-button_font_size='1.2em'
-cardbody_font_size='1em'
-cardheader_color='info'
-cardbody_color='info'
-main_panel_margin={'margin': '10px 0px'}
-left_panel_margin={'width': '25%'}
-right_panel_margin={'class': 'col-md-8', 'display':'block-inline'}
-toggle_switch_color='#91c153'
-
-col_idx = 0
-for i in default_color:
-    start_idx = i.find('(')
-    i = i[start_idx+1:len(i)-1]
-    i = i.split(",")
-    i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_alpha)
-    default_color[col_idx] = i
-    col_idx += 1
-
-COLORSCALES_DICT = [
-    {'value': 'Blackbody', 'label': 'Blackbody'},
-    {'value': 'Bluered', 'label': 'Bluered'},
-    {'value': 'Blues', 'label': 'Blues'},
-    {'value': 'Earth', 'label': 'Earth'},
-    {'value': 'Electric', 'label': 'Electric'},
-    {'value': 'Greens', 'label': 'Greens'},
-    {'value': 'Greys', 'label': 'Greys'},
-    {'value': 'Hot', 'label': 'Hot'},
-    {'value': 'Jet', 'label': 'Jet'},
-    {'value': 'Picnic', 'label': 'Picnic'},
-    {'value': 'Portland', 'label': 'Portland'},
-    {'value': 'Rainbow', 'label': 'Rainbow'},
-    {'value': 'RdBu', 'label': 'RdBu'},
-    {'value': 'Reds', 'label': 'Reds'},
-    {'value': 'Viridis', 'label': 'Viridis'},
-    {'value': 'YlGnBu', 'label': 'YlGnBu'},
-    {'value': 'YlOrRd', 'label': 'YlOrRd'},
-]
-
-MARKERS_DICT = [
-    {'value': 'circle', 'label': 'Circle'},
-    {'value': 'square', 'label': 'Square'},
-    {'value': 'diamond', 'label': 'Diamond'},
-    {'value': 'cross', 'label': 'Cross'},
-    {'value': 'x', 'label': 'x'},
-    {'value': 'triangle-up', 'label': 'Triangle-up'},
-    {'value': 'pentagon', 'label': 'Pentagon'},
-    {'value': 'hexagon', 'label': 'Hexagon'},
-    {'value': 'hexagon2', 'label': 'Hexagon2'},
-    {'value': 'octagon', 'label': 'Octagon'},
-    {'value': 'star', 'label': 'Star'},
-    {'value': 'hexagram', 'label': 'Hexagram'},
-    {'value': 'star-triangle-up', 'label': 'Star-triangle-up'},
-    {'value': 'hourglass', 'label': 'Hourglass'},
-    {'value': 'bowtie', 'label': 'Bowtie'},
-]
-
-DASH_DICT = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
-MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
-'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie'
-]
-
-
-markers_choice = dict()
-
-markers_shape = dict()
 # Function: Render drop down list with label formatting (remove space between words and turn to lower case)
 # Input: id, [options]
 # Output: dcc.Dropdown
 def render_dropdown_format(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options],
+    return dcc.Dropdown(id=id, options=options,
         className='card h-100' )
 
 def render_dropdown(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options],
+    return dcc.Dropdown(id=id, options=options,
         className='card h-100' )
 
 # Function: Render drop down list without any options
@@ -221,6 +137,7 @@ def render_colorpicker(id, color, r, g, b, a):
 # Output: daq.NumericInput
 def render_numinput(id, min, max, value):
     return daq.NumericInput(id=id, min=min, max=max, value=value )
+
 file_name= r'..\UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
@@ -229,6 +146,14 @@ cnames = df.select_dtypes(include='number').columns.values
 num_of_color=9
 default_alpha = 0.65
 default_color = cl.to_rgb(cl.scales[str(num_of_color)]['qual']['Set1'])
+button_font_size='1.2em'
+cardbody_font_size='1em'
+cardheader_color='info'
+cardbody_color='info'
+main_panel_margin={'margin': '10px 0px'}
+left_panel_margin={'width': '25%'}
+right_panel_margin={'class': 'col-md-8', 'display':'block-inline'}
+toggle_switch_color='#91c153'
 
 col_idx = 0
 for i in default_color:
@@ -295,7 +220,7 @@ markers_shape = dict()
 
 
 ## MAIN APP HERE
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 app.layout=html.Div(className='row', children=[
     html.Div(children=[
         html.Div(className='container', children=[
@@ -309,12 +234,12 @@ app.layout=html.Div(className='row', children=[
                         dbc.CardBody(children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('X-Value')),
-                                dbc.CardBody(children=render_radio('select-variable', cnames))
+                                dbc.CardBody(children=render_radio('xaxis-column', cnames))
                             ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Y-Value')),
-                                dbc.CardBody(children=render_radio('select-groupby', cnames))
+                                dbc.CardBody(children=render_radio('yaxis-column', cnames))
                             ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             )
                         ]),
@@ -388,7 +313,7 @@ app.layout=html.Div(className='row', children=[
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Y-Data Transformation')),
-                                dbc.CardBody(children=render_toggleswitch('xaxis-type', ['Linear', 'Logarithmic'], False))
+                                dbc.CardBody(children=render_toggleswitch('yaxis-type', ['Linear', 'Logarithmic'], False))
                             ], style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
@@ -405,12 +330,12 @@ app.layout=html.Div(className='row', children=[
                         dbc.CardBody(children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('X-Threshold')),
-                                dbc.CardBody(children=render_input_number('X-thredshold', 'x_threshold'))
+                                dbc.CardBody(children=render_input_number('X-thredshold', 'X Threshold'))
                             ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Y-Threshold')),
-                                dbc.CardBody(children=render_input_number('Y-thredshold', 'x_threshold'))
+                                dbc.CardBody(children=render_input_number('Y-thredshold', 'Y Threshold'))
                             ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                             ),
                         ]),
@@ -448,6 +373,14 @@ app.layout=html.Div(className='row', children=[
                     ),
                     dbc.Collapse(
                         dbc.CardBody(children=[
+                            '''
+                            In this section there needs to be
+                            color-drop is a dropdown which uses all the columns in the dataframe 
+                            selected-groupby which uses a blank drop down
+                            alignment-colorscale-dropdown needs to be the COLORSCALE DICT as options
+                            alignment-markers-dropdown needs to be a dropdown with MARKERS_DICT
+                            my-color-picker is a color picker
+                            '''
                             dbc.Card([
                                 dbc.CardHeader(html.H5('X-Value')),
                                 dbc.CardBody(children=render_radio('select-variable', cnames))
@@ -515,7 +448,7 @@ app.layout=html.Div(className='row', children=[
     [Input(f'group-{i}-toggle', 'n_clicks') for i in range(1,9)],
     [State(f'collapse-{i}', 'is_open') for i in range(1,9)]
 )
-def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, n8, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open8):
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7):
     ctx = dash.callback_context
 
     if not ctx.triggered:
@@ -537,15 +470,13 @@ def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, n8, is_open1, is_open2, is_open
         return False, False, False, False, False, not is_open6, False, False
     elif button_id ==  'group-7-toggle' and n7:
         return False, False, False, False, False, False, not is_open7, False
-    elif button_id ==  'group-8-toggle' and n8:
-        return False, False, False, False, False, False, False, not is_open8
     return False, False, False, False, False, False, False
 
 @app.callback(
     Output('my-color-picker', 'value'),
     [Input('alignment-markers-dropdown', 'value')]
 )
-def update_box_color_selector(box):
+def update_scatter_color_selector(box):
     temp_str = markers_choice.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
     if isinstance(temp_str, str):
         start_idx = temp_str.find('(')
@@ -600,29 +531,14 @@ def show_linear(on):
 
 
 @app.callback(
-    Output('x_label', 'value'),
-    [Input('xaxis-column', 'value')])
-def set_cities_options(X_c):
-    return X_c
-
-@app.callback(
-    Output('y_label', 'value'),
-    [Input('yaxis-column', 'value')])
-def set_cities_options(Y_c):
-    return Y_c
-
-@app.callback(
     Output('indicator-graphic', 'figure'),
     [Input('xaxis-column', 'value'),
      Input('yaxis-column', 'value'),
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
-     Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
      Input('swap', 'on'),
      Input('linear', 'on'),
-     Input('x_label', 'value'),
-     Input('y_label', 'value'),
      Input('GL', 'on'),
      Input('OL', 'on'),
      Input('alignment-markers-dropdown', 'value'),
@@ -641,9 +557,8 @@ def set_cities_options(Y_c):
      Input('graph-height', 'value'),
      Input('graph-width', 'value'),])
 def update_graph(xaxis_column_name, yaxis_column_name,
-                 xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown, 
-                 swap, linear, x_label, y_label, GL, OL, 
+                 xaxis_type, yaxis_type, alignment_colorscale_dropdown, 
+                 swap, linear, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD,graph_height,
                  graph_width,):
 
@@ -652,9 +567,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
-        tmp1 = x_label
-        x_label = y_label
-        y_label = tmp1
 
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
     line = slope*df[xaxis_column_name]+intercept
@@ -718,7 +630,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 	       			'line': {'width' :0.5, 'color': 'white'},
 	       			'symbol': alignment_markers_dropdown,
 	       			'color': markers_choice[i],
-	       			'symbol':markers_shape[i]
 	       		},
 	       		name=i
 	       		))
@@ -781,20 +692,20 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 
     layou_t=dict(
     	xaxis={
-            'title': x_label,
+            'title': xaxis_column_name,
             'type': 'linear' if xaxis_type == 'Linear' else 'log',
            	'showgrid': GL,
            	'zeroline': OL,
             'dtick': X_D
         },
         yaxis={
-            'title': y_label,
+            'title': yaxis_column_name,
             'type': 'linear' if yaxis_type == 'Linear' else 'log',
             'showgrid': GL,
             'zeroline': OL,
             'dtick': Y_D
         },
-        title= title_1,
+        title= xaxis_column_name + 'vs.' + yaxis_column_name,
         showlegend = LD,
         shapes=threshold_shape,
         hovermode='closest',
