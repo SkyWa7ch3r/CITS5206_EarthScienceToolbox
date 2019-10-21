@@ -564,11 +564,13 @@ def update_figure(
         bar_color['rgb']['a'],)
 
     color_idx = 0
-
+    # generate the unique variables in groupby
     group_list = df[groupby].unique()
+    # generate the unique variables in variable
     var_list = df[variable].unique()
     # Generate barplot
     idx=0
+    # Loop for stacked percentage barplot
     if(plottype== "Stacked_Percentage"):
         for i in group_list:
             pct_idx=0
@@ -622,7 +624,7 @@ def update_figure(
                 idx +=1
                 pct_idx += 1
                 pct_text=[]
-
+    # Loop for side by side and stacked barplot
     elif(plottype=="Side_by_Side" or plottype== "Stacked"):
         for i in group_list:
             if selected_bar is not None:
@@ -643,6 +645,7 @@ def update_figure(
                 cnt.append(count_me)
                 # store the count with format for display
                 cnt_text.append("{}".format(count_me))
+            # trace for vertical bar chart
             if (is_vertical):
                 data_list.append(
                         go.Bar(
@@ -654,12 +657,13 @@ def update_figure(
                             marker_color=bar_color_saved[i]
                         )
                     )
-                # reset the array
+                # reset the array for count
                 cnt = []
                 idx +=1
                 cnt_idx += 1
                 cnt_text=[]
             else:
+                # trace for horizontal bar chart
                 data_list.append(
                         go.Bar(
                             x=cnt,
@@ -671,7 +675,7 @@ def update_figure(
                             marker_color=bar_color_saved[i]
                         )
                     )
-                # reset the array
+                # reset the array for count
                 idx +=1
                 cnt_idx += 1
                 cnt = []
@@ -679,11 +683,13 @@ def update_figure(
     # Change Orientation
     type_x = None
     type_y = None
+    # check the graph orientation and change the title and scale
     if (is_vertical):
         xaxis_title, yaxis_title = yaxis_title, xaxis_title
         type_y = 'log' if is_log else None
 
     else:
+        #check the graph orientation and change the title and scale
         type_x = 'log' if is_log else None
 
     if (plottype== "Side_by_Side"):
@@ -704,6 +710,7 @@ def update_figure(
                                 width=treshold_size, dash=treshold_style,
                                 ),
             type='line',
+            # set the x and y for threshold line
             x0=-0.5 if is_vertical else treshold_value,
             x1=len(var_list)-0.5 if is_vertical else treshold_value,
             y0=treshold_value if is_vertical else -0.5,
