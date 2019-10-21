@@ -79,6 +79,12 @@ def render_dropdown(id, options):
 def render_dropdown_blank(id):
     return dcc.Dropdown(id=id)
 
+# Function: Render drop down list with selected value
+# Input: id, [options], value
+# Output: dcc.Dropdown
+def render_dropdown_valued(id, options, value):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value,
+        className='card h-100' )
 
 # Function: Render drop down list with label formatting (remove space between words and turn to lower case)
 # Input: id, [options]
@@ -237,13 +243,13 @@ app.layout=html.Div(className='row', children=[
                         dbc.CardBody(children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Variable')),
-                                dbc.CardBody(children=render_radio('select-variable', features))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardBody(children=render_dropdown_valued('select-variable', features, features[0]))
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Group by')),
-                                dbc.CardBody(children=render_radio('select-groupby', cat_features))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardBody(children=render_dropdown_valued('select-groupby', cat_features, cat_features[0]))
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                             )
                         ]),
                         id='collapse-1'
