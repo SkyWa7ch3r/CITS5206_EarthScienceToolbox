@@ -128,11 +128,6 @@ app.layout = html.Div([
                 id = 'select-group'
                 ),
 
-            html.H6('Select Line'),
-            dcc.RadioItems(
-                id = 'select-line',
-                ),
-
             # Pick a color for different lines
             daq.ColorPicker(
                 id = 'colorpicker',
@@ -247,7 +242,7 @@ app.layout = html.Div([
 
 @app.callback(
     Output('colorpicker', 'value'),
-    [Input('select-line', 'value')]
+    [Input('select-group', 'value')]
 )
 def update_line_color(yaxis):
     temp_str = LINECOLOR_DICT.get(yaxis, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
