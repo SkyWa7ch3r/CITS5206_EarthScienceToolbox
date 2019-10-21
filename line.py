@@ -203,16 +203,9 @@ app.layout = html.Div([
                 labelPosition = 'top',
                 color = toggle_switch_color),
             daq.BooleanSwitch(
-                id = 'show-zeroline-x',
-                on = False,
-                label = 'X Zeroline',
-                labelPosition = 'top',
-                color = toggle_switch_color
-                ),
-            daq.BooleanSwitch(
                 id = 'show-zeroline-y',
                 on = False,
-                label = 'Y Zeroline',
+                label = 'Show Y Zeroline',
                 labelPosition = 'top',
                 color = toggle_switch_color
                 )
@@ -271,40 +264,25 @@ def update_line_color(yaxis):
     [Input('select-groupby', 'value')]
 )
 def update_group(groupby):
-    idx = 0
+    '''idx = 0
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
-        idx += 1
+        idx += 1'''
     return [{'label': i, 'value': i} for i in df[groupby].unique()] 
 
 '''
 @app.callback(
     Output('select-line', 'options'),
-    [Input('select-group', 'value')]
+    [Input('select-group', 'value'),
+    Input('select-variables', 'value')]
 )
 def update_group(group):
-    df.loc[]
-
+    
     idx = 0
     for i in df[group]:
         LINECOLOR_DICT[i] = default_color[idx % 5]
         idx += 1
     return [{'label': i, 'value': i} for i in df[group]]
-'''
-
-
-# Change the selected y axis
-'''
-@app.callback(
-    Output('select-line', 'options'),
-    [Input('select-group', 'value')]
-)
-def update_yaxis(group):
-    idx = 0
-    for i in df[group].unique():
-        LINECOLOR_DICT[i] = default_color[idx % 5]
-        idx += 1
-    return [{'label': i, 'value': i} for i in df[group].unique()]
 '''
 
 # Main callback
@@ -314,7 +292,6 @@ def update_yaxis(group):
      Input('select-variables', 'value'),
      Input('data-transform', 'value'),
      Input('show-gridlines', 'on'),
-     Input('show-zeroline-x', 'on'),
      Input('show-zeroline-y', 'on'),
      Input('alignment-markers-dropdown', 'value'),
      Input('alignment-labelstyle-dropdown', 'value'),
@@ -330,7 +307,7 @@ def update_yaxis(group):
      ])
 def update_graph(xaxis_column_name, select_variables,
                  data_transform,
-                 show_gridlines, show_zeroline_x, show_zeroline_y,
+                 show_gridlines, show_zeroline_y,
                  alignment_markers_dropdown,
                  alignment_labelstyle_dropdown, show_gaps, ALF,
                  OS,
@@ -442,7 +419,7 @@ def update_graph(xaxis_column_name, select_variables,
             xaxis={
                 #'title' : xaxis_title,
                 'showgrid': show_gridlines,
-                'zeroline': show_zeroline_x,
+                #'zeroline': show_zeroline_x,
                 'rangeslider': {'visible': True}, 'type': 'date'
             },
             yaxis={
