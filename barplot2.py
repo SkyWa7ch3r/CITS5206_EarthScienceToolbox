@@ -183,7 +183,7 @@ def render_numinput(id, min, max, value):
 
 # MAIN APP HERE
 # Loading Data
-file_name = r'C:\Users\james\Downloads\PANDAAS\UWA_acid_base_table.xlsx'
+file_name = r'..\UWA_acid_base_table.xlsx'
 df = read_file(file_name)
 
 
