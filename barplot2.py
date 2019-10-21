@@ -65,6 +65,13 @@ def render_dropdown(id, options):
 def render_dropdown_blank(id):
     return dcc.Dropdown(id=id)
 
+# Function: Render drop down list with selected value
+# Input: id, [options], value
+# Output: dcc.Dropdown
+def render_dropdown_valued(id, options, value):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value,clearable=False,
+        className='card h-100' )
+
 
 # Function: Render drop down list with label formatting (remove space between words and turn to lower case)
 # Input: id, [options]
@@ -216,18 +223,18 @@ app.layout=html.Div(className='row', children=[
                         dbc.CardBody(children=[
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Variable')),
-                                dbc.CardBody(children=render_radio('select-variable', cat_features))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardBody(children=render_dropdown_valued('select-variable', cat_features, cat_features[0]))
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                             ),
                             dbc.Card([
                                 dbc.CardHeader(html.H5('Group by')),
-                                dbc.CardBody(children=render_radio('select-groupby', cat_features))
-                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                dbc.CardBody(children=render_dropdown_valued('select-groupby', cat_features, cat_features[0]))
+                            ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                             )
                         ]),
                         id='collapse-1'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button("Select Bar Plottype", id='group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
@@ -243,7 +250,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-2'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
 
                 dbc.Card([
                     dbc.CardHeader(
@@ -291,7 +298,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-3'
                     ),
-                ], color='info', outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color='info', outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -313,7 +320,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-4'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -350,7 +357,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-5'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button(
@@ -372,7 +379,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-6'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                 dbc.Card([
                     dbc.CardHeader(
                         dbc.Button("Graph Size", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
@@ -393,7 +400,7 @@ app.layout=html.Div(className='row', children=[
                         ]),
                         id='collapse-7'
                     ),
-                ], color=cardbody_color, outline=True, style={'font-s+ize': cardbody_font_size} ),
+                ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
             ])
         ])
     ], className='col-md-3'
@@ -527,16 +534,16 @@ def update_figure(
     if dtick != None:
         dtick_value = dtick
 
-    # Title and axis default title
+    # Title and axis default title for stacked percentage
     if(plottype=="Stacked_Percentage"):
         xaxis_title = str("Percentage % ")
         yaxis_title = variable
-        main_title = str("BARPLOT")
-
+        main_title = str("BarPlot")
+    #Title and axis default title for stacked and side by side barplot
     else:
         xaxis_title = str("Count")
         yaxis_title = variable
-        main_title = str("BARPLOT")
+        main_title = str("BarPlot")
 
 
     # Initialising data list
@@ -546,14 +553,8 @@ def update_figure(
     pct_text = []
     cnt_idx = []
     cnt_text = []
-    n_data = []
     annots_idx = 0
-    annots_ndata=[]
-    ndata = []
-    # Computing N Data
-    max_n = 100
 
-    max_n = 1.05*np.log10(max_n) if is_log else 1.05*max_n
 
 
     picker_bar_color = 'rgba({}, {}, {}, {})'.format(
@@ -569,7 +570,6 @@ def update_figure(
     # Generate barplot
     idx=0
     if(plottype== "Stacked_Percentage"):
-        print(plottype)
         for i in group_list:
             pct_idx=0
             if selected_bar is not None:
@@ -581,10 +581,13 @@ def update_figure(
             color_idx += 1
 
             for j in var_list:
+                # counting all elements for each var_list
                 count_all=df[df[variable]==j][variable].count()
-                ndata.append(count_all)
+                # counting all elements for each var_list for each group_list
                 count_me=df[df[variable]==j][df[groupby]==i][groupby].count()
+                # store percentage in array
                 pct.append(count_me*100/count_all)
+                # store percentage format in array
                 pct_text.append("{}%".format(round(count_me*100/count_all)))
             if (is_vertical):
                 data_list.append(
@@ -597,6 +600,7 @@ def update_figure(
                             marker_color=bar_color_saved[i],
                         )
                     )
+                # reset the array
                 pct=[]
                 idx +=1
                 pct_idx += 1
@@ -613,35 +617,11 @@ def update_figure(
                             marker_color=bar_color_saved[i],
                         )
                     )
+                #reset the array
                 pct =[]
                 idx +=1
                 pct_idx += 1
                 pct_text=[]
-
-            # Counting number of data for each category
-
-            print(ndata)
-            n_data.append(ndata[0])
-
-            # Generating annotations of n of data
-            annots_ndata.append(go.layout.Annotation(
-                x=annots_idx if is_vertical else max_n,
-                y=max_n if is_vertical else annots_idx,
-                xref='x',
-                yref='y',
-                text='N = {}'.format(ndata[annots_idx]),
-                showarrow=False,
-                ax=0 if is_vertical else annots_idx,
-                ay=annots_idx if is_vertical else 0,
-                )
-            )
-            annots_idx = annots_idx + 1
-
-        if(not is_ndatashow):
-            annots_ndata= []
-
-        annots_ndata= annots_ndata
-
 
     elif(plottype=="Side_by_Side" or plottype== "Stacked"):
         for i in group_list:
@@ -655,9 +635,13 @@ def update_figure(
 
             cnt_idx=0
             for j in var_list:
+                # counting all elements for each var_list
                 count_all=df[df[variable]==j][variable].count()
+                # counting all elements for each var_list for each group_list
                 count_me=df[df[variable]==j][df[groupby]==i][groupby].count()
+                # store the count
                 cnt.append(count_me)
+                # store the count with format for display
                 cnt_text.append("{}".format(count_me))
             if (is_vertical):
                 data_list.append(
@@ -670,6 +654,7 @@ def update_figure(
                             marker_color=bar_color_saved[i]
                         )
                     )
+                # reset the array
                 cnt = []
                 idx +=1
                 cnt_idx += 1
@@ -686,6 +671,7 @@ def update_figure(
                             marker_color=bar_color_saved[i]
                         )
                     )
+                # reset the array
                 idx +=1
                 cnt_idx += 1
                 cnt = []
@@ -706,7 +692,7 @@ def update_figure(
             is_side = False
 
     treshold_shape = []
-
+    # threshold line
     if is_tresholdshow:
         treshold_shape.append(dict(line=dict(
                                 # color="rgba(68, 68, 68, 0.5)",
@@ -751,7 +737,6 @@ def update_figure(
             showlegend=legendshow,
             height=graph_height,
             width=graph_width,
-            annotations=annots_ndata,
             shapes=treshold_shape,
         )
     }
