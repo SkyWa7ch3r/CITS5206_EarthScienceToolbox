@@ -31,7 +31,6 @@ dtick_value = None
 
 # Initialising selected marker symbol
 selected_marker_symbols = ['diamond', 'cross', 'triangle-up', 'star', 'x']
-
 # generate default colors list
 col_idx = 0
 for i in default_color:
@@ -668,23 +667,8 @@ def update_figure(
     is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
     treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
     graph_width, selected_box, box_color, grid_width, dtick, is_color_filled,
-    select_percentile, marker_symbol, select_percentile_color, symbol_size, dt_range_slider
+    select_percentile, marker_symbol, select_percentile_color, symbol_size
 ):
-    # Set timestamps from time Range
-    if not df_no_time:
-        from_year=dt_min.year+(dt_range_slider[0]//12)
-        from_month=dt_min.month+(dt_range_slider[0]%12)
-        to_year=dt_min.year+(dt_range_slider[1]//12)
-        to_month=dt_range_slider[1]%12+1
-        bottom_time=pd.Timestamp(year=from_year, month=from_month, day=1, hour=0, second=0)
-        upper_time=pd.Timestamp(year=to_year, month=to_month, day=30, hour=23, second=59)
-        print('from: {}'.format(bottom_time))
-        print('until: {}'.format(upper_time))
-        mydf = df[(df[datetime_feature[0]]>=bottom_time) & (df[datetime_feature[0]]<=upper_time)]
-        if mydf.shape[0] == 0:
-            mydf_is_empty=True
-        else:
-            mydf_is_empty=False
     # Update dtick_value
     if dtick != None:
         dtick_value = dtick
