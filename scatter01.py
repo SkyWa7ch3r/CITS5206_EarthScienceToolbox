@@ -340,12 +340,15 @@ def traces_groupby(color_drop):
 )
 def update_color_picker(group, sub_group):
     if df[group].dtypes == 'object':
-        temp_str = selected_subgroup_color[sub_group]
-        start_idx = temp_str.find('(')
-        temp_str = temp_str[start_idx+1:len(temp_str)-1]
-        temp_str = temp_str.split(",")
-        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
-        return temp_str
+        if sub_group is None:
+            return dict(rgb=dict(r=222, g=110, b=75, a=1))
+        else:
+            temp_str = selected_subgroup_color[sub_group]
+            start_idx = temp_str.find('(')
+            temp_str = temp_str[start_idx+1:len(temp_str)-1]
+            temp_str = temp_str.split(",")
+            temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+            return temp_str
     else:
         return dict(rgb=dict(r=222, g=110, b=75, a=1))
 
