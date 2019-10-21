@@ -264,10 +264,10 @@ def update_line_color(yaxis):
     [Input('select-groupby', 'value')]
 )
 def update_group(groupby):
-    '''idx = 0
+    idx = 0
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
-        idx += 1'''
+        idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()] 
 
 '''
@@ -409,7 +409,7 @@ def update_graph(xaxis_column_name, select_variables,
                     fill = Fill,
                     opacity = OS/100,
                     marker = markerOnly,
-                    line = lineStyle
+                    line = dict(color=LINECOLOR_DICT[selection], width=3, dash=line_style)
                     )
                 )
         
