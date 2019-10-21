@@ -270,20 +270,6 @@ def update_group(groupby):
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()] 
 
-'''
-@app.callback(
-    Output('select-line', 'options'),
-    [Input('select-group', 'value'),
-    Input('select-variables', 'value')]
-)
-def update_group(group):
-    
-    idx = 0
-    for i in df[group]:
-        LINECOLOR_DICT[i] = default_color[idx % 5]
-        idx += 1
-    return [{'label': i, 'value': i} for i in df[group]]
-'''
 
 # Main callback
 @app.callback(
@@ -299,7 +285,6 @@ def update_group(group):
      Input('ALF', 'on'),
      Input('opacity-slider', 'value'),
      Input('colorpicker', 'value'),
-     Input('select-line', 'value'),
      Input('line-style', 'value'),
      Input('select-groupby', 'value'),
      Input('Y-dtick', 'value'),
@@ -312,7 +297,6 @@ def update_graph(xaxis_column_name, select_variables,
                  alignment_labelstyle_dropdown, show_gaps, ALF,
                  OS,
                  colorPicker,
-                 select_line,
                  line_style,
                  groupby,
                  y_dtick,
@@ -334,12 +318,9 @@ def update_graph(xaxis_column_name, select_variables,
 
     color_idx = 0
     for i in group_list:
-        if select_line is not None:
-            print('select_line : {}'.format(select_line))
-            print('line color 1 : {}'.format(LINECOLOR_DICT))
-            if i == select_line:
+        if select_group is not None:
+            if i == select_group:
                 LINECOLOR_DICT[i] = picker_line_color
-                print('line color 2 : {}'.format(LINECOLOR_DICT))
             # else:
             #    box_color_saved[i] = default_color[color_idx % 5]
         color_idx += 1
