@@ -43,7 +43,7 @@ app = dash.Dash(__name__)
 #app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='UWA_acid_base_table.xlsx'
+file_name=r'E:\Users\demas\project5206\UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -319,14 +319,12 @@ def toggle_accordion(n1, n2, n3, n4, is_open1, is_open2, is_open3, is_open4):
 def traces_groupby(color_drop):
     if df[color_drop].dtypes =='object':
         idx = 0
-        selected_subgroup_color={}
-        selected_subgroup_marker={}
+        selected_subgroup_color.clear()
+        selected_subgroup_marker.clear()
         for i in df[color_drop].unique():
             selected_subgroup_color[i] = default_color[idx % num_of_color]
             selected_subgroup_marker[i] = marker_symbols[idx % 9]
             idx += 1
-        print(selected_subgroup_color)
-        print(selected_subgroup_marker)
         return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True
     else:
         return [{'label': color_drop, 'value': color_drop}], False, True, False
@@ -334,23 +332,19 @@ def traces_groupby(color_drop):
 @app.callback(
     Output('my-color-picker', 'value'),
     [
-     Input('color-drop', 'value'),
      Input('selected-groupby', 'value')
     ]
 )
-def update_color_picker(group, sub_group):
-    if df[group].dtypes == 'object':
-        if sub_group is None:
-            return dict(rgb=dict(r=222, g=110, b=75, a=1))
-        else:
-            temp_str = selected_subgroup_color[sub_group]
-            start_idx = temp_str.find('(')
-            temp_str = temp_str[start_idx+1:len(temp_str)-1]
-            temp_str = temp_str.split(",")
-            temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
-            return temp_str
-    else:
+def update_color_picker(sub_group):
+    if sub_group is None:
         return dict(rgb=dict(r=222, g=110, b=75, a=1))
+    else:
+        temp_str = selected_subgroup_color.get(sub_group, 'rgb(222,110,75,1)')
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+        return temp_str
 
 
 @app.callback(
@@ -417,8 +411,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  swap, linear, x_label, y_label, GL, OL,
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
 
-
-
     if swap:
         # Swapping the x and y axes names and values
         tmp = xaxis_column_name
@@ -464,7 +456,9 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if df[color_var].dtypes=='object':
         for i in df[color_var].unique():
             df_by = df[df[color_var] == i]
+            print(C_P)
             if i == G_t:
+                selected_subgroup_color[i]='rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a'])
                 traces.append(go.Scatter(
                 x=df_by[xaxis_column_name],
                 y=df_by[yaxis_column_name],
@@ -478,7 +472,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                     'symbol': alignment_markers_dropdown,
                     'color': selected_subgroup_color[i],
                     #'color': 'rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a']),
-                    'symbol':alignment_markers_dropdown
                 },
                 name=i
                 ))
@@ -492,7 +485,8 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                     opacity=OS/100,
                     marker={
                         'size': 15,
-                        'line': {'width' :0.5, 'color': 'white'}
+                        'line': {'width' :0.5, 'color': 'white'},
+                        'color': selected_subgroup_color[i],
                     },
                     name=i
                 ))
