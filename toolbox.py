@@ -110,7 +110,7 @@ def render_dropdown_blank(id):
 # Input: id, [options], value
 # Output: dcc.Dropdown
 def render_dropdown_valued(id, options, value):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value,
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value, clearable=False,
         className='card h-100' )
 
 # Function: Render drop down list with label formatting (remove space between words and turn to lower case)
