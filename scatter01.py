@@ -330,6 +330,15 @@ def traces_groupby(color_drop):
         return [{'label': color_drop, 'value': color_drop}], False, True, False
 
 @app.callback(
+    Output('alignment-markers-dropdown', 'value'),
+    [
+     Input('selected-groupby', 'value')
+    ]
+)
+def update_markers_dropdown(groupby):
+    return 'circle' if (groupby is None) else selected_subgroup_marker[groupby].lower()
+
+@app.callback(
     Output('my-color-picker', 'value'),
     [
      Input('selected-groupby', 'value')
@@ -456,9 +465,9 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if df[color_var].dtypes=='object':
         for i in df[color_var].unique():
             df_by = df[df[color_var] == i]
-            print(C_P)
             if i == G_t:
                 selected_subgroup_color[i]='rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a'])
+                selected_subgroup_marker[i]=alignment_markers_dropdown.lower()
                 traces.append(go.Scatter(
                 x=df_by[xaxis_column_name],
                 y=df_by[yaxis_column_name],
@@ -469,7 +478,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 marker={
                     'size': 15,
                     'line': {'width' :0.5, 'color': 'white'},
-                    'symbol': alignment_markers_dropdown,
+                    'symbol': selected_subgroup_marker[i].lower(),
                     'color': selected_subgroup_color[i],
                     #'color': 'rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a']),
                 },
@@ -487,6 +496,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                         'size': 15,
                         'line': {'width' :0.5, 'color': 'white'},
                         'color': selected_subgroup_color[i],
+                        'symbol': selected_subgroup_marker[i].lower(),
                     },
                     name=i
                 ))
