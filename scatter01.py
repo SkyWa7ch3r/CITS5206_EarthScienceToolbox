@@ -299,7 +299,7 @@ def toggle_accordion(n1, n2, n3, n4, is_open1, is_open2, is_open3, is_open4):
     Output('my-color-picker', 'value'),
     [Input('alignment-markers-dropdown', 'value')]
 )
-def update_box_color_selector(box):
+def update_scatter_color_selector(box):
     temp_str = markers_choice.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
     if isinstance(temp_str, str):
         start_idx = temp_str.find('(')
@@ -543,4 +543,4 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8000)
+    app.run_server(debug=True)
