@@ -108,7 +108,7 @@ def render_input_number(id, placeholder):
 # Input: id, placeholder, min
 # Output: dcc.Input
 def render_input_number_min(id, placeholder, min):
-    return dcc.Input(id=id, type='number', min=min, placeholder=placeholder, style={'width': '100%'})
+    return dcc.Input(id=id, type='number', min=min, placeholder=placeholder, step=0.1, style={'width': '100%'})
 
 # Function: Render text input with delay feature, will callback after enter key pressed or input area loss its focus
 # Input: id, placeholder

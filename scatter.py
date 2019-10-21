@@ -18,7 +18,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name='../../UWA_acid_base_table.xlsx'
+file_name='../UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -84,8 +84,7 @@ DASH_DICT = [
 ]
 
 MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
-'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie'
-]
+'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie']
 
 markers_choice = dict()
 markers_shape = dict()

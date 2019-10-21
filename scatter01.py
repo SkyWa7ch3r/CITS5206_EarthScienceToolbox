@@ -25,6 +25,7 @@ toggle_switch_color='#91c153'
 num_of_color = 9
 default_color = cl.to_rgb(cl.scales[str(num_of_color)]['qual']['Set1'])
 col_idx = 0
+default_alpha = 0.65
 for i in default_color:
     start_idx = i.find('(')
     i = i[start_idx+1:len(i)-1]
@@ -33,9 +34,10 @@ for i in default_color:
     default_color[col_idx] = i
     col_idx += 1
 
-marker_symbols = ['Circle', 'Square', 'Diamond', 'Cross', 'X', 'Triangle-Up', 'Pentagon', 'Hexagon', 'Star']
-selected_subgroup_color = {}
-selected_subgroup_marker = {}
+MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
+'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie']
+markers_choice = dict()
+markers_shape = dict()
 
 #external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -43,7 +45,7 @@ app = dash.Dash(__name__)
 #app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-file_name=r'E:\Users\demas\project5206\UWA_acid_base_table.xlsx'
+file_name=r'..\UWA_acid_base_table.xlsx'
 
 df = pd.read_excel(file_name)
 
@@ -166,11 +168,6 @@ app.layout=html.Div(className='row', children=[
                             ]
                             ),
                             dbc.Card([
-                                dbc.CardHeader(html.H5('Change Colorscale')),
-                                dbc.CardBody(children=func.render_dropdown_dict_valued('alignment-colorscale-dropdown', COLORSCALES_DICT, 'Greys'))
-                            ]
-                            ),
-                            dbc.Card([
                                 dbc.CardHeader(html.H5('Opacity')),
                                 dbc.CardBody(children=func.render_slider('opacity-slider', 0, 100, 70, 1, []))
                             ]
@@ -243,24 +240,14 @@ app.layout=html.Div(className='row', children=[
                             ],
                             ),
                             dbc.Card([
+                                dbc.CardHeader(html.H5('Change Colorscale')),
+                                dbc.CardBody(children=func.render_dropdown_dict_valued('alignment-colorscale-dropdown', COLORSCALES_DICT, 'Greys'))
+                            ]
+                            ),
+                            dbc.Card([
                                 dbc.CardHeader(html.H5('Sub-group Color')),
                                 dbc.CardBody(children=func.render_colorpicker('my-color-picker', '#ffffff', 22, 222, 160, 1))
                             ],
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Title')),
-                                dbc.CardBody(children=func.render_input('title', 'Title'))
-                            ], style={'display': 'none'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('X Axis Label')),
-                                dbc.CardBody(children=func.render_input('x_label', 'X Axis label'))
-                            ], style={'display': 'none'}
-                            ),
-                            dbc.Card([
-                                dbc.CardHeader(html.H5('Y Axis Label')),
-                                dbc.CardBody(children=func.render_input('y_label', 'Y Axis label'))
-                            ], style={'display': 'none'}
                             ),
                         ],
                         ), id='collapse-4'
@@ -277,7 +264,7 @@ app.layout=html.Div(className='row', children=[
         dbc.Row(children=[
             dcc.Graph(id='indicator-graphic',
                     style={'width' : '90%', 'padding-left' : '3%'},
-                    config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'titleText': True}},
+                    config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'legendPosition' : True, 'legendText' : True, 'colorbarPosition' : True, 'colorbarTitleText' : True}}
             ),
         ],
         ),
@@ -309,83 +296,61 @@ def toggle_accordion(n1, n2, n3, n4, is_open1, is_open2, is_open3, is_open4):
     return False, False, False, False
 
 @app.callback(
-    [Output('selected-groupby', 'options'),
-    Output('alignment-colorscale-dropdown', 'disabled'),
-    Output('my-color-picker','disabled'),
-    Output('LS', 'disabled')
-    ],
-    [Input('color-drop', 'value'),]
-    )
-def traces_groupby(color_drop):
-    if df[color_drop].dtypes =='object':
-        idx = 0
-        selected_subgroup_color.clear()
-        selected_subgroup_marker.clear()
-        for i in df[color_drop].unique():
-            selected_subgroup_color[i] = default_color[idx % num_of_color]
-            selected_subgroup_marker[i] = marker_symbols[idx % 9]
-            idx += 1
-        return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True
-    else:
-        return [{'label': color_drop, 'value': color_drop}], False, True, False
-
-@app.callback(
-    Output('alignment-markers-dropdown', 'value'),
-    [
-     Input('selected-groupby', 'value')
-    ]
-)
-def update_markers_dropdown(groupby):
-    return 'circle' if (groupby is None) else selected_subgroup_marker[groupby].lower()
-
-@app.callback(
     Output('my-color-picker', 'value'),
-    [
-     Input('selected-groupby', 'value')
-    ]
+    [Input('alignment-markers-dropdown', 'value')]
 )
-def update_color_picker(sub_group):
-    if sub_group is None:
-        return dict(rgb=dict(r=222, g=110, b=75, a=1))
-    else:
-        temp_str = selected_subgroup_color.get(sub_group, 'rgb(222,110,75,1)')
+def update_box_color_selector(box):
+    temp_str = markers_choice.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
+    if isinstance(temp_str, str):
         start_idx = temp_str.find('(')
         temp_str = temp_str[start_idx+1:len(temp_str)-1]
         temp_str = temp_str.split(",")
         temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
-        return temp_str
-
+    return temp_str
 
 @app.callback(
-    Output('change-dash', 'disabled'),
-    [Input('linear', 'on'),]
-    )
+	[Output('linear', 'on'),
+	Output('linear', 'disabled')
+	],
+	[Input('xaxis-type', 'value'),
+	Input('yaxis-type', 'value'),
+	]
+	)
+def show_fitline(xv, yv):
+	if xv=='Log' or yv=='Log':
+		return False,True
+	else:
+		return False,False
+
+@app.callback(
+	[Output('selected-groupby', 'options'),
+	Output('alignment-colorscale-dropdown', 'disabled'),
+	Output('my-color-picker','disabled'),
+	Output('LS', 'disabled'),
+	Output('selected-groupby', 'disabled')
+	],
+	[Input('color-drop', 'value'),]
+	)
+def traces_groupby(color_drop):
+	if df[color_drop].dtypes =='object':
+		idx =0
+		for i in df[color_drop].unique():
+			markers_choice[i] = default_color[idx % num_of_color]
+			markers_shape[i] = random.choice(MARKERS_LIST)
+			idx += 1
+		return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True, False
+	else:
+		return [{'label': color_drop, 'value': color_drop}], False, True, False, True
+
+@app.callback(
+	Output('change-dash', 'disabled'),
+	[Input('linear', 'on'),]
+	)
 def show_linear(on):
-    if on:
-        return False
-    else:
-        return True
-
-@app.callback(
-    Output('x_label', 'value'),
-    [Input('xaxis-column', 'value')])
-def set_xaxis_column(X_c):
-    return X_c
-
-@app.callback(
-    Output('y_label', 'value'),
-    [Input('yaxis-column', 'value')])
-def set_yaxis_column(Y_c):
-    return Y_c
-
-@app.callback(
-    Output('title', 'value'),
-    [
-    Input('xaxis-column', 'value'),
-    Input('yaxis-column', 'value'),
-    ])
-def set_title(X_c, Y_c):
-    return "{} vs {}".format(X_c, Y_c)
+	if on:
+		return False
+	else:
+		return True
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -393,12 +358,9 @@ def set_title(X_c, Y_c):
      Input('yaxis-column', 'value'),
      Input('xaxis-type', 'value'),
      Input('yaxis-type', 'value'),
-     Input('title', 'value'),
      Input('alignment-colorscale-dropdown', 'value'),
      Input('swap', 'on'),
      Input('linear', 'on'),
-     Input('x_label', 'value'),
-     Input('y_label', 'value'),
      Input('GL', 'on'),
      Input('OL', 'on'),
      Input('alignment-markers-dropdown', 'value'),
@@ -416,118 +378,126 @@ def set_title(X_c, Y_c):
      Input('change-dash', 'value')])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  xaxis_type, yaxis_type,
-                 title_1, alignment_colorscale_dropdown,
-                 swap, linear, x_label, y_label, GL, OL,
+                 alignment_colorscale_dropdown, 
+                 swap, linear, GL, OL, 
                  alignment_markers_dropdown, color_var, LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB, LS, CD):
 
     if swap:
-        # Swapping the x and y axes names and values
+    	# Swapping the x and y axes names and values
         tmp = xaxis_column_name
         xaxis_column_name = yaxis_column_name
         yaxis_column_name = tmp
-        tmp1 = x_label
-        x_label = y_label
-        y_label = tmp1
 
     slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
-    slope=np.around(slope, decimals=2)
-    intercept=np.around(intercept, decimals=2)
     line = slope*df[xaxis_column_name]+intercept
+
 
     threshold_shape = []
 
+
     #if users set a threshold for X, then show this line
     if X_T !=None:
-        threshold_shape.append(dict(
-        type='line',
-        x0=X_T,
-        x1=X_T,
-        y0=df[yaxis_column_name].min(),
-        y1=df[yaxis_column_name].max()
-        ))
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=X_T,
+    	x1=X_T,
+    	y0=df[yaxis_column_name].min(),
+    	y1=df[yaxis_column_name].max()
+    	))
 
     #if users set a threshold for Y, then show this line
     if Y_T !=None:{
-        threshold_shape.append(dict(
-        type='line',
-        x0=df[xaxis_column_name].min(),
-        x1=df[xaxis_column_name].max(),
-        y0=Y_T,
-        y1=Y_T
-        ))}
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=df[xaxis_column_name].min(),
+    	x1=df[xaxis_column_name].max(),
+    	y0=Y_T,
+    	y1=Y_T
+    	))}
 
     mode_t='markers'
     if LB:
-        mode_t='markers+text'
+    	mode_t='markers+text'
+
+    picker_markers_color = 'rgba({}, {}, {}, {})'.format(
+        C_P['rgb']['r'],
+        C_P['rgb']['g'],
+        C_P['rgb']['b'],
+        C_P['rgb']['a'],)
+
+    if df[color_var].dtypes=='object':
+    	for i in df[color_var].unique():
+    		if color_var is not None:
+    			if i == G_t:
+    				markers_choice[i] = picker_markers_color
+    				markers_shape[i] = alignment_markers_dropdown
 
     traces = []
     #if the data type of the group by column is object, it will show each different values with different colors
     if df[color_var].dtypes=='object':
-        for i in df[color_var].unique():
-            df_by = df[df[color_var] == i]
-            if i == G_t:
-                selected_subgroup_color[i]='rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a'])
-                selected_subgroup_marker[i]=alignment_markers_dropdown.lower()
-                traces.append(go.Scatter(
-                x=df_by[xaxis_column_name],
-                y=df_by[yaxis_column_name],
-                mode=mode_t,
-                text=i,
-                textposition='top center',
-                opacity=OS/100,
-                marker={
-                    'size': 15,
-                    'line': {'width' :0.5, 'color': 'white'},
-                    'symbol': selected_subgroup_marker[i].lower(),
-                    'color': selected_subgroup_color[i],
-                    #'color': 'rgba({}, {}, {}, {})'.format(C_P['rgb']['r'], C_P['rgb']['g'], C_P['rgb']['b'], C_P['rgb']['a']),
-                },
-                name=i
-                ))
-            else:
-                traces.append(go.Scatter(
-                    x=df_by[xaxis_column_name],
-                    y=df_by[yaxis_column_name],
-                    mode=mode_t,
-                    text=i,
-                    textposition='top center',
-                    opacity=OS/100,
-                    marker={
-                        'size': 15,
-                        'line': {'width' :0.5, 'color': 'white'},
-                        'color': selected_subgroup_color[i],
-                        'symbol': selected_subgroup_marker[i].lower(),
-                    },
-                    name=i
-                ))
+    	for i in df[color_var].unique():
+    		df_by = df[df[color_var] == i]
+    		if i == G_t:
+    			traces.append(go.Scatter(
+	    		x=df_by[xaxis_column_name],
+	       		y=df_by[yaxis_column_name],
+	       		mode=mode_t,	       		
+	       		text=i,
+	       		textposition='top center',
+	       		opacity=OS/100,
+	       		marker={
+	       			'size': 15,
+	       			'line': {'width' :0.5, 'color': 'white'},
+	       			'symbol': alignment_markers_dropdown,
+	       			'color': markers_choice[i],
+	       			'symbol':markers_shape[i]
+	       		},
+	       		name=i
+	       		))
+    		else:
+		    	traces.append(go.Scatter(
+		    		x=df_by[xaxis_column_name],
+		       		y=df_by[yaxis_column_name],
+		       		mode=mode_t,
+		       		text=i,
+		       		textposition='top center',
+		       		opacity=OS/100,
+		       		marker={
+		       			'size': 15,
+		       			'line': {'width' :0.5, 'color': 'white'},
+		       			'color': markers_choice[i],
+		       			'symbol':markers_shape[i]
+		       		},
+		       		name=i
+		    	))
 
     #if the data type of the group by column is int or float, it will show the VS, and the color based on the X values
     if df[color_var].dtypes=='int64' or df[color_var].dtypes=='float64':
-        traces.append(go.Scatter(
-            x=df[xaxis_column_name],
-            y=df[yaxis_column_name],
-            mode=mode_t,
-            text = color_var,
-            opacity=OS/100,
-            marker=dict(
-                size = 15,
-                line = {'width': 0.5, 'color': 'white'},
-                color = df[xaxis_column_name],
-                colorscale = alignment_colorscale_dropdown,
-                colorbar=dict(
-                    title=color_var
-                    ),
-                showscale = LS,
-                symbol = alignment_markers_dropdown
-            ),
-            name='{} VS {}'.format(xaxis_column_name, yaxis_column_name)
-        ))
+	    traces.append(go.Scatter(
+	    	x=df[xaxis_column_name],
+	    	y=df[yaxis_column_name],
+	    	mode=mode_t,
+	    	text = color_var,
+	    	opacity=OS/100,
+	    	marker=dict(
+	    		size = 15,
+	        	line = {'width': 0.5, 'color': 'white'},
+	        	color = df[color_var],
+	        	colorscale = alignment_colorscale_dropdown,
+	        	colorbar=dict(
+	        		title=color_var
+	        		),
+	        	showscale = LS,
+	        	symbol = alignment_markers_dropdown
+	    	),
+	    	name='{} VS {}'.format(xaxis_column_name, yaxis_column_name)
+	    ))
 
     traces.append(go.Scatter(
-        x=df[xaxis_column_name],
+    	x=df[xaxis_column_name],
         y=line,
         mode='lines',
-        name='Y = {}*X + {}'.format(slope, intercept),
+        name='Y = {:.3f}*X + {:.3f}'.format(slope, intercept),
         marker=dict(
             size = 15,
             opacity = 0.5,
@@ -536,42 +506,41 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             showscale = LD
         ),
         line = dict(
-            dash=CD
-            ),
+        	dash=CD
+        	),
         visible=linear
     ))
 
     layou_t=dict(
-        xaxis={
-            'title': x_label,
+    	xaxis={
+            'title': xaxis_column_name,
             'type': 'linear' if xaxis_type == 'Linear' else 'log',
-            'showgrid': GL,
-            'zeroline': OL,
+           	'showgrid': GL,
+           	'zeroline': OL,
             'dtick': X_D
         },
         yaxis={
-            'title': y_label,
+            'title': yaxis_column_name,
             'type': 'linear' if yaxis_type == 'Linear' else 'log',
             'showgrid': GL,
             'zeroline': OL,
             'dtick': Y_D
         },
-        title= title_1,
+        title= xaxis_column_name + ' vs. ' + yaxis_column_name,
         showlegend = LD,
         shapes=threshold_shape,
-        hovermode='closest',
-        legend=(dict(x=1.15, y=0.9) if LS else dict(x=1, y=1)) if LD else None,
-        )
+        hovermode='closest'
+    	)
 
     return {
-        'data':
-            traces,
+       	'data': 
+       		traces,
 
-        'layout': go.Layout(
-            layou_t
-        )
+       	'layout': go.Layout(
+           	layou_t
+       	)
     }
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8000)
