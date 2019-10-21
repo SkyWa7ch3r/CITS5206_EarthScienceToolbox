@@ -86,6 +86,15 @@ default_alpha = 0.65
 
 toggle_switch_color = '#91c153'
 
+col_idx = 0
+for i in default_color:
+    start_idx = i.find('(')
+    i = i[start_idx+1:len(i)-1]
+    i = i.split(",")
+    i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_alpha)
+    default_color[col_idx] = i
+    col_idx += 1
+
 
 app.layout = html.Div([
      html.Div([
@@ -175,10 +184,8 @@ app.layout = html.Div([
                 labelPosition = 'top',
                 color = toggle_switch_color
                 )
-
             ],
             style = {'width': '50%', 'display': 'inline-block', 'padding': '10px'}),
-
 
         # Slider to change line opacity
         html.H6("Change Opacity:"),
@@ -191,21 +198,18 @@ app.layout = html.Div([
             )
         ]),
 
-
         # Change distances between y ticks
         html.H6("Change Y ticks:"),
         html.Div([
             dcc.Input(
                 id = 'Y-dtick',
-                type = 'number')
+                type = 'number',
+                min = 1)
             ]),    
-
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
-    
 
-    # Select a particular line
+    # Select Groupby
     html.Div([
-
         html.Div([
             html.H6('Group by'),
             dcc.Dropdown(
@@ -223,26 +227,23 @@ app.layout = html.Div([
         ], style = {'width': '48%', 'display': 'inline-block', 'float': 'right'}),
 
         # Pick a color for different lines
-        
         html.Div([
             html.H6('Line Style'), 
             dcc.Dropdown(
                 id = 'line-style',
                 options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
                 value = (str(line_style[0]).replace(" ", "")).lower(),
-                
             ),
         ], style = {'width': '48%', 'display': 'inline-block', 'float': 'right'}),
 
         html.Div([
             daq.ColorPicker(
-                id = 'line-color',
-                label = 'Line Color',
+                id = 'colorpicker',
+                label = 'Pick Color',
                 style = {'background-color': 'white'},
                 value = dict(rgb = dict(r = 0, g = 0, b = 255, a = 1))
             ),    
         ], style = {'width': '48%', 'display': 'inline-block'}),
-
     ]),
 
     # main graph
@@ -256,9 +257,8 @@ app.layout = html.Div([
 ])
 
 
-
 @app.callback(
-    Output('line-color', 'value'),
+    Output('colorpicker', 'value'),
     [Input('select-line', 'value')]
 )
 def update_line_color(yaxis):
@@ -270,7 +270,6 @@ def update_line_color(yaxis):
         temp_str = dict(rgb = dict(r = temp_str[0], g = temp_str[1], b = temp_str[2], a = temp_str[3]))
     return temp_str
 
-# 改成groupby
 # Change the selected y axis
 @app.callback(
     Output('select-line', 'options'),
@@ -297,10 +296,11 @@ def update_yaxis(groupby):
      Input('SG', 'on'),
      Input('ALF', 'on'),
      Input('opacity-slider', 'value'),
-     Input('line-color', 'value'),
+     Input('colorpicker', 'value'),
      Input('select-line', 'value'),
      Input('line-style', 'value'),
-     Input('select-groupby', 'value')
+     Input('select-groupby', 'value'),
+     Input('Y-dtick', 'value'),
      ])
 def update_graph(xaxis_column_name, yaxis_column_name,
                  data_transform,
@@ -308,10 +308,11 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                  alignment_markers_dropdown,
                  alignment_labelstyle_dropdown, SG, ALF,
                  OS,
-                 line_color,
+                 colorPicker,
                  select_line,
                  line_style,
-                 groupby
+                 groupby,
+                 y_dtick
                  ):
     
     group_list = df[groupby].unique()
@@ -323,18 +324,29 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     yaxis_list = ynames
     
     picker_line_color = 'rgba({}, {}, {}, {})'.format(
-        line_color['rgb']['r'],
-        line_color['rgb']['g'],
-        line_color['rgb']['b'],
-        line_color['rgb']['a'])
+        colorPicker['rgb']['r'],
+        colorPicker['rgb']['g'],
+        colorPicker['rgb']['b'],
+        colorPicker['rgb']['a'])
 
+    color_idx = 0
+    for i in group_list:
+        if select_line is not None:
+            print('select_line : {}'.format(select_line))
+            print('line color 1 : {}'.format(LINECOLOR_DICT))
+            if i == select_line:
+                LINECOLOR_DICT[i] = picker_line_color
+                print('line color 2 : {}'.format(LINECOLOR_DICT))
+            # else:
+            #    box_color_saved[i] = default_color[color_idx % 5]
+        color_idx += 1
 
+    # Variable to change gaps
     ConnectGaps = True
     if SG:
          ConnectGaps = False
 
     # Variable to change line fill
-    # 可能有其他参数 减小fill的范围
     Fill = "none"
     if ALF:
         Fill = "toself"
@@ -345,10 +357,12 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     if alignment_labelstyle_dropdown == 'lines':
         MarkerOnly = None
         lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
-                line_color['rgb']['r'],
-                line_color['rgb']['g'],
-                line_color['rgb']['b'],
-                line_color['rgb']['a'],), width = 3, dash = line_style)
+                colorPicker['rgb']['r'],
+                colorPicker['rgb']['g'],
+                colorPicker['rgb']['b'],
+                colorPicker['rgb']['a'],),
+                width = 3,
+                dash = line_style)
     elif alignment_labelstyle_dropdown == 'lines+markers':
         MarkerOnly = dict(
             size = 8,
@@ -357,16 +371,19 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             symbol = alignment_markers_dropdown
         )
         lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
-                line_color['rgb']['r'],
-                line_color['rgb']['g'],
-                line_color['rgb']['b'],
-                line_color['rgb']['a'],),
+                colorPicker['rgb']['r'],
+                colorPicker['rgb']['g'],
+                colorPicker['rgb']['b'],
+                colorPicker['rgb']['a'],),
                 width = 3,
                 dash = line_style)
-    #else:
-
-        
-
+    else:
+        MarkerOnly = dict(
+            size = 8,
+            opacity = 0.5,
+            line = {'width': 0.5, 'color': 'white', 'dash': line_style},
+            symbol = alignment_markers_dropdown
+        )
 
     traces_list = []
     for col in yaxis_column_name:
@@ -400,6 +417,7 @@ def update_graph(xaxis_column_name, yaxis_column_name,
                 'type' : type_y,
                 'showgrid': show_gridlines,
                 'zeroline': show_zeroline_y,
+                'dtick': y_dtick
                 # new
                 #'range': [range1[0], range1[1]]
             },
