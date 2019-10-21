@@ -30,8 +30,6 @@ cache = Cache(app.server, config={
     'CACHE_TYPE' : 'filesystem',
     'CACHE_DIR' : 'cache',
 })
-#Save the session!
-cache.set('session', str(uuid.uuid4()))
 
 #--------CONSTANT VARIABLES------------#
 button_font_size='1.2em'
@@ -42,8 +40,6 @@ main_panel_margin={'margin': '10px 0px'}
 left_panel_margin={'width': '25%'}
 right_panel_margin={'class': 'col-md-8', 'display':'block-inline'}
 toggle_switch_color='#91c153'
-line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
-marker_symbols = ['Circle', 'Square', 'Diamond', 'Cross', 'X', 'Triangle-Up', 'Pentagon', 'Hexagon', 'Star']
 default_alpha = 0.65
 default_symbol_alpha = 1
 box_color_saved = {}
@@ -229,6 +225,8 @@ def render_numinput(id, min, max, value):
 #----------THE APP LAYOUT----------#
 #Begin the layout of the app layout
 app.layout = html.Div(children = [
+    #Add the inviible session ID to header
+    html.Div(str(uuid.uuid4()), id='session_id', style={'display': 'none'}),
     #Create the header
     html.Div(
         className = "header",
@@ -262,8 +260,9 @@ app.layout = html.Div(children = [
 ])
 #Callbacks for the tabs
 @app.callback(Output('tabs-content-inline', 'children'),
-              [Input('tabs-styled-with-inline', 'value')])
-def render_content(tab):
+              [Input('tabs-styled-with-inline', 'value'),
+              Input('session_id', 'children')])
+def render_content(tab, session):
     #Based on the value of the tabs....
     if tab == 'upload':
         #If Upload is selected then show the content for uploading and data cleaning recommendation
@@ -295,7 +294,6 @@ def render_content(tab):
             html.H3('Tab content 3')
         ])
     elif tab == 'box':
-        session = cache.get('session')
         df = cache.get(session + '-df')
         if df is None:
             return dcc.Markdown('''
@@ -573,9 +571,8 @@ Please look into the comments for what each one is for
 Some of it is derived by https://dash.plot.ly/dash-core-components/upload
 As it provides a good base to start from in order to upload files.
 '''
-def parse_contents(contents, filename, date):
+def parse_contents(contents, filename, date, session_id):
     content_type, content_string = contents.split(',')
-    session_id = cache.get('session')
     decoded = base64.b64decode(content_string)
     try:
         if 'csv' in filename:
@@ -613,10 +610,10 @@ def parse_contents(contents, filename, date):
         ])
 
 @app.callback(Output('tabs-content-upload', 'children'),
-              [Input('tabs-styled-in-upload', 'value')])
-def render_upload_content(tab):
+              [Input('tabs-styled-in-upload', 'value'),
+              Input('session_id', 'children')])
+def render_upload_content(tab, session_id):
     #Retrieve the Dataframe from Cache
-    session_id = cache.get('session')
     df = cache.get(session_id + '-df')
     if tab == "upload-data":
         #If no data has been uploaded then show the content below
@@ -844,21 +841,22 @@ def render_upload_content(tab):
 
 @app.callback([Output('upload-data-output', 'children'),
                Output('markdown-message', 'hidden')],
-              [Input('data', 'contents')],
+              [Input('data', 'contents'),
+              Input('session_id', 'children')],
               [State('data', 'filename'),
                State('data', 'last_modified')]
             )
-def update_output(content, name, date):
+def update_output(content, session, name, date):
     if content is not None:
-        return parse_contents(content, name, date), True
+        return parse_contents(content, name, date, session), True
 
 @app.callback(Output('scatter-matrix-fig', 'figure'),
               [Input('splom-column', 'value'),
               Input('splom-colorscale', 'value'),
-              Input('splom-color-chooser', 'value')])
-def render_splom(columns, colorscale, color):
+              Input('splom-color-chooser', 'value'),
+              Input('session_id', 'children')])
+def render_splom(columns, colorscale, color, session_id):
     #Get the dataframe
-    session_id = cache.get('session')
     df = cache.get(session_id + '-df')
     #Get all the number columns
     num_column_names = df.select_dtypes(include='number').columns.values
@@ -1001,10 +999,10 @@ def update_box_color_selector(box):
 # Box Selector Callback
 @app.callback(
     Output('select-box', 'options'),
-    [Input('select-groupby', 'value')]
+    [Input('select-groupby', 'value'),
+    Input('session_id', 'children')]
 )
-def update_select_box(groupby):
-    session = cache.get('session')
+def update_select_box(groupby, session):
     df = cache.get(session + '-df')
     idx = 0
     for i in df[groupby].unique():
@@ -1017,12 +1015,12 @@ def update_select_box(groupby):
     Output('treshold-value', 'value'),
     [Input('show-treshold', 'on'),
      Input('select-variable', 'value'),
+     Input('session_id', 'children')
      ]
 )
 def update_treshold_value(
-    is_tresholdshow, variable
+    is_tresholdshow, variable, session
 ):
-    session = cache.get('session')
     df = cache.get(session + '-df')
     return np.around(np.mean(df[variable]), 0) if is_tresholdshow else ' '
 
@@ -1056,6 +1054,7 @@ def update_showstat(outliersshow):
         Input('box-color-fill', 'value'),
         Input('select-percentile', 'value'), Input('marker-symbol', 'value'),
         Input('select-percentile-color', 'value'), Input('symbol-size', 'value'),
+        Input('session_id', 'children'),
     ]
 )
 def update_figure(
@@ -1065,9 +1064,9 @@ def update_figure(
     is_percentileshow, is_meanshow, is_sdshow, is_tresholdshow, treshold_value,
     treshold_style, treshold_color, treshold_size, is_statshow, graph_height,
     graph_width, selected_box, box_color, grid_width, dtick, is_color_filled,
-    select_percentile, marker_symbol, select_percentile_color, symbol_size
+    select_percentile, marker_symbol, select_percentile_color, symbol_size,
+    session
 ):
-    session = cache.get('session')
     df = cache.get(session + '-df')
     # Update dtick_value
     if dtick != None:
