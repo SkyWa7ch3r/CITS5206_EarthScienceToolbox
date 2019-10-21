@@ -93,6 +93,7 @@ line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 marker_symbols = ['Circle', 'Square', 'Diamond', 'Cross', 'X', 'Triangle-Up', 'Pentagon', 'Hexagon', 'Star']
 
 #----------BOOTSTRAP FUNCTIONS----------#
+#TODO ADD BELOW FUNCTIONS TO A SEPARATE PYTHON FILE
 # Function: Render drop down list
 # Input: id, [options]
 # Output: dcc.Dropdown
@@ -286,14 +287,17 @@ def render_content(tab, session):
             ),
         ])
     elif tab == 'scatter':
+        #TODO add verification that it has numerical
         return html.Div([
             html.H3('Tab content 2')
         ])
     elif tab == 'line':
+        #TODO add verification that it has time series data under Date or Time
         return html.Div([
             html.H3('Tab content 3')
         ])
     elif tab == 'box':
+        #TODO add verification that the dataframe has both categorical and numerical.
         df = cache.get(session + '-df')
         if df is None:
             return dcc.Markdown('''
