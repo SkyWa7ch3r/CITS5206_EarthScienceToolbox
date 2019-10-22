@@ -270,7 +270,7 @@ def update_line_style(select_group):
     [Input('select-group', 'value')]
     )
 def update_marker_style(select_group):
-    temp_str = marker_dict.get(select_group)
+    temp_str = marker_dict[select_group]['value']
     return temp_str
 
 
@@ -423,7 +423,7 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
-                        symbol = marker_dict[selection]),
+                        symbol = marker_dict[selection]['value']),
                     line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
                     )
                 )
