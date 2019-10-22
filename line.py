@@ -107,7 +107,7 @@ app.layout = html.Div([
                 value=xnames[0],
                 ),
 
-            # option to choose y value, move from right side to choose x value to underneath x value 
+            # option to choose y value, move from right side to choose x value to underneath x value
             html.H6('Select Variables'),
             dcc.Dropdown(
                 id = 'select-variables',
@@ -157,7 +157,7 @@ app.layout = html.Div([
                 color = toggle_switch_color
                 ),
 
-            html.H6('Line Style'), 
+            html.H6('Line Style'),
             dcc.Dropdown(
                 id = 'line-style',
                 options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
@@ -226,7 +226,7 @@ app.layout = html.Div([
                 type = 'number',
                 min = 0,
                 step = 0.1)
-            ]),    
+            ]),
     ], style = {'width': '45%', 'height': '100%', 'display': 'inline-block', 'float': 'left'}),
 
     # main graph
@@ -263,7 +263,7 @@ def update_group(groupby):
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
         idx += 1
-    return [{'label': i, 'value': i} for i in df[groupby].unique()] 
+    return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
 
 
@@ -306,7 +306,7 @@ def update_graph(xaxis_column_name, select_variables,
         type_y = 'log'
 
     yaxis_list = ynames
-    
+
     picker_line_color = 'rgba({}, {}, {}, {})'.format(
         colorPicker['rgb']['r'],
         colorPicker['rgb']['g'],
@@ -384,6 +384,7 @@ def update_graph(xaxis_column_name, select_variables,
 
     traces_list = []
     for variable in select_variables:
+        print("Var: {}".format(variable))
         for selection in group_list:
             traces_list.append(
                 go.Scatter(
@@ -399,7 +400,7 @@ def update_graph(xaxis_column_name, select_variables,
                     line = dict(color=LINECOLOR_DICT[selection], width=3, dash=line_style)
                     )
                 )
-        
+
     return {
         'data': traces_list,
         'layout': go.Layout(
