@@ -257,21 +257,6 @@ def update_line_color(select_group):
         temp_str = dict(rgb = dict(r = temp_str[0], g = temp_str[1], b = temp_str[2], a = temp_str[3]))
     return temp_str
 
-@app.callback(
-    Output('line-style', 'value'),
-    [Input('select-group', 'value')]
-    )
-def update_line_style(select_group):
-    temp_str = linestyle_dict.get(select_group)
-    return temp_str
-
-@app.callback(
-    Output('alignment-markers-dropdown', 'value'),
-    [Input('select-group', 'value')]
-    )
-def update_marker_style(select_group):
-    temp_str = marker_dict[select_group]['value']
-    return temp_str
 
 
 @app.callback(
@@ -286,7 +271,6 @@ def update_group(groupby):
         linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
-
 
 
 # Main callback
