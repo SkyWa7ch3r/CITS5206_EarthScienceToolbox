@@ -83,7 +83,9 @@ marker_dict = {}
 
 linestyle_dict = {}
 
-#
+gap_dict = {}
+
+
 LINECOLOR_DICT = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 default_alpha = 0.65
@@ -258,7 +260,6 @@ def update_line_color(select_group):
     return temp_str
 
 
-
 @app.callback(
     Output('select-group', 'options'),
     [Input('select-groupby', 'value')]
@@ -269,6 +270,7 @@ def update_group(groupby):
         LINECOLOR_DICT[i] = default_color[idx % 5]
         marker_dict[i] = MARKERS_DICT[idx % 15]
         linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
+        gap_dict[i] = True
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
@@ -312,82 +314,38 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
         colorPicker['rgb']['b'],
         colorPicker['rgb']['a'])
 
-    color_idx = 0
     for i in group_list:
         if select_group is not None:
             if i == select_group:
                 LINECOLOR_DICT[i] = picker_line_color
-            # else:
-            #    box_color_saved[i] = default_color[color_idx % 5]
-        color_idx += 1
 
-    marker_idx = 0
     for i in group_list:
         if select_group is not None:
             if i == select_group:
                 marker_dict[i] = alignment_markers_dropdown
-        marker_idx += 1
-        
 
-    linestyle_idx = 0
     for i in group_list:
         if select_group is not None:
             if i == select_group:
                 linestyle_dict[i] = line_style
-        linestyle_idx += 1
 
+    for i in group_list:
+        if select_group is not None:
+            if i == select_group:
+                gap_dict[i] = show_gaps
 
     # Variable to change gaps
-    ConnectGaps = True
-    if show_gaps:
-         ConnectGaps = False
+    for variable in select_variables:
+        for selection in group_list:
+            if show_gaps:
+                gap_dict[selection] = False
+            else:
+                gap_dict[selection] = True
 
     # Variable to change line fill
     Fill = "none"
     if ALF:
         Fill = "toself"
-
-
-    # Variables for label styles
-    lineStyle = dict()
-    markerOnly = dict()
-    if alignment_labelstyle_dropdown == 'lines':
-        markerOnly = None
-        lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
-                colorPicker['rgb']['r'],
-                colorPicker['rgb']['g'],
-                colorPicker['rgb']['b'],
-                colorPicker['rgb']['a'],),
-                width = 3,
-                dash = line_style)
-    elif alignment_labelstyle_dropdown == 'lines+markers':
-        markerOnly = dict(
-            size = 8,
-            opacity = 0.5,
-            line = {'width': 0.5, 'color': 'white', 'dash': line_style},
-            symbol = alignment_markers_dropdown
-        )
-        lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
-                colorPicker['rgb']['r'],
-                colorPicker['rgb']['g'],
-                colorPicker['rgb']['b'],
-                colorPicker['rgb']['a'],),
-                width = 3,
-                dash = line_style)
-    else:
-        markerOnly = dict(
-            size = 8,
-            opacity = 0.5,
-            line = {'width': 0.5, 'color': 'white', 'dash': line_style},
-            symbol = alignment_markers_dropdown
-        )
-        lineStyle = dict(color = 'rgba({}, {}, {}, {})'.format(
-                colorPicker['rgb']['r'],
-                colorPicker['rgb']['g'],
-                colorPicker['rgb']['b'],
-                colorPicker['rgb']['a'],),
-                width = 3,
-                dash = line_style)
 
 
     traces_list = []
@@ -401,13 +359,13 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
                     text=df[df[groupby] == selection][variable],
                     mode=alignment_labelstyle_dropdown,
                     name=str(variable).replace('[', '').replace(']', '').replace("\'", "")+': '+str(selection),
-                    connectgaps = ConnectGaps,
+                    connectgaps = gap_dict[selection],
                     fill = Fill,
                     opacity = OS/100,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
-                        symbol = marker_dict[selection]['value']),
+                        symbol = alignment_markers_dropdown),
                     line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
                     )
                 )
