@@ -38,11 +38,11 @@ df = read_file(file_name)
 names = df.select_dtypes(exclude='number').columns.values
 
 # Date and time in list xnames
-xnames = []
+datetime = []
 for col in names:
-    if 'date' in col.lower() or 'time' in col.lower():
+    if 'date' in col.lower():
         df[col] = pd.to_datetime(df[col], infer_datetime_format=True)
-        xnames.append(col)
+        datetime = df[col]
 
 # Other data in ynames
 ynames = df.select_dtypes(include='number').columns.values
@@ -62,12 +62,12 @@ LABELSTYLE_DICT = [
 
 # Marker styles users can choose from
 MARKERS_DICT = [
-    {'value': 'circle', 'label': 'circle'},
-    {'value': 'square', 'label': 'square'},
-    {'value': 'diamond', 'label': 'diamond'},
-    {'value': 'cross', 'label': 'cross'},
-    {'value': 'x', 'label': 'x'},
-    {'value': 'triangle-up', 'label': 'triangle-up'},
+    {'value': 'circle', 'label': 'Circle'},
+    {'value': 'square', 'label': 'Square'},
+    {'value': 'diamond', 'label': 'Diamond'},
+    {'value': 'cross', 'label': 'Cross'},
+    {'value': 'x', 'label': 'X'},
+    {'value': 'triangle-up', 'label': 'Triangle-up'},
     {'value': 'pentagon', 'label': 'pentagon'},
     {'value': 'hexagon', 'label': 'hexagon'},
     {'value': 'hexagon2', 'label': 'hexagon2'},
@@ -80,13 +80,11 @@ MARKERS_DICT = [
 ]
 
 marker_dict = {}
-
 linestyle_dict = {}
-
 gap_dict = {}
-
-
+label_dict = {}
 LINECOLOR_DICT = {}
+linefill = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
 default_alpha = 0.65
 
@@ -105,13 +103,6 @@ for i in default_color:
 app.layout = html.Div([
      html.Div([
         html.Div([
-            # option to choose x value
-            html.H6('Choose X value:'),
-            dcc.Dropdown(
-                id='xaxis-column',
-                options=[{'label': i, 'value': i} for i in xnames],
-                value=xnames[0],
-                ),
 
             # option to choose y value, move from right side to choose x value to underneath x value
             html.H6('Select Variables'),
@@ -122,9 +113,9 @@ app.layout = html.Div([
                 multi = True
                 ),
 
-            daq.ToggleSwitch(
+            daq.BooleanSwitch(
                 id = 'use-group-by',
-                value = True,
+                on = False,
                 label = 'Use Group By',
                 labelPosition = 'top',
                 color = toggle_switch_color
@@ -258,23 +249,12 @@ app.layout = html.Div([
             )
 ])
 
-@app.callback(
-    Output('select-groupby', 'disabled'),
-    #Output('select-group', 'disabled')],
-    [Input('use-group-by', 'value')]
-)
-def update_groupby(use_group_by):
-    if use_group_by == True:
-        return False
-    else:
-        return True
-
 
 @app.callback(
     Output('colorpicker', 'value'),
-    [Input('select-group', 'value')]
+    [Input('select-group', 'value'),]
 )
-def update_line_color(select_group):
+def update_line(select_group):
     temp_str = LINECOLOR_DICT.get(select_group, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
     if isinstance(temp_str, str):
         start_idx = temp_str.find('(')
@@ -285,25 +265,43 @@ def update_line_color(select_group):
 
 
 @app.callback(
-    Output('select-group', 'options'),
-    [Input('select-groupby', 'value')]
+    [Output('select-group', 'options'),
+    Output('select-groupby', 'disabled')],
+    [Input('select-groupby', 'value'),
+    Input('use-group-by', 'on'),
+    Input('select-variables', 'value')]
 )
-def update_group(groupby):
+def update_group(groupby, usegroup, selected):
     idx = 0
-    for i in df[groupby].unique():
-        LINECOLOR_DICT[i] = default_color[idx % 5]
-        marker_dict[i] = MARKERS_DICT[idx % 15]
-        linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
-        gap_dict[i] = True
-        idx += 1
-    return [{'label': i, 'value': i} for i in df[groupby].unique()]
+    if usegroup:
+        groups = []
+        for s in selected:
+            for i in df[groupby].unique():
+                LINECOLOR_DICT[s + ' : '+ i] = default_color[idx % 5]
+                marker_dict[s + ' : '+ i] = MARKERS_DICT[idx % 5]['value']
+                linestyle_dict[s + ' : '+ i] = linestyle_list[idx % 6].replace(' ', '').lower()
+                gap_dict[s + ' : '+ i] = True
+                label_dict[s + ' : '+ i] = LABELSTYLE_DICT[0]['value']
+                linefill[s + ' : '+ i] = False
+                idx += 1
+                groups.append(s + ' : '+ i)
+            return [{'label': i, 'value': i} for i in groups], False
+    else:
+        for i in selected:
+            LINECOLOR_DICT[i] = default_color[idx % 5]
+            marker_dict[i] = MARKERS_DICT[idx % 5]['value']
+            linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
+            gap_dict[i] = True
+            label_dict[i] = LABELSTYLE_DICT[0]['value']
+            linefill[i] = False
+            idx += 1
+        return [{'label': i, 'value': i} for i in selected], True
 
 
 # Main callback
 @app.callback(
     Output('indicator-graphic', 'figure'),
-    [Input('xaxis-column', 'value'),
-     Input('select-variables', 'value'),
+    [Input('select-variables', 'value'),
      Input('data-transform', 'value'),
      Input('show-gridlines', 'on'),
      Input('show-zeroline-y', 'on'),
@@ -317,9 +315,9 @@ def update_group(groupby):
      Input('select-groupby', 'value'),
      Input('Y-dtick', 'value'),
      Input('select-group', 'value'),
-     Input('use-group-by', 'value')
+     Input('use-group-by', 'on')
      ])
-def update_graph(xaxis_column_name, select_variables, data_transform,
+def update_graph(select_variables, data_transform,
                  show_gridlines, show_zeroline_y,
                  alignment_markers_dropdown, alignment_labelstyle_dropdown,
                  show_gaps, ALF, OS, colorPicker, line_style,
@@ -332,90 +330,58 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
         if data_transform:
             type_y = 'log'
 
-        yaxis_list = ynames
-
         picker_line_color = 'rgba({}, {}, {}, {})'.format(
             colorPicker['rgb']['r'],
             colorPicker['rgb']['g'],
             colorPicker['rgb']['b'],
             colorPicker['rgb']['a'])
 
-        for i in group_list:
-            if select_group is not None:
-                if i == select_group:
-                    LINECOLOR_DICT[i] = picker_line_color
-
-        for i in group_list:
-            if select_group is not None:
-                if i == select_group:
-                    marker_dict[i] = alignment_markers_dropdown
-
-        for i in group_list:
-            if select_group is not None:
-                if i == select_group:
-                    linestyle_dict[i] = line_style
-
-        for i in group_list:
-            if select_group is not None:
-                if i == select_group:
-                    gap_dict[i] = show_gaps
-
-        # Variable to change gaps
-        for variable in select_variables:
-            for selection in group_list:
-                if show_gaps:
-                    gap_dict[selection] = False
-                else:
-                    gap_dict[selection] = True
-
-        # Variable to change line fill
-        Fill = "none"
-        if ALF:
-            Fill = "toself"
-
-
         traces_list = []
         for variable in select_variables:
-            print("Var: {}".format(variable))
             for selection in group_list:
+                reference = variable + ' : '+ selection
+                if reference == select_group:
+                    LINECOLOR_DICT[reference] = picker_line_color
+                    marker_dict[reference] = alignment_markers_dropdown
+                    linestyle_dict[reference] = line_style
+                    gap_dict[reference] = show_gaps
+                    label_dict[reference] = alignment_labelstyle_dropdown
+                    linefill[reference] = ALF
                 traces_list.append(
                     go.Scatter(
-                        x=df[xaxis_column_name],
+                        x=datetime,
                         y=df[df[groupby] == selection][variable],
                         text=df[df[groupby] == selection][variable],
-                        mode=alignment_labelstyle_dropdown,
-                        name=str(variable).replace('[', '').replace(']', '').replace("\'", "")+': '+str(selection),
-                        connectgaps = gap_dict[selection],
-                        fill = Fill,
+                        mode=label_dict[reference],
+                        name=reference,
+                        connectgaps = gap_dict[reference],
+                        fill = "toself" if linefill[reference] else "none",
                         opacity = OS/100,
                         marker = dict(
                             size = 8,
                             opacity = 0.8,
-                            symbol = alignment_markers_dropdown),
-                        line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
-                        )
+                            symbol = marker_dict[reference]
+                        ),
+                        line = dict(color=LINECOLOR_DICT[reference], width=3, dash=linestyle_dict[reference])
                     )
-
+                )    
         return {
             'data': traces_list,
             'layout': go.Layout(
                 xaxis={
-                    #'title' : xaxis_title,
+                    'title' : 'Time',
                     'showgrid': show_gridlines,
-                    #'zeroline': show_zeroline_x,
                     'rangeslider': {'visible': True}, 'type': 'date'
                 },
                 yaxis={
-                    #'title' : yaxis_title,
+                    'title' : ', '.join(select_variables),
                     'type' : type_y,
                     'showgrid': show_gridlines,
                     'zeroline': show_zeroline_y,
                     'dtick': y_dtick
-                    # new
-                    #'range': [range1[0], range1[1]]
                 },
                 margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-                #title= title_1,
+                title= "Time-Series-Edit Me Last",
                 hovermode='closest'
             )
         }
@@ -437,32 +403,32 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
         if ALF:
             Fill = "toself"
 
-        Connectgaps = False
-        if show_gaps== True:
-            Connectgaps = True
-
         traces_list = []
         for variable in select_variables:
+            if select_group is not None:
+                if variable == select_group:
+                    LINECOLOR_DICT[variable] = picker_line_color
+                    marker_dict[variable] = alignment_markers_dropdown
+                    linestyle_dict[variable] = line_style
+                    gap_dict[variable] = show_gaps
+                    label_dict[variable] = alignment_labelstyle_dropdown
+                    linefill[variable] = ALF
             traces_list.append(
                 go.Scatter(
-                    x=df[xaxis_column_name],
-                    y=df[select_variables],
-                    text=df[select_variables],
-                    mode=alignment_labelstyle_dropdown,
+                    x=datetime,
+                    y=df[variable],
+                    text=df[variable],
+                    mode=label_dict[variable],
                     name=str(variable).replace('[', '').replace(']', '').replace("\'", ""),
-                    connectgaps = Connectgaps,
-                    fill = Fill,
+                    connectgaps = gap_dict[variable],
+                    fill = "toself" if linefill[variable] else "none",
                     opacity = OS/100,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
-                        symbol = alignment_markers_dropdown),
-                    line = dict(color='rgba({}, {}, {}, {})'.format(
-                                    colorPicker['rgb']['r'],
-                                    colorPicker['rgb']['g'],
-                                    colorPicker['rgb']['b'],
-                                    colorPicker['rgb']['a'],),
-                                width=3, dash=line_style)
+                        symbol = marker_dict[variable]
+                    ),
+                    line = dict(color=LINECOLOR_DICT[variable], width=3, dash=linestyle_dict[variable])
                     )
                 )
 
@@ -470,22 +436,20 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
             'data': traces_list,
             'layout': go.Layout(
                 xaxis={
-                    #'title' : xaxis_title,
+                    'title' : 'Time',
                     'showgrid': show_gridlines,
-                    #'zeroline': show_zeroline_x,
-                    'rangeslider': {'visible': True}, 'type': 'date'
+                    'rangeslider': {'visible': True}, 
+                    'type': 'date'
                 },
                 yaxis={
-                    #'title' : yaxis_title,
+                    'title' : ', '.join(select_variables),
                     'type' : type_y,
                     'showgrid': show_gridlines,
                     'zeroline': show_zeroline_y,
                     'dtick': y_dtick
-                    # new
-                    #'range': [range1[0], range1[1]]
                 },
                 margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-                #title= title_1,
+                title= "Time-Series-Edit Me Last",
                 hovermode='closest'
             )
         }   

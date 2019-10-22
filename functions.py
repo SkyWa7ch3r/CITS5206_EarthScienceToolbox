@@ -9,55 +9,64 @@ toggle_switch_color='#91c153'
 # Input: id, [options]
 # Output: dcc.Dropdown
 def render_dropdown(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options],
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], clearable=False,
         className='card h-100' )
 
 # Function: Render drop down list
 # Input: id, [options]
 # Output: dcc.Dropdown
 def render_dropdown_dict(id, options):
-    return dcc.Dropdown(id=id, options=options,
+    return dcc.Dropdown(id=id, options=options, clearable=False,
+        className='card h-100' )
+
+# Function: Render drop down list clearable
+# Input: id, [options]
+# Output: dcc.Dropdown
+def render_dropdown_dict_clear(id, options):
+    return dcc.Dropdown(id=id, options=options, clearable=True,
         className='card h-100' )
 
 # Function: Render drop down list with selected value
 # Input: id, [options], value
 # Output: dcc.Dropdown
 def render_dropdown_valued(id, options, value):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value,
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value, clearable=False,
         className='card h-100' )
 
-# Function: Render drop down list with selected value
+# Function: Render drop down list with selected valueand clearable
 # Input: id, [options], value
 # Output: dcc.Dropdown
-def render_dropdown_valued_multi(id, options, value):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=[value], multi=True,
+def render_dropdown_valued_clear(id, options, value):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value, clearable=True,
         className='card h-100' )
 
 # Function: Render drop down list with selected value
 # Input: id, [options], value
 # Output: dcc.Dropdown
 def render_dropdown_dict_valued(id, options, value):
-    return dcc.Dropdown(id=id, options=options, value=value,
+    return dcc.Dropdown(id=id, options=options, value=value, clearable=False,
         className='card h-100' )
 
 # Function: Render drop down list without any options
 # Input: id
 # Output: dcc.Dropdown
 def render_dropdown_blank(id):
-    return dcc.Dropdown(id=id)
+    return dcc.Dropdown(id=id, clearable=False)
+
 
 # Function: Render drop down list with label formatting (remove space between words and turn to lower case)
 # Input: id, [options]
 # Output: dcc.Dropdown
 def render_dropdown_format(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options],
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options], clearable=False,
         className='card h-100' )
 
-# Function: Render drop down list with label formatting (remove space between words and turn to lower case)
-# Input: id, [options]
+
+# Function: Render drop down list with selected value
+# Input: id, [options], value
 # Output: dcc.Dropdown
-def render_dropdown_format_valued(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options], value=(str(options[0]).replace(" ", "")).lower(),
+def render_dropdown_valued_multi(id, options, value):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=[value], multi=True,
         className='card h-100' )
 
 # Function: Render radio items
@@ -121,7 +130,7 @@ def render_input_number(id, placeholder):
 # Input: id, placeholder, min
 # Output: dcc.Input
 def render_input_number_min(id, placeholder, min):
-    return dcc.Input(id=id, type='number', min=min, placeholder=placeholder, style={'width': '100%'})
+    return dcc.Input(id=id, type='number', min=min, placeholder=placeholder, step=0.1, style={'width': '100%'})
 
 # Function: Render text input with delay feature, will callback after enter key pressed or input area loss its focus
 # Input: id, placeholder
@@ -180,3 +189,10 @@ def render_numinput(id, min, max, value):
 # Output: daq.NumericInput
 def render_numinput_justmin(id, min):
     return daq.NumericInput(id=id, min=min, className='w-100')
+
+# Function: Render color picker
+# Input: id, min, max, value, step, label
+# Output: daq.ColorPicker
+def render_colorpicker_small(id, color, r, g, b, a):
+    value=dict(rgb=dict(r=r, g=g, b=b, a=a))
+    return daq.ColorPicker(id=id, value=value, size=150)
