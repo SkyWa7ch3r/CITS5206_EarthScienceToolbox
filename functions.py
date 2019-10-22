@@ -61,6 +61,14 @@ def render_dropdown_format(id, options):
     return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options], clearable=False,
         className='card h-100' )
 
+
+# Function: Render drop down list with selected value
+# Input: id, [options], value
+# Output: dcc.Dropdown
+def render_dropdown_valued_multi(id, options, value):
+    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=[value], multi=True,
+        className='card h-100' )
+
 # Function: Render radio items
 # Input: id, [options]
 # Output: dcc.RadioItems
