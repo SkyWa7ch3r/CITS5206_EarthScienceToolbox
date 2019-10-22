@@ -48,7 +48,7 @@ for col in names:
 ynames = df.select_dtypes(include='number').columns.values
 
 # Six defferent line styles to choose from
-line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
+linestyle_list = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 
 # Features that are Categorical
 cat_features = df.select_dtypes(include = 'object').columns.values
@@ -80,6 +80,8 @@ MARKERS_DICT = [
 ]
 
 marker_dict = {}
+
+linestyle_dict = {}
 
 #
 LINECOLOR_DICT = {}
@@ -162,8 +164,8 @@ app.layout = html.Div([
             html.H6('Line Style'),
             dcc.Dropdown(
                 id = 'line-style',
-                options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in line_style],
-                value = (str(line_style[0]).replace(" ", "")).lower(),
+                options = [{'label': i, 'value': (i.replace(" ", "")).lower()} for i in linestyle_list],
+                value = (str(linestyle_list[0]).replace(" ", "")).lower(),
                 ),
 
             # Option to change marker style
@@ -260,8 +262,8 @@ def update_line_color(select_group):
     [Input('select-group', 'value')]
     )
 def update_line_style(select_group):
-    #temp_str = 
-    return 
+    temp_str = linestyle_dict.get(select_group)
+    return temp_str
 
 
 @app.callback(
@@ -272,7 +274,8 @@ def update_group(groupby):
     idx = 0
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
-        marker_dict[i] = MARKERS_DICT[idx % 5]
+        #marker_dict[i] = MARKERS_DICT[idx % 15]
+        linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
@@ -328,14 +331,20 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
         color_idx += 1
 
     marker_idx = 0
+    j = 0
     for i in group_list:
-        j = 0
         if select_group is not None:
             if i == select_group:
                 marker_dict[i] = MARKERS_DICT[j%15]
         marker_idx += 1
         j += 1
 
+    linestyle_idx = 0
+    for i in group_list:
+        if select_group is not None:
+            if i == select_group:
+                linestyle_dict[i] = line_style
+        linestyle_idx += 1
 
 
     # Variable to change gaps
@@ -408,8 +417,8 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
-                        symbol = marker_dict[selection]),
-                    line = dict(color=LINECOLOR_DICT[selection], width=3, dash=line_style)
+                        symbol = alignment_markers_dropdown),
+                    line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
                     )
                 )
 
