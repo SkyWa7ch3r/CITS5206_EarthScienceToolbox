@@ -143,7 +143,8 @@ app.layout = html.Div([
 
             html.H6('Select Group'),
             dcc.RadioItems(
-                id = 'select-group'
+                id = 'select-group',
+                #disabled = False
                 ),
 
             # Pick a color for different lines
@@ -183,7 +184,7 @@ app.layout = html.Div([
                 ),
 
             # Option to change lable style
-            html.H6("Change Label Style:"),
+            html.H6("Label Style"),
             dcc.Dropdown(
                 id = 'alignment-labelstyle-dropdown',
                 options = LABELSTYLE_DICT,
@@ -191,7 +192,7 @@ app.layout = html.Div([
             ),
 
             # Option to change marker style
-            html.H6("Change Marker Style:"),
+            html.H6("Marker Style"),
             dcc.Dropdown(
                 id = 'alignment-markers-dropdown',
                 className = 'markers-controls-block-dropdown',
@@ -206,7 +207,7 @@ app.layout = html.Div([
             daq.BooleanSwitch(
                 id = 'ALF',
                 on = False,
-                label = 'Add Line Fill',
+                label = 'Line Fill',
                 labelPosition = 'top',
                 color = toggle_switch_color),
             daq.BooleanSwitch(
@@ -218,7 +219,7 @@ app.layout = html.Div([
             daq.BooleanSwitch(
                 id = 'show-zeroline-y',
                 on = False,
-                label = 'Show Y Zeroline',
+                label = 'Y Zeroline',
                 labelPosition = 'top',
                 color = toggle_switch_color
                 )
@@ -226,7 +227,7 @@ app.layout = html.Div([
             style = {'width': '50%', 'display': 'inline-block', 'padding': '10px'}),
 
         # Slider to change line opacity
-        html.H6("Change Opacity:"),
+        html.H6("Opacity"),
         html.Div([
             dcc.Slider(
                 id = 'opacity-slider',
@@ -237,7 +238,7 @@ app.layout = html.Div([
         ]),
 
         # Change distances between y ticks
-        html.H6("Change Y ticks:"),
+        html.H6("Y ticks"),
         html.Div([
             dcc.Input(
                 id = 'Y-dtick',
@@ -259,6 +260,7 @@ app.layout = html.Div([
 
 @app.callback(
     Output('select-groupby', 'disabled'),
+    #Output('select-group', 'disabled')],
     [Input('use-group-by', 'value')]
 )
 def update_groupby(use_group_by):
@@ -324,100 +326,170 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
                  groupby, y_dtick, select_group, use_group_by
                  ):
     if use_group_by == True:
-        a = 0
-        
-    group_list = df[groupby].unique()
-    type_y = None
-    if data_transform:
-        type_y = 'log'
 
-    yaxis_list = ynames
+        group_list = df[groupby].unique()
+        type_y = None
+        if data_transform:
+            type_y = 'log'
 
-    picker_line_color = 'rgba({}, {}, {}, {})'.format(
-        colorPicker['rgb']['r'],
-        colorPicker['rgb']['g'],
-        colorPicker['rgb']['b'],
-        colorPicker['rgb']['a'])
+        yaxis_list = ynames
 
-    for i in group_list:
-        if select_group is not None:
-            if i == select_group:
-                LINECOLOR_DICT[i] = picker_line_color
+        picker_line_color = 'rgba({}, {}, {}, {})'.format(
+            colorPicker['rgb']['r'],
+            colorPicker['rgb']['g'],
+            colorPicker['rgb']['b'],
+            colorPicker['rgb']['a'])
 
-    for i in group_list:
-        if select_group is not None:
-            if i == select_group:
-                marker_dict[i] = alignment_markers_dropdown
+        for i in group_list:
+            if select_group is not None:
+                if i == select_group:
+                    LINECOLOR_DICT[i] = picker_line_color
 
-    for i in group_list:
-        if select_group is not None:
-            if i == select_group:
-                linestyle_dict[i] = line_style
+        for i in group_list:
+            if select_group is not None:
+                if i == select_group:
+                    marker_dict[i] = alignment_markers_dropdown
 
-    for i in group_list:
-        if select_group is not None:
-            if i == select_group:
-                gap_dict[i] = show_gaps
+        for i in group_list:
+            if select_group is not None:
+                if i == select_group:
+                    linestyle_dict[i] = line_style
 
-    # Variable to change gaps
-    for variable in select_variables:
-        for selection in group_list:
-            if show_gaps:
-                gap_dict[selection] = False
-            else:
-                gap_dict[selection] = True
+        for i in group_list:
+            if select_group is not None:
+                if i == select_group:
+                    gap_dict[i] = show_gaps
 
-    # Variable to change line fill
-    Fill = "none"
-    if ALF:
-        Fill = "toself"
+        # Variable to change gaps
+        for variable in select_variables:
+            for selection in group_list:
+                if show_gaps:
+                    gap_dict[selection] = False
+                else:
+                    gap_dict[selection] = True
+
+        # Variable to change line fill
+        Fill = "none"
+        if ALF:
+            Fill = "toself"
 
 
-    traces_list = []
-    for variable in select_variables:
-        print("Var: {}".format(variable))
-        for selection in group_list:
+        traces_list = []
+        for variable in select_variables:
+            print("Var: {}".format(variable))
+            for selection in group_list:
+                traces_list.append(
+                    go.Scatter(
+                        x=df[xaxis_column_name],
+                        y=df[df[groupby] == selection][variable],
+                        text=df[df[groupby] == selection][variable],
+                        mode=alignment_labelstyle_dropdown,
+                        name=str(variable).replace('[', '').replace(']', '').replace("\'", "")+': '+str(selection),
+                        connectgaps = gap_dict[selection],
+                        fill = Fill,
+                        opacity = OS/100,
+                        marker = dict(
+                            size = 8,
+                            opacity = 0.8,
+                            symbol = alignment_markers_dropdown),
+                        line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
+                        )
+                    )
+
+        return {
+            'data': traces_list,
+            'layout': go.Layout(
+                xaxis={
+                    #'title' : xaxis_title,
+                    'showgrid': show_gridlines,
+                    #'zeroline': show_zeroline_x,
+                    'rangeslider': {'visible': True}, 'type': 'date'
+                },
+                yaxis={
+                    #'title' : yaxis_title,
+                    'type' : type_y,
+                    'showgrid': show_gridlines,
+                    'zeroline': show_zeroline_y,
+                    'dtick': y_dtick
+                    # new
+                    #'range': [range1[0], range1[1]]
+                },
+                margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+                #title= title_1,
+                hovermode='closest'
+            )
+        }
+
+    else:
+        type_y = None
+        if data_transform:
+            type_y = 'log'
+
+        yaxis_list = ynames
+
+        picker_line_color = 'rgba({}, {}, {}, {})'.format(
+            colorPicker['rgb']['r'],
+            colorPicker['rgb']['g'],
+            colorPicker['rgb']['b'],
+            colorPicker['rgb']['a'])
+
+        Fill = "none"
+        if ALF:
+            Fill = "toself"
+
+        Connectgaps = False
+        if show_gaps== True:
+            Connectgaps = True
+
+        traces_list = []
+        for variable in select_variables:
             traces_list.append(
                 go.Scatter(
                     x=df[xaxis_column_name],
-                    y=df[df[groupby] == selection][variable],
-                    text=df[df[groupby] == selection][variable],
+                    y=df[select_variables],
+                    text=df[select_variables],
                     mode=alignment_labelstyle_dropdown,
-                    name=str(variable).replace('[', '').replace(']', '').replace("\'", "")+': '+str(selection),
-                    connectgaps = gap_dict[selection],
+                    name=str(variable).replace('[', '').replace(']', '').replace("\'", ""),
+                    connectgaps = Connectgaps,
                     fill = Fill,
                     opacity = OS/100,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
                         symbol = alignment_markers_dropdown),
-                    line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
+                    line = dict(color='rgba({}, {}, {}, {})'.format(
+                                    colorPicker['rgb']['r'],
+                                    colorPicker['rgb']['g'],
+                                    colorPicker['rgb']['b'],
+                                    colorPicker['rgb']['a'],),
+                                width=3, dash=line_style)
                     )
                 )
 
-    return {
-        'data': traces_list,
-        'layout': go.Layout(
-            xaxis={
-                #'title' : xaxis_title,
-                'showgrid': show_gridlines,
-                #'zeroline': show_zeroline_x,
-                'rangeslider': {'visible': True}, 'type': 'date'
-            },
-            yaxis={
-                #'title' : yaxis_title,
-                'type' : type_y,
-                'showgrid': show_gridlines,
-                'zeroline': show_zeroline_y,
-                'dtick': y_dtick
-                # new
-                #'range': [range1[0], range1[1]]
-            },
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-            #title= title_1,
-            hovermode='closest'
-        )
-    }
+        return {
+            'data': traces_list,
+            'layout': go.Layout(
+                xaxis={
+                    #'title' : xaxis_title,
+                    'showgrid': show_gridlines,
+                    #'zeroline': show_zeroline_x,
+                    'rangeslider': {'visible': True}, 'type': 'date'
+                },
+                yaxis={
+                    #'title' : yaxis_title,
+                    'type' : type_y,
+                    'showgrid': show_gridlines,
+                    'zeroline': show_zeroline_y,
+                    'dtick': y_dtick
+                    # new
+                    #'range': [range1[0], range1[1]]
+                },
+                margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+                #title= title_1,
+                hovermode='closest'
+            )
+        }   
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
