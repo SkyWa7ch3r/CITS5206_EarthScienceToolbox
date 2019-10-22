@@ -15,6 +15,9 @@ import dash_bootstrap_components as dbc
 import colorlover as cl
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
+import functions as func
+import random
+from scipy import stats
 
 #Create the app
 app = dash.Dash(__name__, external_stylesheets=['/assets/toolbox_menu.css'])
@@ -59,7 +62,7 @@ for i in default_color:
     i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_alpha)
     default_color[col_idx] = i
     col_idx += 1
-
+#Get the default colors for the percentiles in the Box Plot
 col_idx = 0
 for i in percentile_color_saved:
     start_idx = i.find('(')
@@ -68,7 +71,7 @@ for i in percentile_color_saved:
     i = 'rgba({},{},{},{})'.format(i[0], i[1], i[2], default_symbol_alpha)
     percentile_color_saved[col_idx] = i
     col_idx += 1
-
+#DICTIONARY FOR THE COLORSCALES
 COLORSCALES_DICT = [
     {'value': 'Blackbody', 'label': 'Blackbody'},
     {'value': 'Bluered', 'label': 'Bluered'},
@@ -88,140 +91,44 @@ COLORSCALES_DICT = [
     {'value': 'YlGnBu', 'label': 'YlGnBu'},
     {'value': 'YlOrRd', 'label': 'YlOrRd'},
 ]
-
+#DICTIONARY FOR THE MARKERS
+MARKERS_DICT = [
+    {'value': 'circle', 'label': 'Circle'},
+    {'value': 'square', 'label': 'Square'},
+    {'value': 'diamond', 'label': 'Diamond'},
+    {'value': 'cross', 'label': 'Cross'},
+    {'value': 'x', 'label': 'X'},
+    {'value': 'triangle-up', 'label': 'Triangle-up'},
+    {'value': 'pentagon', 'label': 'Pentagon'},
+    {'value': 'hexagon', 'label': 'Hexagon'},
+    {'value': 'hexagon2', 'label': 'Hexagon2'},
+    {'value': 'octagon', 'label': 'Octagon'},
+    {'value': 'star', 'label': 'Star'},
+    {'value': 'hexagram', 'label': 'Hexagram'},
+    {'value': 'star-triangle-up', 'label': 'Star-triangle-up'},
+    {'value': 'hourglass', 'label': 'Hourglass'},
+    {'value': 'bowtie', 'label': 'Bowtie'},
+]
+#THE DICTIONARY FOR THE LABELS
+DASH_DICT = [
+    {'value': 'solid', 'label': 'Solid'},
+    {'value': 'dash', 'label': 'Dash'},
+    {'value': 'dot', 'label': 'Dot'},
+    {'value': 'dashdot', 'label': 'Dash Dot'},
+    {'value': 'longdash', 'label': 'Long Dash'},
+    {'value': 'longdashdot', 'label': 'Long Dash Dot'}
+]
+#For Demas
 line_style = ['Solid', 'Dash', 'Dot', 'Long Dash', 'Dash Dot', 'Long Dash Dot']
 marker_symbols = ['Circle', 'Square', 'Diamond', 'Cross', 'X', 'Triangle-Up', 'Pentagon', 'Hexagon', 'Star']
-
-#----------BOOTSTRAP FUNCTIONS----------#
-#TODO ADD BELOW FUNCTIONS TO A SEPARATE PYTHON FILE
-# Function: Render drop down list
-# Input: id, [options]
-# Output: dcc.Dropdown
-def render_dropdown(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options],
-        className='card h-100' )
-
-# Function: Render drop down list without any options
-# Input: id
-# Output: dcc.Dropdown
-def render_dropdown_blank(id):
-    return dcc.Dropdown(id=id)
-
-# Function: Render drop down list with selected value
-# Input: id, [options], value
-# Output: dcc.Dropdown
-def render_dropdown_valued(id, options, value):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': i} for i in options], value=value, clearable=False,
-        className='card h-100' )
-
-# Function: Render drop down list with label formatting (remove space between words and turn to lower case)
-# Input: id, [options]
-# Output: dcc.Dropdown
-def render_dropdown_format(id, options):
-    return dcc.Dropdown(id=id, options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options],
-        className='card h-100' )
-
-# Function: Render radio items
-# Input: id, [options]
-# Output: dcc.RadioItems
-def render_radio(id, options):
-    return dcc.RadioItems(id=id, options=[{'label': i, 'value': i} for i in options],
-        value=str(options[0]), labelStyle={'display': 'block'} )
-
-# Function: Render radio items for data points and outlies
-# Input: id
-# Output: dcc.RadioItems
-def render_radio_outliers(id):
-    return dcc.RadioItems(
-        id=id,
-        options=[
-            {'label': 'Default', 'value': 'outliers'},
-            {'label': 'Only Wiskers', 'value': 'False'},
-            {'label': 'Suspected Outliers', 'value': 'suspectedoutliers'},
-            {'label': 'All Points', 'value': 'all'},
-        ],
-        value='outliers',
-        labelStyle={'display': 'block'} )
-
-# Function: Render radio items contain id only
-# Input: id
-# Output: dcc.RadioItems
-def render_radio_blank(id):
-    return dcc.RadioItems(id=id, labelStyle={'display': 'block'} )
-
-# Function: Render radio items with label formatting (remove space between words and turn to lower case)
-# Input: id, [options]
-# Output: dcc.RadioItems
-def render_radio_format(id, options):
-    return dcc.RadioItems(
-        id=id,
-        options=[{'label': i, 'value': (i.replace(" ", "")).lower()} for i in options],
-        value=(str(options[0]).replace(" ", "")).lower(),
-        labelStyle={'display': 'block'}, )
-
-# Function: Render text input
-# Input: id, placeholder
-# Output: dcc.Input
-def render_input(id, placeholder):
-    return dcc.Input(id=id, type='text', placeholder=placeholder, style={'width': '100%'})
-
-# Function: Render number input
-# Input: id, placeholder
-# Output: dcc.Input
-def render_input_number(id, placeholder):
-    return dcc.Input(id=id, type='number', min=0, placeholder=placeholder, style={'width': '100%'})
-
-# Function: Render text input with delay feature, will callback after enter key pressed or input area loss its focus
-# Input: id, placeholder
-# Output: dcc.RadioItems
-def render_input_delay(id, placeholder):
-    return dcc.Input(id=id, type='text', placeholder=placeholder, debounce=True, style={'width': '100%'})
-
-# Function: Render toggle switch
-# Input: id, [labels], value
-# Output: daq.ToggleSwitch
-def render_toggleswitch(id, labels, value):
-    return daq.ToggleSwitch(id=id, label=labels, value=value, color=toggle_switch_color, )
-
-# Function: Render boolean switch
-# Input: id, label, on
-# Output: daq.BooleanSwitch
-def render_booleanswitch(id, label, on):
-    return daq.BooleanSwitch(id=id, label=label, on=on, labelPosition='top', color=toggle_switch_color, )
-
-# Function: Render boolean switch without label
-# Input: id, on
-# Output: daq.BooleanSwitch
-def render_booleanswitch_nolab(id, on):
-    return daq.BooleanSwitch(id=id, on=on, color=toggle_switch_color, )
-
-# Function: Render slider
-# Input: id, min, max, value, step, label
-# Output: daq.Slider
-def render_slider(id, min, max, value, step, marks):
-    mymark={}
-    for i in marks:
-        mymark[i]=str(i)
-    return daq.Slider(id=id, min=min, max=max, value=value, step=step, marks=mymark )
-
-# Function: Render Range slider
-# Input: id, min, max, [value], step, {marks}
-# Output: dcc.RangeSlider
-def render_range_slider(id, min, max, value, step, marks):
-    return dcc.RangeSlider(id=id, min=min, max=max, value=value, step=step, marks=marks )
-
-# Function: Render color picker
-# Input: id, min, max, value, step, label
-# Output: daq.ColorPicker
-def render_colorpicker(id, color, r, g, b, a):
-    value=dict(rgb=dict(r=r, g=g, b=b, a=a))
-    return daq.ColorPicker(id=id, value=value)
-
-# Function: Render numeric Input
-# Input: id, min, max, value
-# Output: daq.NumericInput
-def render_numinput(id, min, max, value):
-    return daq.NumericInput(id=id, min=min, max=max, value=value )
+#For Bo
+MARKERS_LIST = ['circle', 'square', 'diamond', 'cross', 'x', 'triangle-up', 'pentagon', 'hexagon', 'hexagon2',
+'octagon', 'star', 'hexagram', 'star-triangle-up', 'hourglass', 'bowtie']
+markers_choice = dict()
+markers_shape = dict()
+#For Robin
+bar_color_saved = {}
+plottype = " "
 
 #----------THE APP LAYOUT----------#
 #Begin the layout of the app layout
@@ -287,17 +194,323 @@ def render_content(tab, session):
             ),
         ])
     elif tab == 'scatter':
-        #TODO add verification that it has numerical
-        return html.Div([
-            html.H3('Tab content 2')
-        ])
+        df = cache.get(session + '-df')
+        if df is None:
+            return dcc.Markdown('''
+            # No Data Uploaded
+
+            If you're seeing this message, then you haven't uploaded any data yet
+
+            Please do so by navigating to the Data Upload and uploading some data.
+
+            When you are ready, come back here to create a Scatter Plot.
+            ''')
+        elif len(df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values) == 0 or len(df.select_dtypes(include='number').columns.values) == 0:
+            return dcc.Markdown('''
+            # Data Uploaded but with no Numerical Features
+
+            If you're seeing this message, then you haven't uploaded any data that contains
+
+            numerical features. All your columns are categorical or empty.
+            
+            To produce a scatter plot, you must have numerical values in the dataset.
+
+            Otherwise, the dataset may have no categorical features, the reason why these are needed for
+
+            this scatter plot is due to how it was made, with the options of grouping the markers by a category, this
+
+            became necessary to enforce.
+            ''')
+        else:
+            cnames = df.select_dtypes(include='number').columns.values
+            cat_names = df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values
+            return html.Div(className='row', children=[
+                        html.Div(children=[
+                            html.Div(className='container', children=[
+                                html.Div(className='accordion', children=[
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Select Data', id='scatter-group-1-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Axis Value')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('xaxis-column', options=cnames, value=cnames[0] ))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Axis Value')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('yaxis-column', options=cnames, value=cnames[-1] ))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-1'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size, }
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Plot Settings', id='scatter-group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Swap Axis')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('swap', False))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Grid Lines')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('GL', True))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Zero Lines')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('OL', False))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Label')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('LB', False))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Legend')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('LD', True))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Colorbar')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('LS', True))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Set X Axis Type')),
+                                                    dbc.CardBody(children=func.render_toggleswitch('xaxis-type', ['Linear', 'Logarithmic'], False))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Set Y Axis Type')),
+                                                    dbc.CardBody(children=func.render_toggleswitch('yaxis-type', ['Linear', 'Logarithmic'], False))
+                                                ], className='col-md-6',
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-2'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Thresholds', id='scatter-group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Axis Threshold')),
+                                                    dbc.CardBody(children=func.render_input_number('X-thredshold', 'X Axis Threshold'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Axis Threshold')),
+                                                    dbc.CardBody(children=func.render_input_number('Y-thredshold', 'Y Axis Threshold'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Threshold Line Style')),
+                                                    dbc.CardBody(children=func.render_dropdown_dict_valued('x-threshold-style', DASH_DICT, 'solid'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Threshold Line Style')),
+                                                    dbc.CardBody(children=func.render_dropdown_dict_valued('y-threshold-style', DASH_DICT, 'solid'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Threshold Line Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker_small('x-threshold-color', '#ffffff', 0, 0, 0, 1))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Threshold Line Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker_small('y-threshold-color', '#ffffff', 0, 0, 0, 1))
+                                                ], className='col-md-6',
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-3'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Statistics', id='scatter-group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Linear Best Fit Line')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('linear', False))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Best Fit Line Style')),
+                                                    dbc.CardBody(children=func.render_dropdown_dict('change-dash', DASH_DICT))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Best Fit Line Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker_small('fit-color-picker', '#ffffff', 0, 0, 0, 1))
+                                                ], className='col-md-6',
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-4'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Marker Style', id='scatter-group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Category Marker Style')),
+                                                    dbc.CardBody(children=func.render_dropdown_dict_valued('alignment-markers-dropdown', MARKERS_DICT, 'circle'))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardBody(children=func.render_booleanswitch('marker-style-tog', 'Set Marker by a Group', False))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Group By')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('marker-drop', cat_names, cat_names[0]))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Select Category')),
+                                                    dbc.CardBody(children=func.render_dropdown_blank('marker-selected-groupby'))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-5'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Marker Size', id='scatter-group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardBody(children=func.render_booleanswitch('marker-size-tog', 'Set Marker Size by a Group', False))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('The Maximum Size for the Markers')),
+                                                    dbc.CardBody(children=func.render_input_number_min_value('marker-max', 1, 15))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Marker Size Group')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('marker-size', cnames, cnames[0]))
+                                                ], style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-6'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Plot Color', id='scatter-group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Group By')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('color-drop', df.columns, df.columns[0]))
+                                                ]
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Select Category')),
+                                                    dbc.CardBody(children=func.render_dropdown_blank('color-selected-groupby'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Change Colorscale')),
+                                                    dbc.CardBody(children=func.render_dropdown_dict_valued('alignment-colorscale-dropdown', COLORSCALES_DICT, 'Greys'))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Category Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker_small('my-color-picker', '#ffffff', 22, 222, 160, 1))
+                                                ]
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-7'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button('Graph Settings', id='scatter-group-8-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True, )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Graph Height')),
+                                                    dbc.CardBody(children=func.render_slider('graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]), style={'padding':'5% 5% 10% 5%'})
+                                                ], style={'width': '100%'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Graph Width')),
+                                                    dbc.CardBody(children=func.render_slider('graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]), style={'padding':'5% 5% 10% 5%'})
+                                                ], style={'width': '100%'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Opacity')),
+                                                    dbc.CardBody(children=func.render_slider('opacity-slider', 0, 100, 70, 1, []))
+                                                ], style={'width': '100%'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Tick Distance')),
+                                                    dbc.CardBody(children=func.render_input_number_min('X-dtick', 'X Axis Delta Tick', 0))
+                                                ], className='col-md-6',
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Tick Distance')),
+                                                    dbc.CardBody(children=func.render_input_number_min('Y-dtick', 'Y Axis Delta Tick', 0))
+                                                ], className='col-md-6',
+                                                ),
+                                            ],
+                                            ), id='scatter-collapse-8'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size}
+                                    ),
+                                ],
+                                ),
+                            ],
+                            ),
+                        ], className='col-md-3'
+                        ),
+                        html.Div(children=[
+                            dbc.Row(children=[
+                                dcc.Graph(id='indicator-graphic',
+                                        style={'width' : '90%', 'padding-left' : '3%'},
+                                        config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'legendPosition' : True, 'legendText' : True, 'colorbarPosition' : True, 'colorbarTitleText' : True}}
+                                ),
+                            ],
+                            ),
+                        ], className='col-md-9'),
+                    ], )
     elif tab == 'line':
         #TODO add verification that it has time series data under Date or Time
         return html.Div([
             html.H3('Tab content 3')
         ])
     elif tab == 'box':
-        #TODO add verification that the dataframe has both categorical and numerical.
         df = cache.get(session + '-df')
         if df is None:
             return dcc.Markdown('''
@@ -309,243 +522,278 @@ def render_content(tab, session):
 
             When you are ready, come back here to create a Box and Whisker Plot.
             ''')
+        elif len(df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values) == 0 or len(df.select_dtypes(include='number').columns.values) == 0:
+            return dcc.Markdown('''
+            # Data Uploaded but with all Categorical Features or all Numerical Features
+
+            If you're seeing this message, then you haven't uploaded any data that contains
+
+            categorical features. All your columns are numerical or empty, otherwise, all the columns
+
+            could potentially be categorical. To produce a box plot, you must have both in the set.
+            ''')
         else:
+            #Get the numerical and categorical features
             features = df.select_dtypes(include='number').columns.values
             cat_features = cat_features = df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values
+            #Setup the layout
             return  html.Div(className='row', children=[
                         html.Div(children=[
                             html.Div(className='container', children=[
                                 html.Div(className='accordion', children=[
+                                    #SELECT THE DATA
                                     dbc.Card([
                                         dbc.CardHeader(
-                                            dbc.Button("Select Data", id='group-1-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            dbc.Button("Select Data", id='box-group-1-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
+                                        #Do the Variable and Group by Dropdowns
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Variable')),
-                                                    dbc.CardBody(children=render_dropdown_valued('select-variable', features, features[0]))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('select-variable', features, features[0]))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Group by')),
-                                                    dbc.CardBody(children=render_dropdown_valued('select-groupby', cat_features, cat_features[0]))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('select-groupby', cat_features, cat_features[0]))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                                                 )
                                             ]),
-                                            id='collapse-1'
+                                            id='box-collapse-1'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    #PLOT SETTINGS
                                     dbc.Card([
                                         dbc.CardHeader(
                                             dbc.Button(
-                                                "Plot Setting", id='group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                                "Plot Setting", id='box-group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
+                                        #Do all the toggle switches for graph orientation, legend, grid lines, zero lines and have input for tick step and grid width
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Graph Orientation')),
-                                                    dbc.CardBody(children=render_toggleswitch('graph-alignment', ['Vertical', 'Horizontal'], False))
+                                                    dbc.CardBody(children=func.render_toggleswitch('graph-alignment', ['Vertical', 'Horizontal'], False))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Legend')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-legend', True))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-legend', True))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Grid Lines')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-gridlines', True))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-gridlines', True))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('X Zero Line')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-zeroline-x', True))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-zeroline-x', True))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Y Zero Line')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-zeroline-y', True))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-zeroline-y', True))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Grid Width')),
-                                                    dbc.CardBody(children=render_numinput('grid-width', 1, 5, 1))
+                                                    dbc.CardBody(children=func.render_numinput('grid-width', 1, 5, 1))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Tick Step')),
-                                                    dbc.CardBody(children=render_input_number('delta-tick', 'Tick Step'))
+                                                    dbc.CardBody(children=func.render_input_number('delta-tick', 'Tick Step'))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                             ]),
-                                            id='collapse-3'
+                                            id='box-collapse-3'
                                         ),
                                     ], color='info', outline=True, style={'font-size': cardbody_font_size} ),
                                     dbc.Card([
                                         dbc.CardHeader(
                                             dbc.Button(
-                                                "Statistic Information", id='group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                                "Statistic Information", id='box-group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
+                                        #DATA TRANSFORMATION
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
+                                                #Set all the options for the Box Plot specifics, the one below is linear or logarithmic
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Data Transformation')),
-                                                    dbc.CardBody(children=render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
+                                                    dbc.CardBody(children=func.render_toggleswitch('data-transform', ['Linear', 'Logarithmic'], False))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose how to deal with outliers
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Boxplot type')),
-                                                    dbc.CardBody(children=render_radio_outliers('select-outliers'))
+                                                    dbc.CardBody(children=func.render_radio_outliers('select-outliers'))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Show the frequency annotations
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Frequency')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-ndata', True))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-ndata', True))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Show the mean
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Mean')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-mean', False))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-mean', False))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Show the standard deviation
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Std. Dev.')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-sd', False))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-sd', False))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Show all the labels
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Summary Stats')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-stats', False))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-stats', False))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                             ]),
-                                            id='collapse-4'
+                                            id='box-collapse-4'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    #Deal with the PERCENTILES
                                     dbc.Card([
                                         dbc.CardHeader(
                                             dbc.Button(
-                                                "Percentiles", id='group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                                "Percentiles", id='box-group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
+                                        #Show the percentiles and have the ability to adjust them.
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Show Percentiles')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-percentiles', False))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-percentiles', False))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose the percentile to adjust
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Percentile')),
-                                                    dbc.CardBody(children=render_dropdown('select-percentile', ['5%', '10%', '90%', '95%']))
+                                                    dbc.CardBody(children=func.render_dropdown('select-percentile', ['5%', '10%', '90%', '95%']))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose the marker for them
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Marker Symbol')),
-                                                    dbc.CardBody(children=render_dropdown_format('marker-symbol', marker_symbols))
+                                                    dbc.CardBody(children=func.render_dropdown_format('marker-symbol', marker_symbols))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose the size
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Symbol Size'), className='card w-100'),
-                                                    dbc.CardBody(children=render_numinput('symbol-size', 1, 15, 8))
+                                                    dbc.CardBody(children=func.render_numinput('symbol-size', 1, 15, 8))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose the color
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Color')),
-                                                    dbc.CardBody(children=render_colorpicker('select-percentile-color', 'white', 100, 200, 255, 0.65))
+                                                    dbc.CardBody(children=func.render_colorpicker('select-percentile-color', 'white', 100, 200, 255, 0.65))
                                                 ],
                                                 ),
                                             ]),
-                                            id='collapse-7'
+                                            id='box-collapse-7'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    #Do all the threshold settings
                                     dbc.Card([
                                         dbc.CardHeader(
                                             dbc.Button(
-                                                "Threshold Setting", id='group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                                "Threshold Setting", id='box-group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Threshold')),
-                                                    dbc.CardBody(children=render_booleanswitch_nolab('show-treshold', False))
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('show-treshold', False))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Value')),
-                                                    dbc.CardBody(children=render_input('treshold-value', 'Threshold Value'))
+                                                    dbc.CardBody(children=func.render_input('treshold-value', 'Threshold Value'))
                                                 ], className='col-md-6'
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Line Size')),
-                                                    dbc.CardBody(children=render_numinput('treshold-line-size', 1, 10, 2))
+                                                    dbc.CardBody(children=func.render_numinput('treshold-line-size', 1, 10, 2))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Line Style')),
-                                                    dbc.CardBody(children=render_dropdown_format('treshold-style', line_style))
+                                                    dbc.CardBody(children=func.render_dropdown_format('treshold-style', line_style))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Line Color')),
-                                                    dbc.CardBody(children=render_colorpicker('treshold-line-color', 'white', 0, 0, 255, 1))
+                                                    dbc.CardBody(children=func.render_colorpicker('treshold-line-color', 'white', 0, 0, 255, 1))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                             ]),
-                                            id='collapse-5'
+                                            id='box-collapse-5'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    #Do all the box colors
                                     dbc.Card([
                                         dbc.CardHeader(
                                             dbc.Button(
-                                                "Box Color", id='group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                                "Box Color", id='box-group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
+                                        #Choose to fill
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Fill')),
-                                                    dbc.CardBody(children=render_toggleswitch('box-color-fill', ['Transparent', 'Colored'], True))
+                                                    dbc.CardBody(children=func.render_toggleswitch('box-color-fill', ['Transparent', 'Colored'], True))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Select the box to adjust
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Select Box'), className='card w-100'),
-                                                    dbc.CardBody(children=render_dropdown_blank('select-box'))
+                                                    dbc.CardBody(children=func.render_dropdown_blank('select-box'))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
+                                                #Choose the color for the box
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Color')),
-                                                    dbc.CardBody(children=render_colorpicker('box-color', 'white', 0, 0, 255, 0.65))
+                                                    dbc.CardBody(children=func.render_colorpicker('box-color', 'white', 0, 0, 255, 0.65))
                                                 ],
                                                 ),
                                             ]),
-                                            id='collapse-6'
+                                            id='box-collapse-6'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    #Choose the graph size, height and width
                                     dbc.Card([
                                         dbc.CardHeader(
-                                            dbc.Button("Graph Size", id='group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            dbc.Button("Graph Size", id='box-group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
                                             )
                                         ),
                                         dbc.Collapse(
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Graph Height')),
-                                                    dbc.CardBody(children=render_slider('graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]), style={'padding':'5% 5% 10% 5%'})
+                                                    dbc.CardBody(children=func.render_slider('graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]), style={'padding':'5% 5% 10% 5%'})
                                                 ], style={'width': '100%'}
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Graph Width')),
-                                                    dbc.CardBody(children=render_slider('graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]), style={'padding':'5% 5% 10% 5%'})
+                                                    dbc.CardBody(children=func.render_slider('graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]), style={'padding':'5% 5% 10% 5%'})
                                                 ], style={'width': '100%'}
                                                 ),
                                             ]),
-                                            id='collapse-2'
+                                            id='box-collapse-2'
                                         ),
                                     ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
                                 ])
@@ -563,10 +811,359 @@ def render_content(tab, session):
                     ], style=main_panel_margin)
 
     elif tab == 'bar':
-        return html.Div([
-            html.H3('Tab content 4')
-        ])
+        df = cache.get(session + '-df')
+        if df is None:
+            return dcc.Markdown('''
+            # No Data Uploaded
 
+            If you're seeing this message, then you haven't uploaded any data yet
+
+            Please do so by navigating to the Data Upload and uploading some data.
+
+            When you are ready, come back here to create a Box and Whisker Plot.
+            ''')
+        elif len(df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values) == 0:
+            return dcc.Markdown('''
+            # Data Uploaded but with no Categorical Features or all Numerical Features
+
+            If you're seeing this message, then you haven't uploaded any data that contains
+
+            categorical features. All your columns are numerical or empty.
+            ''')
+        else:
+            # Loading non-Numeric Data from Dataframe
+            cat_features = df.select_dtypes(exclude=['number', 'datetime', 'datetime64']).columns.values
+            return html.Div(className='row', children=[
+                        html.Div(children=[
+                            html.Div(className='container', children=[
+                                html.Div(className='accordion', children=[
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button("Select Data", id='bar-group-1-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Variable')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('bar-select-variable', cat_features, cat_features[0]))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Group by')),
+                                                    dbc.CardBody(children=func.render_dropdown_valued('bar-select-groupby', cat_features, cat_features[0]))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
+                                                )
+                                            ]),
+                                            id='bar-collapse-1'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button("Select Bar Plottype", id='bar-group-2-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Barplot type')),
+                                                    dbc.CardBody(children=func.render_radio_plotype('select-barplot'))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                            ]),
+                                            id='bar-collapse-2'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button(
+                                                "Plot Setting", id='bar-group-3-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Graph Orientation')),
+                                                    dbc.CardBody(children=func.render_toggleswitch('bar-graph-alignment', ['Horizontal', 'Vertical'], True))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Legend')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-legend', True))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Grid Lines')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-gridlines', True))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('X Zero Line')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-zeroline-x', True))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Y Zero Line')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-zeroline-y', True))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Grid Width')),
+                                                    dbc.CardBody(children=func.render_numinput('bar-grid-width', 1, 5, 1))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Tick Step')),
+                                                    dbc.CardBody(children=func.render_input_number('bar-delta-tick', 'Tick Step'))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                            ]),
+                                            id='bar-collapse-3'
+                                        ),
+                                    ], color='info', outline=True, style={'font-size': cardbody_font_size} ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button(
+                                                "Statistic Information", id='bar-group-4-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Data Transformation')),
+                                                    dbc.CardBody(children=func.render_toggleswitch('bar-data-transform', ['Linear', 'Logarithmic'], False))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Frequency')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-ndata', True))
+                                                ],style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                            ]),
+                                            id='bar-collapse-4'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button(
+                                                "Threshold Setting", id='bar-group-5-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Threshold')),
+                                                    dbc.CardBody(children=func.render_booleanswitch_nolab('bar-show-treshold', False))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Value')),
+                                                    dbc.CardBody(children=func.render_input('bar-treshold-value', 'Threshold Value'))
+                                                ], className='col-md-6'
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Line Size')),
+                                                    dbc.CardBody(children=func.render_numinput('bar-treshold-line-size', 1, 10, 2))
+                                                ], className='col-md-6', style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Line Style')),
+                                                    dbc.CardBody(children=func.render_dropdown_format('bar-treshold-style', line_style))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Line Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker('bar-treshold-line-color', 'white', 0, 0, 255, 1))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                            ]),
+                                            id='bar-collapse-5'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button(
+                                                "Bar Color", id='bar-group-6-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Select bar'), className='card w-100'),
+                                                    dbc.CardBody(children=func.render_dropdown_blank('select-bar'))
+                                                ], style={'margin': '0px 0px 10px 0px'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Color')),
+                                                    dbc.CardBody(children=func.render_colorpicker('bar-color', 'white', 0, 0, 255, 0.65))
+                                                ],
+                                                ),
+                                            ]),
+                                            id='bar-collapse-6'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                    dbc.Card([
+                                        dbc.CardHeader(
+                                            dbc.Button("Graph Size", id='bar-group-7-toggle', color=cardheader_color, style={'font-size': button_font_size}, block=True,
+                                            )
+                                        ),
+                                        dbc.Collapse(
+                                            dbc.CardBody(children=[
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Graph Height')),
+                                                    dbc.CardBody(children=func.render_slider('bar-graph-height', 600, 1200, 600, 50, [600, 700, 800, 900, 1000, 1100, 1200]), style={'padding':'5% 5% 10% 5%'})
+                                                ], style={'width': '100%'}
+                                                ),
+                                                dbc.Card([
+                                                    dbc.CardHeader(html.H5('Graph Width')),
+                                                    dbc.CardBody(children=func.render_slider('bar-graph-width', 800, 1400, 800, 50, [800, 900, 1000, 1100, 1200, 1300, 1400]), style={'padding':'5% 5% 10% 5%'})
+                                                ], style={'width': '100%'}
+                                                ),
+                                            ]),
+                                            id='bar-collapse-7'
+                                        ),
+                                    ], color=cardbody_color, outline=True, style={'font-size': cardbody_font_size} ),
+                                ])
+                            ])
+                        ], className='col-md-3'
+                        ),
+                        html.Div(children=[
+                            dbc.Row(children=[
+                                dcc.Graph(id='bar-plot',
+                                        style={'width' : '90%', 'padding-left' : '3%'},
+                                        config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'titleText': True}},
+                                ),
+                            ]),
+                        ], className='col-md-9'
+                        ),
+                    ], style=main_panel_margin)
+
+
+#----------------------ACCORDIAN CALLBACKS USED IN EVERY SINGLE PLOT--------------------#
+# Accordion Toggle Callback
+@app.callback(
+    [Output(f'scatter-collapse-{i}', 'is_open') for i in range(1,9)],
+    [Input(f'scatter-group-{i}-toggle', 'n_clicks') for i in range(1,9)],
+    [State(f'scatter-collapse-{i}', 'is_open') for i in range(1,9)]
+)
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, n8, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7, is_open8):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        return ""
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id ==  'scatter-group-1-toggle' and n1:
+        return not is_open1, False, False, False, False, False, False, False
+    elif button_id ==  'scatter-group-2-toggle' and n2:
+        return False, not is_open2, False, False, False, False, False, False
+    elif button_id ==  'scatter-group-3-toggle' and n3:
+        return False, False, not is_open3, False, False, False, False, False
+    elif button_id ==  'scatter-group-4-toggle' and n4:
+        return False, False, False, not is_open4, False, False, False, False
+    elif button_id ==  'scatter-group-5-toggle' and n5:
+        return False, False, False, False, not is_open5, False, False, False
+    elif button_id ==  'scatter-group-6-toggle' and n6:
+        return False, False, False, False, False, not is_open6, False, False
+    elif button_id ==  'scatter-group-7-toggle' and n7:
+        return False, False, False, False, False, False, not is_open7, False
+    elif button_id ==  'scatter-group-8-toggle' and n8:
+        return False, False, False, False, False, False, False, not is_open8
+    return False, False, False, False, False, False, False, False
+
+# Accordion Toggle Callback
+@app.callback(
+    [Output(f'line-collapse-{i}', 'is_open') for i in range(1,9)],
+    [Input(f'line-group-{i}-toggle', 'n_clicks') for i in range(1,9)],
+    [State(f'line-collapse-{i}', 'is_open') for i in range(1,9)]
+)
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, n8, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7, is_open8):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        return ""
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id ==  'line-group-1-toggle' and n1:
+        return not is_open1, False, False, False, False, False, False, False
+    elif button_id ==  'line-group-2-toggle' and n2:
+        return False, not is_open2, False, False, False, False, False, False
+    elif button_id ==  'line-group-3-toggle' and n3:
+        return False, False, not is_open3, False, False, False, False, False
+    elif button_id ==  'line-group-4-toggle' and n4:
+        return False, False, False, not is_open4, False, False, False, False
+    elif button_id ==  'line-group-5-toggle' and n5:
+        return False, False, False, False, not is_open5, False, False, False
+    elif button_id ==  'line-group-6-toggle' and n6:
+        return False, False, False, False, False, not is_open6, False, False
+    elif button_id ==  'line-group-7-toggle' and n7:
+        return False, False, False, False, False, False, not is_open7, False
+    elif button_id ==  'line-group-8-toggle' and n8:
+        return False, False, False, False, False, False, False, not is_open8
+    return False, False, False, False, False, False, False, False
+
+# Accordion Toggle Callback
+@app.callback(
+    [Output(f'box-collapse-{i}', 'is_open') for i in range(1,8)],
+    [Input(f'box-group-{i}-toggle', 'n_clicks') for i in range(1,8)],
+    [State(f'box-collapse-{i}', 'is_open') for i in range(1,8)]
+)
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        return ""
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id ==  'box-group-1-toggle' and n1:
+        return not is_open1, False, False, False, False, False, False
+    elif button_id ==  'box-group-2-toggle' and n2:
+        return False, not is_open2, False, False, False, False, False
+    elif button_id ==  'box-group-3-toggle' and n3:
+        return False, False, not is_open3, False, False, False, False
+    elif button_id ==  'box-group-4-toggle' and n4:
+        return False, False, False, not is_open4, False, False, False
+    elif button_id ==  'box-group-5-toggle' and n5:
+        return False, False, False, False, not is_open5, False, False
+    elif button_id ==  'box-group-6-toggle' and n6:
+        return False, False, False, False, False, not is_open6, False
+    elif button_id ==  'box-group-7-toggle' and n7:
+        return False, False, False, False, False, False, not is_open7
+    return False, False, False, False, False, False, False
+
+# Accordion Toggle Callback
+@app.callback(
+    [Output(f'bar-collapse-{i}', 'is_open') for i in range(1,8)],
+    [Input(f'bar-group-{i}-toggle', 'n_clicks') for i in range(1,8)],
+    [State(f'bar-collapse-{i}', 'is_open') for i in range(1,8)]
+)
+def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        return ""
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id ==  'bar-group-1-toggle' and n1:
+        return not is_open1, False, False, False, False, False, False
+    elif button_id ==  'bar-group-2-toggle' and n2:
+        return False, not is_open2, False, False, False, False, False
+    elif button_id ==  'bar-group-3-toggle' and n3:
+        return False, False, not is_open3, False, False, False, False
+    elif button_id ==  'bar-group-4-toggle' and n4:
+        return False, False, False, not is_open4, False, False, False
+    elif button_id ==  'bar-group-5-toggle' and n5:
+        return False, False, False, False, not is_open5, False, False
+    elif button_id ==  'bar-group-6-toggle' and n6:
+        return False, False, False, False, False, not is_open6, False
+    elif button_id ==  'bar-group-7-toggle' and n7:
+        return False, False, False, False, False, False, not is_open7
+    return False, False, False, False, False, False, False
 
 '''
 #------------------ DATA CLEANING RECOMMENDATION PAGE AND DATA UPLOAD --------------------------------#
@@ -813,9 +1410,11 @@ def render_upload_content(tab, session_id):
                 '''),
             ])
         else:
+            #Get all the numerical columns
             num_column_names = df.select_dtypes(include='number').columns.values
             return html.Div([
                 html.Div([
+                    #HEre's the multichoice dropdown for the splom
                     html.H3("Choose Your Features"),
                     dcc.Dropdown(
                         id='splom-column',
@@ -824,6 +1423,7 @@ def render_upload_content(tab, session_id):
                         multi=True,
                     ),
                 ], className='splom-choices'),
+                #Choose the colorscale for the splom
                 html.Div([
                     html.H3("Choose your Colorscale"),
                     dcc.Dropdown(
@@ -832,17 +1432,22 @@ def render_upload_content(tab, session_id):
                         value='Greys',
                     ),
                 ], className='splom-choices'),
+                #Choose what value to group the splom by
                 html.Div([
-                    html.H3("Choose the Feature for the Colour and Hovertext"),
+                    html.H3("Group By"),
                     dcc.Dropdown(
                         id='splom-color-chooser',
-                        options=[{'label': i, 'value': i} for i in df.columns],
+                        options=[{'label': i, 'value': i} for i in num_column_names],
                         value=df.columns[0],
                     ),
                 ], className='splom-choices'),
                 dcc.Graph(id="scatter-matrix-fig"),
             ])
 
+'''
+This callback feeds the parse contents function, which processes a file,
+reads it and gets basic info and saves its content inside the cache.
+'''
 @app.callback([Output('upload-data-output', 'children'),
                Output('markdown-message', 'hidden')],
               [Input('data', 'contents'),
@@ -854,6 +1459,7 @@ def update_output(content, session, name, date):
     if content is not None:
         return parse_contents(content, name, date, session), True
 
+#Do the scatter plot matrix
 @app.callback(Output('scatter-matrix-fig', 'figure'),
               [Input('splom-column', 'value'),
               Input('splom-colorscale', 'value'),
@@ -880,7 +1486,7 @@ def render_splom(columns, colorscale, color, session_id):
         showlegend = False
 
 
-    
+    #Do the Sploms data
     return {'data': [
                 go.Splom(
                     dimensions=[{'label': i, 'values': df[i]} for i in columns],
@@ -903,38 +1509,472 @@ def render_splom(columns, colorscale, color, session_id):
         }
 
 '''
+#--------------------SCATTER PLOT CALLBACKS--------------------#
+The following are coded by Bo Yang, Demas Dasa and Joel Dunstan, Bo Yang
+was responsible for the original forms and callbacks (mostly). Demas provided the
+layout, Joel integrated it to here and did the Markers Tabs.
+'''
+'''
+The function below will update the color picker with the value from the class
+'''
+@app.callback(
+    Output('my-color-picker', 'value'),
+    [Input('alignment-markers-dropdown', 'value')]
+)
+def update_scatter_color_selector(box):
+    #Get the current class and its colors
+    temp_str = markers_choice.get(box, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
+    #If its an instance, reformat it into the rgb string
+    if isinstance(temp_str, str):
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+    #Return RGB String
+    return temp_str
+
+'''
+Function will enable or disable the line of best fit function
+if either of the axes are put into logarithmic mode.
+'''
+@app.callback(
+	[Output('linear', 'on'),
+	Output('linear', 'disabled')
+	],
+	[Input('xaxis-type', 'value'),
+	Input('yaxis-type', 'value'),
+	]
+	)
+def show_fitline(xv, yv):
+	if xv=='Log' or yv=='Log':
+		return False,True
+	else:
+		return False,False
+
+'''
+This will disable the threshold options if the threshold forms are empty
+'''
+@app.callback(
+    [Output('x-threshold-style', 'disabled'),
+    Output('y-threshold-style', 'disabled'),
+    Output('x-threshold-color', 'disabled'),
+    Output('y-threshold-color', 'disabled')],
+    [Input('X-thredshold', 'value'),
+     Input('Y-thredshold', 'value'),]
+)
+def enable_threshold_styles(x_t, y_t):
+    #If the x threshold isnt empty
+    if x_t is not None:
+        x_style = False
+        x_color= False
+    #If it is empty
+    else:
+        x_style = True
+        x_color = True
+    #If y threshold is empty
+    if y_t is not None:
+        y_style = False
+        y_color = False
+    #If Y threshold
+    else:
+        y_style = True
+        y_color = True
+    return x_style, y_style, x_color, y_color
+
+'''
+This will adjust the options for the colors, if a categorical column is chosen
+then it will disable the colorscale options and enable the color picker. If a numerical
+column is chosen it will do the opposite
+'''
+@app.callback(
+	[Output('color-selected-groupby', 'options'),
+	Output('alignment-colorscale-dropdown', 'disabled'),
+	Output('my-color-picker','disabled'),
+	Output('LS', 'disabled'),
+	Output('color-selected-groupby', 'disabled'),
+    Output('color-selected-groupby', 'value'),
+	],
+	[Input('color-drop', 'value'),
+    Input('session_id', 'children')]
+	)
+def scatter_traces_groupby(color_drop, session):
+    #Get the dataframe
+    df = cache.get(session + '-df')
+    #If the column chosen is categorical
+    if df[color_drop].dtypes =='object':
+        idx =0
+        #Go through each unique one
+        for i in df[color_drop].unique():
+            #Assign the default colors
+            markers_choice[i] = default_color[idx % num_of_color]
+            idx += 1
+        #Return the labels
+        return [{'label': i, 'value': i} for i in df[color_drop].unique()], True, False, True, False,df[color_drop].unique()[0]
+    else:
+        #Return single label
+        return [{'label': color_drop, 'value': color_drop}], False, True, False, True, color_drop
+
+'''
+This will assign all the markers to a category
+and return the options, and the value.
+'''
+@app.callback(
+    [Output('marker-selected-group', 'value'),
+    Output('marker-selected-groupby', 'options'),
+    Output('marker-selected-groupby', 'disabled'),
+    Output('marker-drop', 'disabled')],
+    [Input('marker-style-tog', 'on'),
+    Input('marker-drop', 'value'),
+    Input('session_id', 'children')]
+)
+def scatter_markers_groupby(marker_on, marker_drop, session):
+    #Get the dataframe
+    df = cache.get(session + '-df')
+    idx = 0
+    dictionary = dict()
+    #If we're grouping by the marker
+    if marker_on:
+        #For every unique category
+        for i in df[marker_drop].unique():
+            #Pick a marker
+            markers_shape[i] = random.choice(MARKERS_LIST)
+            idx += 1
+        #Return the necessary values
+        return df[marker_drop].unique()[0], [{'label': i, 'value': i} for i in df[marker_drop].unique()], False, False
+    else:
+        return marker_drop, [{'label': marker_drop, 'value': marker_drop}], True, True
+
+'''
+Adjusts the linear functions options availability depending on if
+the linear line of best fit has been enabled or not.
+'''
+@app.callback(
+	[Output('change-dash', 'disabled'),
+    Output('fit-color-picker', 'disabled')],
+	[Input('linear', 'on'),]
+	)
+def show_linear(on):
+	if on:
+		return False, False
+	else:
+		return True, True
+
+'''
+This is the main function of the scatter plot, its the function that updates
+the graph!
+'''
+@app.callback(
+    Output('indicator-graphic', 'figure'),
+    [Input('xaxis-column', 'value'),
+     Input('yaxis-column', 'value'),
+     Input('xaxis-type', 'value'),
+     Input('yaxis-type', 'value'),
+     Input('alignment-colorscale-dropdown', 'value'),
+     Input('swap', 'on'),
+     Input('linear', 'on'),
+     Input('GL', 'on'),
+     Input('OL', 'on'),
+     Input('alignment-markers-dropdown', 'value'),
+     Input('color-drop', 'value'),
+     Input('LD', 'on'),
+     Input('opacity-slider', 'value'),
+     Input('X-dtick', 'value'),
+     Input('Y-dtick', 'value'),
+     Input('X-thredshold', 'value'),
+     Input('Y-thredshold', 'value'),
+     Input('color-selected-groupby', 'value'),
+     Input('my-color-picker', 'value'),
+     Input('LB', 'on'),
+     Input('LS', 'on'),
+     Input('change-dash', 'value'),
+     Input('graph-height', 'value'),
+     Input('graph-width', 'value'),
+     Input('fit-color-picker', 'value'),
+     Input('x-threshold-style', 'value'),
+     Input('y-threshold-style', 'value'),
+     Input('x-threshold-color', 'value'),
+     Input('y-threshold-color', 'value'),
+     Input('marker-size-tog', 'on'),
+     Input('marker-size', 'value'),
+     Input('marker-max', 'value'),
+     Input('marker-drop', 'value'),
+     Input('marker-selected-groupby', 'value'),
+     Input('marker-style-tog', 'on'),
+     Input('session_id', 'children'),
+     ])
+def scatter_update_graph(xaxis_column_name, yaxis_column_name,
+                 xaxis_type, yaxis_type,
+                 alignment_colorscale_dropdown, 
+                 swap, linear, GL, OL, 
+                 alignment_markers_dropdown, color_var, 
+                 LD, OS, X_D, Y_D, X_T, Y_T, G_t, C_P, LB,
+                 LS, CD, graph_height, graph_width, 
+                 fit_color_picker, x_t_style, y_t_style,
+                 x_t_color, y_t_color, use_size, marker_size, marker_max, 
+                 marker_drop, marker_groupby, marker_on, session):
+    #Get the dataframe
+    df = cache.get(session + '-df')
+    #If Swap Axes is enabled
+    if swap:
+    	# Swapping the x and y axes names
+        tmp = xaxis_column_name
+        xaxis_column_name = yaxis_column_name
+        yaxis_column_name = tmp
+
+    #Generate the Line of Best Fit
+    slope, intercept, r_value, p_value, std_err = stats.linregress(df[xaxis_column_name],df[yaxis_column_name])
+    line = slope*df[xaxis_column_name]+intercept
+
+    #Do the setup for the thresholds
+    threshold_shape = []
+    #Take the x threshold color
+    x_color = 'rgba({}, {}, {}, {})'.format(
+        x_t_color['rgb']['r'],
+        x_t_color['rgb']['g'],
+        x_t_color['rgb']['b'],
+        x_t_color['rgb']['a'],)
+    #Take the y threshold color
+    y_color = 'rgba({}, {}, {}, {})'.format(
+        y_t_color['rgb']['r'],
+        y_t_color['rgb']['g'],
+        y_t_color['rgb']['b'],
+        y_t_color['rgb']['a'],)
+
+    #if users set a threshold for X, then show this line
+    if X_T !=None:
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=X_T,
+    	x1=X_T,
+    	y0=df[yaxis_column_name].min(),
+    	y1=df[yaxis_column_name].max(),
+        line=dict(
+            color=x_color,
+            dash=x_t_style
+        )
+    	))
+
+    #if users set a threshold for Y, then show this line
+    if Y_T !=None:{
+    	threshold_shape.append(dict(
+    	type='line',
+    	x0=df[xaxis_column_name].min(),
+    	x1=df[xaxis_column_name].max(),
+    	y0=Y_T,
+    	y1=Y_T,
+        line=dict(
+            color=y_color,
+            dash=y_t_style
+        )
+    	))}
+
+    #Set the mode, if someone wants to show labels then do so.
+    mode_t='markers'
+    if LB:
+    	mode_t='markers+text'
+    #Get the color for the plots categories
+    picker_markers_color = 'rgba({}, {}, {}, {})'.format(
+        C_P['rgb']['r'],
+        C_P['rgb']['g'],
+        C_P['rgb']['b'],
+        C_P['rgb']['a'],)
+    #If we are using a category then apply the color just grabbed from the color picker
+    if df[color_var].dtypes=='object':
+    	for i in df[color_var].unique():
+    		if color_var is not None:
+                #We only edit the necessary one, which we select via a drop down
+    			if i == G_t:
+    				markers_choice[i] = picker_markers_color
+    #If the markers are on, then apply the marker via the group by marker, similar to the color above
+    if marker_on:
+        for cat in df[marker_drop].unique():
+            if marker_drop is not None:
+                if cat == marker_groupby:
+                    markers_shape[cat] = alignment_markers_dropdown
+    #If use size has been enabled then..
+    if use_size:
+        #Take the data as a numpy float array
+        marker_data = np.array(df[marker_size], dtype='float64')
+        #Use numpy's interp to scale the data between 1 and some specified range
+        marker_size = list(np.interp(marker_data, (marker_data.min(), marker_data.max()), (1, marker_max)))
+    #Else use the marker size 15
+    else:
+        marker_size=15
+
+    traces = []
+    #If the data is categorical, then do the traces by category
+    if df[color_var].dtypes=='object' and not marker_on:
+        #If the marker is not on, then do the traces by the color var category
+    	for i in df[color_var].unique():
+    		df_by = df[df[color_var] == i]
+            #Append the trace
+    		traces.append(go.Scatter(
+	    		x=df_by[xaxis_column_name],
+	       		y=df_by[yaxis_column_name],
+                #Take the mode
+	       		mode=mode_t,	       		
+	       		text=i,
+	       		textposition='top center',
+	       		opacity=OS/100,
+                #Set the markers to all a single marker
+	       		marker={
+	       			'size': marker_size,
+	       			'line': {'width' :0.5, 'color': 'white'},
+	       			'symbol': alignment_markers_dropdown,
+                    #But use a different color for all of them
+	       			'color': markers_choice[i],
+	       		},
+                #Name is simply the category
+	       		name=i
+	       	    )
+            )
+    #If dealing with categorical variables in color, and the marker is on
+    elif df[color_var].dtypes=='object' and marker_on:
+        for i in df[color_var].unique():
+            for j in df[marker_drop].unique():
+                #Then for each trace we grab the subset from color var and marker drop together
+                df_by = df[df[color_var] == i][df[marker_drop] == j]
+                traces.append(go.Scatter(
+                    x=df_by[xaxis_column_name],
+                    y=df_by[yaxis_column_name],
+                    mode=mode_t,
+                    text=i,
+                    textposition='top center',
+                    opacity=OS/100,
+                    #The main differences to others are below
+                    marker={
+                        'size': marker_size,
+                        'line': {'width' :0.5, 'color': 'white'},
+                        #Both color and markers are set per individual trace
+                        'color': markers_choice[i],
+                        'symbol':markers_shape[j]
+                        },
+                        #Name is a combination of both things
+                        name=str(i) + ' : ' + str(j)
+                    )
+                )
+    #if the data type of the group by column is int or float, it will show the VS, and the color based on the X values
+    elif (df[color_var].dtypes=='int64' or df[color_var].dtypes=='float64') and not marker_on:
+        #Marker not on
+	    traces.append(go.Scatter(
+	    	x=df[xaxis_column_name],
+	    	y=df[yaxis_column_name],
+	    	mode=mode_t,
+	    	text = color_var,
+	    	opacity=OS/100,
+	    	marker=dict(
+	    		size = marker_size,
+	        	line = {'width': 0.5, 'color': 'white'},
+                #Scale the colors to some numerical array
+	        	color = df[color_var],
+                #Use the colorscale
+	        	colorscale = alignment_colorscale_dropdown,
+	        	colorbar=dict(
+	        		title=color_var
+	        		),
+	        	showscale = LS,
+                #Use the same marker for everyone
+	        	symbol = alignment_markers_dropdown
+	    	),
+	    	name='{} VS {}'.format(xaxis_column_name, yaxis_column_name)
+	    ))
+    #If numerical and marker is on then
+    elif (df[color_var].dtypes=='int64' or df[color_var].dtypes=='float64') and marker_on:
+        for cat in df[marker_drop].unique():
+            #Grab the category
+            df_by = df[df[marker_drop] == cat]
+            showScale = False
+            #If its the last one, the enable the colorscale, otherwise it adds one for every trace
+            if cat == df[marker_drop].unique()[-1]:
+                showScale = LS
+            traces.append(go.Scatter(
+                x=df_by[xaxis_column_name],
+                y=df_by[yaxis_column_name],
+                mode=mode_t,
+                text = color_var,
+                opacity=OS/100,
+                marker=dict(
+                    size = marker_size,
+                    line = {'width': 0.5, 'color': 'white'},
+                    #Stiull use colorscale
+                    color = df[color_var],
+                    colorscale = alignment_colorscale_dropdown,
+                    colorbar=dict(
+                        title=color_var
+                        ),
+                    showscale = showScale,
+                    #Set the marker for each trace
+                    symbol = markers_shape[cat]
+                ),
+                #Name is now the category
+                name=cat,
+            ))
+    #Set all the options for line of best fit
+    # Get the color first   
+    fit_color = 'rgba({}, {}, {}, {})'.format(
+        fit_color_picker['rgb']['r'],
+        fit_color_picker['rgb']['g'],
+        fit_color_picker['rgb']['b'],
+        fit_color_picker['rgb']['a'],)
+    #Now add the trace
+    traces.append(go.Scatter(
+    	x=df[xaxis_column_name],
+        y=line,
+        mode='lines',
+        name='Y = {:.3f}*X + {:.3f}'.format(slope, intercept),
+        marker=dict(
+            size = 15,
+            opacity = 0.5,
+            line = {'width': 0.5, 'color': 'white'},
+            color = fit_color,
+            showscale = LD
+        ),
+        line = dict(
+            #Uses a set line style
+        	dash=CD
+        	),
+        #Will only be visible if its enabled
+        visible=linear
+    ))
+    #Do the layout, most if it is self explanatory via the variable names
+    layou_t=dict(
+    	xaxis={
+            'title': xaxis_column_name,
+            'type': 'log' if xaxis_type else 'linear',
+           	'showgrid': GL,
+           	'zeroline': OL,
+            'dtick': X_D
+        },
+        yaxis={
+            'title': yaxis_column_name,
+            'type': 'log' if yaxis_type else 'linear',
+            'showgrid': GL,
+            'zeroline': OL,
+            'dtick': Y_D
+        },
+        title= xaxis_column_name + ' vs. ' + yaxis_column_name,
+        showlegend = LD,
+        shapes=threshold_shape,
+        hovermode='closest',
+        height=graph_height,
+        width=graph_width
+    	)
+    #Return everything!
+    return {
+       	'data': 
+       		traces,
+
+       	'layout': go.Layout(
+           	layou_t
+       	)
+    }
+
+
+'''
 #---------------------BOX PLOT CALLBACKS--------------------#
 The following was coded by Demas Dasa (this includes the layout for the Box Plot), 
 these are all the callbacks for the plot below.
 '''
-@app.callback(
-    [Output(f'collapse-{i}', 'is_open') for i in range(1,8)],
-    [Input(f'group-{i}-toggle', 'n_clicks') for i in range(1,8)],
-    [State(f'collapse-{i}', 'is_open') for i in range(1,8)]
-)
-def toggle_accordion(n1, n2, n3, n4, n5, n6, n7, is_open1, is_open2, is_open3, is_open4, is_open5, is_open6, is_open7):
-    ctx = dash.callback_context
-
-    if not ctx.triggered:
-        return ""
-    else:
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if button_id ==  'group-1-toggle' and n1:
-        return not is_open1, False, False, False, False, False, False
-    elif button_id ==  'group-2-toggle' and n2:
-        return False, not is_open2, False, False, False, False, False
-    elif button_id ==  'group-3-toggle' and n3:
-        return False, False, not is_open3, False, False, False, False
-    elif button_id ==  'group-4-toggle' and n4:
-        return False, False, False, not is_open4, False, False, False
-    elif button_id ==  'group-5-toggle' and n5:
-        return False, False, False, False, not is_open5, False, False
-    elif button_id ==  'group-6-toggle' and n6:
-        return False, False, False, False, False, not is_open6, False
-    elif button_id ==  'group-7-toggle' and n7:
-        return False, False, False, False, False, False, not is_open7
-    return False, False, False, False, False, False, False
 
 # Update marker symbol when percentile selected
 @app.callback(
@@ -1000,7 +2040,7 @@ def update_box_color_selector(box):
         temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
     return temp_str
 
-# Box Selector Callback
+# Box Selector Callback, adjusts the options of the categories drop down
 @app.callback(
     Output('select-box', 'options'),
     [Input('select-groupby', 'value'),
@@ -1140,7 +2180,6 @@ def update_figure(
             if i == selected_box:
                 box_color_saved[i] = picker_box_color
         color_idx += 1
-
         if (not is_vertical):
             data_list.append(
                 go.Box(
@@ -1354,7 +2393,7 @@ def update_figure(
         ip = 2
     else:
         ip = 3
-
+    #Change the percentile markers and color
     selected_marker_symbols[ip] = marker_symbol
     percentile_color_saved[ip] = picker_percentile_color
 
@@ -1429,6 +2468,313 @@ def update_figure(
             height=graph_height,
             width=graph_width,
             annotations=annots_ndata,
+            shapes=treshold_shape,
+        )
+    }
+
+'''
+#---------------------BAR PLOT CALLBACKS--------------------#
+Below is the callbacks which were developed by Robin with help from Demas
+'''
+# Turn Y Tick Disabled when in Logarithmic and Enabled when in Linear
+# Turn Y Tick Value to None when in Logarithmic end recall previous value when turn back to Linear
+@app.callback(
+    [Output('bar-delta-tick', 'disabled'),
+     Output('bar-delta-tick', 'value')],
+    [Input('bar-data-transform', 'value')]
+)
+def update_delta_tick_disabled(is_log):
+    return is_log, None if is_log else dtick_value
+
+# Bar Color Selector Callback
+@app.callback(
+    Output('bar-color', 'value'),
+    [Input('select-bar', 'value')]
+)
+def update_bar_color_selector(bar):
+    temp_str = bar_color_saved.get(bar, dict(rgb=dict(r=222, g=110, b=75, a=default_alpha)))
+    if isinstance(temp_str, str):
+        start_idx = temp_str.find('(')
+        temp_str = temp_str[start_idx+1:len(temp_str)-1]
+        temp_str = temp_str.split(",")
+        temp_str = dict(rgb=dict(r=temp_str[0], g=temp_str[1], b=temp_str[2], a=temp_str[3]))
+    return temp_str
+
+# Bar Selector Callback
+@app.callback(
+    Output('select-bar', 'options'),
+    [Input('bar-select-groupby', 'value'),
+    Input('session_id', 'children') ]
+)
+def update_select_bar(groupby, session):
+    df = cache.get(session + '-df')
+    idx = 0
+    for i in df[groupby].unique():
+        bar_color_saved[i] = default_color[idx % 5]
+        idx += 1
+    return [{'label': i, 'value': i} for i in df[groupby].unique()]
+
+# Threshold Line Callback
+@app.callback(
+    Output('bar-treshold-value', 'value'),
+    [Input('bar-show-treshold', 'on'),
+     ]
+)
+def update_treshold_value(
+    is_tresholdshow
+):
+    return '25' if is_tresholdshow else ' '
+
+# Figure Callback
+@app.callback(
+    Output('bar-plot', 'figure'),
+    [
+        Input('bar-select-variable', 'value'),
+        Input('bar-select-groupby', 'value'),
+        Input('select-barplot', 'value'),
+        Input('bar-show-gridlines', 'on'),
+        Input('bar-show-zeroline-x', 'on'),
+        Input('bar-show-zeroline-y', 'on'),
+        Input('bar-show-legend', 'on'),
+        Input('bar-graph-alignment', 'value'),
+        Input('bar-data-transform', 'value'),
+        Input('bar-show-ndata', 'on'),
+        Input('bar-show-treshold', 'on'),
+        Input('bar-treshold-value', 'value'),
+        Input('bar-treshold-style', 'value'),
+        Input('bar-treshold-line-color', 'value'),
+        Input('bar-treshold-line-size', 'value'),
+        Input('bar-graph-height', 'value'),
+        Input('bar-graph-width', 'value'),
+        Input('select-bar', 'value'),
+        Input('bar-color', 'value'),
+        Input('bar-grid-width', 'value'),
+        Input('bar-delta-tick', 'value'),
+        Input('session_id', 'children'),
+    ]
+)
+def update_figure(
+    variable, groupby,plottype,
+    gridshow, xzeroline, yzeroline, legendshow,
+    is_vertical, is_log,is_ndatashow,is_tresholdshow, treshold_value,
+    treshold_style, treshold_color, treshold_size, graph_height,
+    graph_width, selected_bar, bar_color, grid_width, dtick, session
+):
+    df = cache.get(session + '-df')
+    # Update dtick_value
+    if dtick != None:
+        dtick_value = dtick
+
+    # Title and axis default title for stacked percentage
+    if(plottype=="Stacked_Percentage"):
+        xaxis_title = str("Percentage % ")
+        yaxis_title = variable
+        main_title = str("BarPlot")
+    #Title and axis default title for stacked and side by side barplot
+    else:
+        xaxis_title = str("Count")
+        yaxis_title = variable
+        main_title = str("BarPlot")
+
+
+    # Initialising data list
+    data_list = []
+    pct = []
+    cnt = []
+    pct_text = []
+    cnt_idx = []
+    cnt_text = []
+    annots_idx = 0
+
+
+
+    picker_bar_color = 'rgba({}, {}, {}, {})'.format(
+        bar_color['rgb']['r'],
+        bar_color['rgb']['g'],
+        bar_color['rgb']['b'],
+        bar_color['rgb']['a'],)
+
+    color_idx = 0
+    # generate the unique variables in groupby
+    group_list = df[groupby].unique()
+    # generate the unique variables in variable
+    var_list = df[variable].unique()
+    # Generate barplot
+    idx=0
+    # Loop for stacked percentage barplot
+    if(plottype== "Stacked_Percentage"):
+        for i in group_list:
+            pct_idx=0
+            if selected_bar is not None:
+                print('selected_bar : {}'.format(selected_bar))
+                print('bar color 1 : {}'.format(bar_color_saved))
+                if i == selected_bar:
+                    bar_color_saved[i] = picker_bar_color
+                    print('bar color 2 : {}'.format(bar_color_saved))
+            color_idx += 1
+
+            for j in var_list:
+                # counting all elements for each var_list
+                count_all=df[df[variable]==j][variable].count()
+                # counting all elements for each var_list for each group_list
+                count_me=df[df[variable]==j][df[groupby]==i][groupby].count()
+                # store percentage in array
+                pct.append(count_me*100/count_all)
+                # store percentage format in array
+                pct_text.append("{}%".format(round(count_me*100/count_all)))
+            if (is_vertical):
+                data_list.append(
+                        go.Bar(
+                            x=var_list,
+                            y=pct,
+                            name=i,
+                            text =pct_text if is_ndatashow else None,
+                            textposition ="auto",
+                            marker_color=bar_color_saved[i],
+                        )
+                    )
+                # reset the array
+                pct=[]
+                idx +=1
+                pct_idx += 1
+                pct_text=[]
+            else:
+                data_list.append(
+                        go.Bar(
+                            x=pct,
+                            y=var_list,
+                            name=i,
+                            orientation='h',
+                            text =pct_text if is_ndatashow else None,
+                            textposition ="auto",
+                            marker_color=bar_color_saved[i],
+                        )
+                    )
+                #reset the array
+                pct =[]
+                idx +=1
+                pct_idx += 1
+                pct_text=[]
+    # Loop for side by side and stacked barplot
+    elif(plottype=="Side_by_Side" or plottype== "Stacked"):
+        for i in group_list:
+            if selected_bar is not None:
+                print('selected_bar : {}'.format(selected_bar))
+                print('bar color 1 : {}'.format(bar_color_saved))
+                if i == selected_bar:
+                    bar_color_saved[i] = picker_bar_color
+                    print('bar color 2 : {}'.format(bar_color_saved))
+            color_idx += 1
+
+            cnt_idx=0
+            for j in var_list:
+                # counting all elements for each var_list
+                count_all=df[df[variable]==j][variable].count()
+                # counting all elements for each var_list for each group_list
+                count_me=df[df[variable]==j][df[groupby]==i][groupby].count()
+                # store the count
+                cnt.append(count_me)
+                # store the count with format for display
+                cnt_text.append("{}".format(count_me))
+            # trace for vertical bar chart
+            if (is_vertical):
+                data_list.append(
+                        go.Bar(
+                            x=var_list,
+                            y=cnt,
+                            name=i,
+                            text =cnt_text if is_ndatashow else None,
+                            textposition ="auto",
+                            marker_color=bar_color_saved[i]
+                        )
+                    )
+                # reset the array for count
+                cnt = []
+                idx +=1
+                cnt_idx += 1
+                cnt_text=[]
+            else:
+                # trace for horizontal bar chart
+                data_list.append(
+                        go.Bar(
+                            x=cnt,
+                            y=var_list,
+                            name=i,
+                            orientation='h',
+                            text =cnt_text if is_ndatashow else None,
+                            textposition ="auto",
+                            marker_color=bar_color_saved[i]
+                        )
+                    )
+                # reset the array for count
+                idx +=1
+                cnt_idx += 1
+                cnt = []
+                cnt_text=[]
+    # Change Orientation
+    type_x = None
+    type_y = None
+    # check the graph orientation and change the title and scale
+    if (is_vertical):
+        xaxis_title, yaxis_title = yaxis_title, xaxis_title
+        type_y = 'log' if is_log else None
+
+    else:
+        #check the graph orientation and change the title and scale
+        type_x = 'log' if is_log else None
+
+    if (plottype== "Side_by_Side"):
+            is_side = True
+    else:
+            is_side = False
+
+    treshold_shape = []
+    # threshold line
+    if is_tresholdshow:
+        treshold_shape.append(dict(line=dict(
+                                # color="rgba(68, 68, 68, 0.5)",
+                                color='rgba({}, {}, {}, {})'.format(
+                                    treshold_color['rgb']['r'],
+                                    treshold_color['rgb']['g'],
+                                    treshold_color['rgb']['b'],
+                                    treshold_color['rgb']['a'], ),
+                                width=treshold_size, dash=treshold_style,
+                                ),
+            type='line',
+            # set the x and y for threshold line
+            x0=-0.5 if is_vertical else treshold_value,
+            x1=len(var_list)-0.5 if is_vertical else treshold_value,
+            y0=treshold_value if is_vertical else -0.5,
+            y1=treshold_value if is_vertical else len(var_list)-0.5,
+        ))
+
+    # Returning figure
+    return{
+        'data': data_list,
+        'layout': go.Layout(
+            xaxis=go.layout.XAxis(
+                title=xaxis_title,
+                showgrid=gridshow,
+                zeroline=xzeroline,
+                type=type_x,
+                gridwidth=grid_width,
+                gridcolor='lightgrey',
+                dtick=None if is_vertical else dtick,
+            ),
+            yaxis=go.layout.YAxis(
+                title=yaxis_title,
+                showgrid=gridshow,
+                zeroline=yzeroline,
+                type=type_y,
+                gridwidth=grid_width,
+                gridcolor='lightgrey',
+                dtick=dtick if is_vertical else None,
+            ),
+            barmode = "group" if is_side else "stack",
+            title=main_title,
+            showlegend=legendshow,
+            height=graph_height,
+            width=graph_width,
             shapes=treshold_shape,
         )
     }

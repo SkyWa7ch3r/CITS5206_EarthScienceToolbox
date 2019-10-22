@@ -194,3 +194,17 @@ def render_numinput(id, min, max, value):
 # Output: daq.NumericInput
 def render_numinput_justmin(id, min):
     return daq.NumericInput(id=id, min=min, className='w-100')
+
+# Function: Render radio items for data points and outlies
+# Input: id
+# Output: dcc.RadioItems
+def render_radio_plotype(id):
+    return dcc.RadioItems(
+        id=id,
+        options=[
+            {'label': 'Stacked', 'value': 'Stacked'},
+            {'label': 'Percentage', 'value': 'Stacked_Percentage'},
+            {'label': 'Side by Side', 'value': 'Side_by_Side'},
+        ],
+        value='Stacked',
+        labelStyle={'display': 'block'} )
