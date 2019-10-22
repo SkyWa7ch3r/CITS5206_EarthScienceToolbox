@@ -266,6 +266,8 @@ def update_group(groupby):
     return [{'label': i, 'value': i} for i in df[groupby].unique()] 
 
 
+
+
 # Main callback
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -319,6 +321,15 @@ def update_graph(xaxis_column_name, select_variables,
             # else:
             #    box_color_saved[i] = default_color[color_idx % 5]
         color_idx += 1
+
+    marker_idx = 0
+    for i in group_list:
+        if select_group is not None:
+            if i == select_group:
+                a = 0
+        marker_idx += 1
+
+
 
     # Variable to change gaps
     ConnectGaps = True
