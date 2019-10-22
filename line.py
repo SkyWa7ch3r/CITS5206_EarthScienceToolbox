@@ -79,6 +79,8 @@ MARKERS_DICT = [
     {'value': 'bowtie', 'label': 'bowtie'},
 ]
 
+marker_dict = {}
+
 #
 LINECOLOR_DICT = {}
 default_color = cl.to_rgb(cl.scales['5']['qual']['Set1'])
@@ -244,14 +246,22 @@ app.layout = html.Div([
     Output('colorpicker', 'value'),
     [Input('select-group', 'value')]
 )
-def update_line_color(yaxis):
-    temp_str = LINECOLOR_DICT.get(yaxis, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
+def update_line_color(select_group):
+    temp_str = LINECOLOR_DICT.get(select_group, dict(rgb = dict(r = 222, g = 110, b = 75, a = default_alpha)))
     if isinstance(temp_str, str):
         start_idx = temp_str.find('(')
         temp_str = temp_str[start_idx+1:len(temp_str)-1]
         temp_str = temp_str.split(",")
         temp_str = dict(rgb = dict(r = temp_str[0], g = temp_str[1], b = temp_str[2], a = temp_str[3]))
     return temp_str
+
+@app.callback(
+    Output('line-style', 'value'),
+    [Input('select-group', 'value')]
+    )
+def update_line_style(select_group):
+    #temp_str = 
+    return 
 
 
 @app.callback(
@@ -262,6 +272,7 @@ def update_group(groupby):
     idx = 0
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
+        marker_dict[i] = MARKERS_DICT[idx % 5]
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
 
@@ -287,17 +298,11 @@ def update_group(groupby):
      Input('Y-dtick', 'value'),
      Input('select-group', 'value')
      ])
-def update_graph(xaxis_column_name, select_variables,
-                 data_transform,
+def update_graph(xaxis_column_name, select_variables, data_transform,
                  show_gridlines, show_zeroline_y,
-                 alignment_markers_dropdown,
-                 alignment_labelstyle_dropdown, show_gaps, ALF,
-                 OS,
-                 colorPicker,
-                 line_style,
-                 groupby,
-                 y_dtick,
-                 select_group
+                 alignment_markers_dropdown, alignment_labelstyle_dropdown,
+                 show_gaps, ALF, OS, colorPicker, line_style,
+                 groupby, y_dtick, select_group
                  ):
     group_list = df[groupby].unique()
 
@@ -324,10 +329,12 @@ def update_graph(xaxis_column_name, select_variables,
 
     marker_idx = 0
     for i in group_list:
+        j = 0
         if select_group is not None:
             if i == select_group:
-                a = 0
+                marker_dict[i] = MARKERS_DICT[j%15]
         marker_idx += 1
+        j += 1
 
 
 
@@ -340,6 +347,7 @@ def update_graph(xaxis_column_name, select_variables,
     Fill = "none"
     if ALF:
         Fill = "toself"
+
 
     # Variables for label styles
     lineStyle = dict()
@@ -382,6 +390,7 @@ def update_graph(xaxis_column_name, select_variables,
                 width = 3,
                 dash = line_style)
 
+
     traces_list = []
     for variable in select_variables:
         print("Var: {}".format(variable))
@@ -396,7 +405,10 @@ def update_graph(xaxis_column_name, select_variables,
                     connectgaps = ConnectGaps,
                     fill = Fill,
                     opacity = OS/100,
-                    marker = markerOnly,
+                    marker = dict(
+                        size = 8,
+                        opacity = 0.8,
+                        symbol = marker_dict[selection]),
                     line = dict(color=LINECOLOR_DICT[selection], width=3, dash=line_style)
                     )
                 )
