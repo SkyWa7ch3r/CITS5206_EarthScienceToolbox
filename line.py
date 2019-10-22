@@ -265,6 +265,14 @@ def update_line_style(select_group):
     temp_str = linestyle_dict.get(select_group)
     return temp_str
 
+@app.callback(
+    Output('alignment-markers-dropdown', 'value'),
+    [Input('select-group', 'value')]
+    )
+def update_marker_style(select_group):
+    temp_str = marker_dict.get(select_group)
+    return temp_str
+
 
 @app.callback(
     Output('select-group', 'options'),
@@ -274,11 +282,10 @@ def update_group(groupby):
     idx = 0
     for i in df[groupby].unique():
         LINECOLOR_DICT[i] = default_color[idx % 5]
-        #marker_dict[i] = MARKERS_DICT[idx % 15]
+        marker_dict[i] = MARKERS_DICT[idx % 15]
         linestyle_dict[i] = linestyle_list[idx % 6].replace(' ', '').lower()
         idx += 1
     return [{'label': i, 'value': i} for i in df[groupby].unique()]
-
 
 
 
@@ -331,13 +338,12 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
         color_idx += 1
 
     marker_idx = 0
-    j = 0
     for i in group_list:
         if select_group is not None:
             if i == select_group:
-                marker_dict[i] = MARKERS_DICT[j%15]
+                marker_dict[i] = alignment_markers_dropdown
         marker_idx += 1
-        j += 1
+        
 
     linestyle_idx = 0
     for i in group_list:
@@ -417,7 +423,7 @@ def update_graph(xaxis_column_name, select_variables, data_transform,
                     marker = dict(
                         size = 8,
                         opacity = 0.8,
-                        symbol = alignment_markers_dropdown),
+                        symbol = marker_dict[selection]),
                     line = dict(color=LINECOLOR_DICT[selection], width=3, dash=linestyle_dict[selection])
                     )
                 )
