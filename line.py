@@ -122,12 +122,24 @@ app.layout = html.Div([
                 multi = True
                 ),
 
-            html.H6('Group By'),
-            dcc.Dropdown(
-                id = 'select-groupby',
-                options = [{'label': i, 'value': i} for i in cat_features],
-                value = str(cat_features[0])
+            daq.ToggleSwitch(
+                id = 'use-group-by',
+                value = True,
+                label = 'Use Group By',
+                labelPosition = 'top',
+                color = toggle_switch_color
                 ),
+
+            html.H6('Group By'),
+            html.Div([
+                dcc.Dropdown(
+                    id = 'select-groupby',
+                    options = [{'label': i, 'value': i} for i in cat_features],
+                    value = str(cat_features[0]),
+                    disabled = False
+                ),
+            ], style = {'display': 'block'}),
+
 
             html.H6('Select Group'),
             dcc.RadioItems(
@@ -170,6 +182,14 @@ app.layout = html.Div([
                 value = (str(linestyle_list[0]).replace(" ", "")).lower(),
                 ),
 
+            # Option to change lable style
+            html.H6("Change Label Style:"),
+            dcc.Dropdown(
+                id = 'alignment-labelstyle-dropdown',
+                options = LABELSTYLE_DICT,
+                value = 'lines'
+            ),
+
             # Option to change marker style
             html.H6("Change Marker Style:"),
             dcc.Dropdown(
@@ -177,14 +197,6 @@ app.layout = html.Div([
                 className = 'markers-controls-block-dropdown',
                 options = MARKERS_DICT,
                 value = 'circle'
-            ),
-
-            # Option to change lable style
-            html.H6("Change Label Style:"),
-            dcc.Dropdown(
-                id = 'alignment-labelstyle-dropdown',
-                options = LABELSTYLE_DICT,
-                value = 'lines'
             )
         ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
 
@@ -245,6 +257,16 @@ app.layout = html.Div([
             )
 ])
 
+@app.callback(
+    Output('select-groupby', 'disabled'),
+    [Input('use-group-by', 'value')]
+)
+def update_groupby(use_group_by):
+    if use_group_by == True:
+        return False
+    else:
+        return True
+
 
 @app.callback(
     Output('colorpicker', 'value'),
@@ -292,16 +314,19 @@ def update_group(groupby):
      Input('line-style', 'value'),
      Input('select-groupby', 'value'),
      Input('Y-dtick', 'value'),
-     Input('select-group', 'value')
+     Input('select-group', 'value'),
+     Input('use-group-by', 'value')
      ])
 def update_graph(xaxis_column_name, select_variables, data_transform,
                  show_gridlines, show_zeroline_y,
                  alignment_markers_dropdown, alignment_labelstyle_dropdown,
                  show_gaps, ALF, OS, colorPicker, line_style,
-                 groupby, y_dtick, select_group
+                 groupby, y_dtick, select_group, use_group_by
                  ):
+    if use_group_by == True:
+        a = 0
+        
     group_list = df[groupby].unique()
-
     type_y = None
     if data_transform:
         type_y = 'log'
