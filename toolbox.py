@@ -694,7 +694,7 @@ def render_content(tab, session):
                         html.Div(children=[
                             dbc.Row(children=[
                                 dcc.Graph(id='line-graphic',
-                                    style={'width' : '90%', 'padding-left' : '3%'},
+                                    style={'width' : '90%', 'padding-left' : '3%', 'padding-top' : '3%'},
                                     config={'editable' : True, 'toImageButtonOptions': {'scale' : 10},'edits' : {'legendPosition' : True, 'legendText' : True, 'colorbarPosition' : True, 'colorbarTitleText' : True}}
                                 ),
                             ])
