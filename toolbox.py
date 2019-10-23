@@ -30,8 +30,10 @@ NOT BEING FOUND INSIDE THE PYTHON FILE
 app.config['suppress_callback_exceptions']=True
 #Create the cache needed to store the dataframe
 cache = Cache(app.server, config={
-    'CACHE_TYPE' : 'filesystem',
-    'CACHE_DIR' : 'cache',
+    'CACHE_TYPE' : 'redis',
+    'CACHE_DEFAULT_TIMEOUT' : 10800,
+    'CACHE_REDIS_HOST' : '127.0.0.1',
+    'CACHE_REDIS_PORT' : 6379,
 })
 
 #--------CONSTANT VARIABLES------------#
