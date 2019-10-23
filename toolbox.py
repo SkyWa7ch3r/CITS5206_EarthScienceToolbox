@@ -403,7 +403,7 @@ def render_content(tab, session):
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Select Category')),
-                                                    dbc.CardBody(children=func.render_dropdown_blank('marker-selected-groupby'))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('marker-selected-groupby', df[cat_names[0]].unique(), df[cat_names[0]].unique()[0]))
                                                 ], className='col-md-6', style={'margin': '0px 0px 10px 0px', 'height': '30em'}
                                                 ),
                                             ],
@@ -449,7 +449,7 @@ def render_content(tab, session):
                                                 ),
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Select Category')),
-                                                    dbc.CardBody(children=func.render_dropdown_blank('color-selected-groupby'))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('color-selected-groupby', df[cat_names[0]].unique(), df[cat_names[0]].unique()[0]))
                                                 ], className='col-md-6',
                                                 ),
                                                 dbc.Card([
@@ -626,7 +626,7 @@ def render_content(tab, session):
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H6('Select Category')),
-                                                    dbc.CardBody(children=func.render_dropdown_blank('line-select-group'))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('line-select-group', df[cat_features[0]].unique(), df[cat_features[0]].unique()[0]))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
@@ -952,7 +952,7 @@ def render_content(tab, session):
                                                 #Select the box to adjust
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Select Box'), className='card w-100'),
-                                                    dbc.CardBody(children=func.render_dropdown_blank('select-box'))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('select-box', df[cat_features[0]].unique(),df[cat_features[0]].unique()[0]))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 #Choose the color for the box
@@ -1182,7 +1182,7 @@ def render_content(tab, session):
                                             dbc.CardBody(children=[
                                                 dbc.Card([
                                                     dbc.CardHeader(html.H5('Select bar'), className='card w-100'),
-                                                    dbc.CardBody(children=func.render_dropdown_blank('select-bar'))
+                                                    dbc.CardBody(children=func.render_dropdown_valued('select-bar', df[cat_features[0]].unique(),df[cat_features[0]].unique()[0]))
                                                 ], style={'margin': '0px 0px 10px 0px'}
                                                 ),
                                                 dbc.Card([
@@ -1813,7 +1813,8 @@ and return the options, and the value.
     [Output('marker-selected-group', 'value'),
     Output('marker-selected-groupby', 'options'),
     Output('marker-selected-groupby', 'disabled'),
-    Output('marker-drop', 'disabled')],
+    Output('marker-drop', 'disabled'),
+    Output('marker-selected-groupby', 'value')],
     [Input('marker-style-tog', 'on'),
     Input('marker-drop', 'value'),
     Input('session_id', 'children')]
@@ -1831,9 +1832,9 @@ def scatter_markers_groupby(marker_on, marker_drop, session):
             markers_shape[i] = random.choice(MARKERS_LIST)
             idx += 1
         #Return the necessary values
-        return df[marker_drop].unique()[0], [{'label': i, 'value': i} for i in df[marker_drop].unique()], False, False
+        return df[marker_drop].unique()[0], [{'label': i, 'value': i} for i in df[marker_drop].unique()], False, False, df[marker_drop].unique()[0]
     else:
-        return marker_drop, [{'label': marker_drop, 'value': marker_drop}], True, True
+        return marker_drop, [{'label': marker_drop, 'value': marker_drop}], True, True, marker_drop
 
 '''
 Adjusts the linear functions options availability depending on if
@@ -1972,16 +1973,19 @@ def scatter_update_graph(xaxis_column_name, yaxis_column_name,
     #If we are using a category then apply the color just grabbed from the color picker
     if df[color_var].dtypes=='object':
     	for i in df[color_var].unique():
-    		if color_var is not None:
+            if color_var is not None:
                 #We only edit the necessary one, which we select via a drop down
-    			if i == G_t:
-    				markers_choice[i] = picker_markers_color
+                if i == G_t:
+                    markers_choice[i] = picker_markers_color
+                    print(markers_choice[i])
     #If the markers are on, then apply the marker via the group by marker, similar to the color above
     if marker_on:
         for cat in df[marker_drop].unique():
             if marker_drop is not None:
                 if cat == marker_groupby:
                     markers_shape[cat] = alignment_markers_dropdown
+            else:
+                markers_shape[cat] = random.choice(MARKERS_LIST)
     #If use size has been enabled then..
     if use_size:
         #Take the data as a numpy float array
@@ -2180,7 +2184,8 @@ def update_line(select_group):
 
 @app.callback(
     [Output('line-select-group', 'options'),
-    Output('line-select-groupby', 'disabled')],
+    Output('line-select-groupby', 'disabled'),
+    Output('line-select-group', 'value')],
     [Input('line-select-groupby', 'value'),
     Input('use-group-by', 'on'),
     Input('select-variables', 'value'),
@@ -2201,7 +2206,7 @@ def line_update_group(groupby, usegroup, selected, session):
                 linefill[s + ' : '+ i] = False
                 idx += 1
                 groups.append(s + ' : '+ i)
-            return [{'label': i, 'value': i} for i in groups], False
+            return [{'label': i, 'value': i} for i in groups], False, groups[0]
     else:
         for i in selected:
             LINECOLOR_DICT[i] = default_color[idx % 5]
@@ -2211,7 +2216,7 @@ def line_update_group(groupby, usegroup, selected, session):
             label_dict[i] = LABELSTYLE_DICT[0]['value']
             linefill[i] = False
             idx += 1
-        return [{'label': i, 'value': i} for i in selected], True
+        return [{'label': i, 'value': i} for i in selected], True, selected[0]
 
 
 # Main callback
@@ -2453,7 +2458,8 @@ def update_box_color_selector(box):
 
 # Box Selector Callback, adjusts the options of the categories drop down
 @app.callback(
-    Output('select-box', 'options'),
+    [Output('select-box', 'options'),
+    Output('select-box', 'value')],
     [Input('select-groupby', 'value'),
     Input('session_id', 'children')]
 )
@@ -2463,7 +2469,7 @@ def update_select_box(groupby, session):
     for i in df[groupby].unique():
         box_color_saved[i] = default_color[idx % num_of_color]
         idx += 1
-    return [{'label': i, 'value': i} for i in df[groupby].unique()]
+    return [{'label': i, 'value': i} for i in df[groupby].unique()], df[groupby].unique()[0]
 
 # Threshold Line Callback
 @app.callback(
@@ -2512,7 +2518,7 @@ def update_showstat(outliersshow):
         Input('session_id', 'children'),
     ]
 )
-def update_figure(
+def box_update_figure(
     variable, groupby,
     gridshow, xzeroline, yzeroline, legendshow,
     datapointsshow, is_vertical, is_log, outliersshow, is_ndatashow,
@@ -2913,7 +2919,8 @@ def update_bar_color_selector(bar):
 
 # Bar Selector Callback
 @app.callback(
-    Output('select-bar', 'options'),
+    [Output('select-bar', 'options'),
+    Output('select-bar', 'value')],
     [Input('bar-select-groupby', 'value'),
     Input('session_id', 'children') ]
 )
@@ -2923,7 +2930,7 @@ def update_select_bar(groupby, session):
     for i in df[groupby].unique():
         bar_color_saved[i] = default_color[idx % 5]
         idx += 1
-    return [{'label': i, 'value': i} for i in df[groupby].unique()]
+    return [{'label': i, 'value': i} for i in df[groupby].unique()], df[groupby].unique()[0]
 
 # Threshold Line Callback
 @app.callback(
@@ -2964,7 +2971,7 @@ def update_treshold_value(
         Input('session_id', 'children'),
     ]
 )
-def update_figure(
+def bar_update_figure(
     variable, groupby,plottype,
     gridshow, xzeroline, yzeroline, legendshow,
     is_vertical, is_log,is_ndatashow,is_tresholdshow, treshold_value,
@@ -3190,4 +3197,4 @@ def update_figure(
         )
     }
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(debug=False, host='0.0.0.0')
